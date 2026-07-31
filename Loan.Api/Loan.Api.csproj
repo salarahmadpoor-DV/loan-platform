@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.1" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.4" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Loan.Application\Loan.Application.csproj" />
+    <ProjectReference Include="..\Loan.Infrastructure\Loan.Infrastructure.csproj" />
+    <ProjectReference Include="..\Loan.Contracts\Loan.Contracts.csproj" />
+    <ProjectReference Include="..\Loan.Shared\Loan.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

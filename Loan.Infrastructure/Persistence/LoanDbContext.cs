@@ -13,7 +13,8 @@ public sealed class LoanDbContext : DbContext
     #region DbSets
 
     public DbSet<Bank> Banks => Set<Bank>();
-
+    public DbSet<LoanRequest> LoanRequests => Set<LoanRequest>();
+    
     // بعداً اضافه می‌شوند
     // public DbSet<BankQuestion> BankQuestions => Set<BankQuestion>();
     // public DbSet<BankQuestionOption> BankQuestionOptions => Set<BankQuestionOption>();
@@ -27,5 +28,9 @@ public sealed class LoanDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(LoanDbContext).Assembly);
+        modelBuilder.Entity<LoanRequest>().ToTable("LoanRequest");
+        modelBuilder.HasDefaultSchema("dbo");
     }
+
+    
 }

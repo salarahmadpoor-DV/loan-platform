@@ -22,4 +22,17 @@ public class BankRepository : IBankRepository
             .OrderBy(x => x.SortOrder)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<Bank?> GetBySlugAsync(
+    string slug,
+    CancellationToken cancellationToken = default)
+{
+    return await _context.Banks
+        .Include(x => x.Questions)
+        .FirstOrDefaultAsync(
+            x => x.Slug == slug &&
+                 !x.IsDeleted,
+            cancellationToken);
+}
+    
 }

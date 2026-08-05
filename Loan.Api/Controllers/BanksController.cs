@@ -1,6 +1,7 @@
+using Loan.Application.Features.Banks.Queries.GetBanks;
+using Loan.Application.Features.Banks.Queries.GetBankBySlug;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Loan.Application.Features.Banks.Queries.GetBanks;
 
 namespace Loan.Api.Controllers;
 
@@ -22,6 +23,21 @@ public class BanksController : ControllerBase
         var result = await _mediator.Send(
             new GetBanksQuery(),
             cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpGet("{slug}")]
+    public async Task<IActionResult> GetBySlug(
+        string slug,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new GetBankBySlugQuery(slug),
+            cancellationToken);
+
+        if (result is null)
+            return NotFound();
 
         return Ok(result);
     }

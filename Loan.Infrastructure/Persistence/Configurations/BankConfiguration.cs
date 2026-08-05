@@ -8,7 +8,7 @@ public sealed class BankConfiguration : IEntityTypeConfiguration<Bank>
 {
     public void Configure(EntityTypeBuilder<Bank> builder)
     {
-        builder.ToTable("Banks", "Loan");
+        builder.ToTable("Banks", "dbo");
 
         // Primary Key
         builder.HasKey(x => x.Id);

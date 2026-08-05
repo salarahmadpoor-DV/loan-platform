@@ -1,6 +1,8 @@
 using Loan.Infrastructure.DependencyInjection;
 using Loan.Application.DependencyInjection;
 using Loan.Application.Features.Banks.Queries.GetBanks;
+using Loan.Infrastructure.Persistence;
+using Loan.Infrastructure.Persistence.Seed;
 var builder = WebApplication.CreateBuilder(args);
 
 // Services
@@ -17,7 +19,13 @@ builder.Services.AddMediatR(cfg =>
         builder.Services.AddControllers();
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider
+        .GetRequiredService<LoanDbContext>();
 
+    await DatabaseSeeder.SeedAsync(dbContext);
+}
 
 // Middleware
 if (app.Environment.IsDevelopment())

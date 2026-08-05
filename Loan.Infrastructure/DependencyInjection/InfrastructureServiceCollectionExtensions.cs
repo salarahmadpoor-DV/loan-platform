@@ -21,6 +21,7 @@ public static class InfrastructureServiceCollectionExtensions
 
 
         services.AddScoped<IBankRepository, BankRepository>();
+        services.AddScoped<ILoanRequestRepository, LoanRequestRepository>();
 
         return services;
     }

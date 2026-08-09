@@ -1,3 +1,4 @@
+
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,6 +14,9 @@ public static class ApplicationServiceCollectionExtensions
             cfg.RegisterServicesFromAssembly(
                 typeof(ApplicationServiceCollectionExtensions).Assembly);
         });
+
+        
+        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(Common.MediatR.ValidationBehavior<,>));
 
         return services;
     }

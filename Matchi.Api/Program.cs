@@ -9,11 +9,10 @@ using Matchi.Infrastructure.Persistence.Seed;
 using Matchi.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Net.Mime;
-using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 
@@ -39,9 +38,12 @@ builder.Services.AddValidatorsFromAssemblyContaining<Matchi.Application.Features
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
-builder.Services.AddControllers()
-    .AddFluentValidationAutoValidation();
+builder.Services.AddControllers();
 
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddControllers();
+
+builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -78,7 +80,6 @@ builder.Services
             ValidateIssuer = true,
             ValidateAudience = true,
             ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtSettings.Issuer,
             ValidAudience = jwtSettings.Audience,

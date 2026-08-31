@@ -34,16 +34,10 @@ builder.Services.Configure<JwtSettings>(jwtSection);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 builder.Services.AddValidatorsFromAssemblyContaining<Matchi.Application.Features.Auth.Commands.SendOtp.SendOtpCommandValidator>();
-
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-
-builder.Services.AddControllers();
-
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddControllers();
-
-builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -88,7 +82,11 @@ builder.Services
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("REQUEST_VIEW", policy =>
+        policy.RequireClaim("permission", "REQUEST_VIEW"));
+});
 
 var app = builder.Build();
 
@@ -119,9 +117,9 @@ app.UseExceptionHandler(errorApp =>
 
         var problemDetails = new ProblemDetails
         {
-            Status = statusCode,
-            Title = exception is FluentValidation.ValidationException ? "Validation failed." : statusCode == StatusCodes.Status500InternalServerError ? "An unexpected error occurred." : exception?.Message,
-            Type = statusCode == StatusCodes.Status500InternalServerError ? "https://httpstatuses.com/500" : null
+    Status = statusCode,
+    Title = exception?.GetType().Name,
+    Detail = exception?.Message
         };
 
         if (exception is FluentValidation.ValidationException validationException)

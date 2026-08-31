@@ -15,6 +15,7 @@ public class User : AuditableEntity
     private User()
     {
     }
+    public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 
     public User(string mobile)
     {

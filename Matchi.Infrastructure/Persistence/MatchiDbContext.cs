@@ -10,15 +10,18 @@ public sealed class MatchiDbContext : DbContext
     {
     }
 
-    #region DbSets
-
     public DbSet<Bank> Banks => Set<Bank>();
     public DbSet<LoanRequest> LoanRequests => Set<LoanRequest>();
+
     public DbSet<User> Users => Set<User>();
+    public DbSet<UserRole> UserRoles => Set<UserRole>();
+    public DbSet<Role> Roles => Set<Role>();
+
     public DbSet<ServiceCategory> ServiceCategories => Set<ServiceCategory>();
     public DbSet<Service> Services => Set<Service>();
     public DbSet<ServiceQuestion> ServiceQuestions => Set<ServiceQuestion>();
     public DbSet<QuestionOption> QuestionOptions => Set<QuestionOption>();
+
     public DbSet<Provider> Providers => Set<Provider>();
     public DbSet<ProviderService> ProviderServices => Set<ProviderService>();
     public DbSet<Business> Businesses => Set<Business>();
@@ -27,8 +30,6 @@ public sealed class MatchiDbContext : DbContext
     public DbSet<RequestAnswer> RequestAnswers => Set<RequestAnswer>();
     public DbSet<Introduction> Introductions => Set<Introduction>();
     public DbSet<Review> Reviews => Set<Review>();
-
-    #endregion
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -42,11 +43,15 @@ public sealed class MatchiDbContext : DbContext
         modelBuilder.Entity<LoanRequest>()
             .ToTable("LoanRequest");
 
-        // Users table
         modelBuilder.Entity<User>()
             .ToTable("Users");
 
-        // Service domain
+        modelBuilder.Entity<Role>()
+            .ToTable("Roles");
+
+        modelBuilder.Entity<UserRole>()
+            .ToTable("UserRoles");
+
         modelBuilder.Entity<ServiceCategory>()
             .ToTable("ServiceCategories");
 

@@ -11,16 +11,19 @@ public sealed class VerifyOtpCommandHandler
     private readonly IUserRepository _userRepository;
     private readonly IOtpService _otpService;
     private readonly IJwtTokenService _jwtTokenService;
+    private readonly IUserRoleRepository _userRoleRepository;
 
-    public VerifyOtpCommandHandler(
-        IUserRepository userRepository,
-        IOtpService otpService,
-        IJwtTokenService jwtTokenService)
-    {
-        _userRepository = userRepository;
-        _otpService = otpService;
-        _jwtTokenService = jwtTokenService;
-    }
+public VerifyOtpCommandHandler(
+    IUserRepository userRepository,
+    IUserRoleRepository userRoleRepository,
+    IOtpService otpService,
+    IJwtTokenService jwtTokenService)
+{
+    _userRepository = userRepository;
+    _userRoleRepository = userRoleRepository;
+    _otpService = otpService;
+    _jwtTokenService = jwtTokenService;
+}
 
     public async Task<AuthResultDto> Handle(
         VerifyOtpCommand request,
@@ -57,22 +60,30 @@ public sealed class VerifyOtpCommandHandler
             }
         }
 
-        var tokenResult = _jwtTokenService.GenerateToken(
-            user.Id,
-            user.Mobile,
-            new[] { "Customer" });
+var roles = await _userRoleRepository
+    .GetRoleCodesByUserIdAsync(
+        user.Id,
+        cancellationToken);
+        var permissions = await _userRoleRepository
+    .GetPermissionCodesByUserIdAsync(user.Id, cancellationToken);
 
-        return new AuthResultDto
-        {
-            AccessToken = tokenResult.AccessToken,
-            RefreshToken = string.Empty,
-            ExpiresAtUtc = tokenResult.ExpiresAtUtc,
-            User = new AuthUserDto
-            {
-                Id = user.Id,
-                Mobile = user.Mobile,
-                Roles = new[] { "Customer" }
-            }
-        };
+var tokenResult = _jwtTokenService.GenerateToken(
+    user.Id,
+    user.Mobile,
+    roles,
+    permissions);
+
+return new AuthResultDto
+{
+    AccessToken = tokenResult.AccessToken,
+    RefreshToken = string.Empty,
+    ExpiresAtUtc = tokenResult.ExpiresAtUtc,
+    User = new AuthUserDto
+    {
+        Id = user.Id,
+        Mobile = user.Mobile,
+        Roles = roles
+    }
+};
     }
 }

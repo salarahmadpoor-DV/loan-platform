@@ -17,7 +17,11 @@ public sealed class JwtTokenService : IJwtTokenService
         _jwtSettings = jwtSettings.Value;
     }
 
-    public JwtTokenResult GenerateToken(long userId, string mobile, IEnumerable<string>? roles = null)
+    public JwtTokenResult GenerateToken(
+        long userId,
+        string mobile,
+        IEnumerable<string>? roles = null,
+        IEnumerable<string>? permissions = null)
     {
         var now = DateTime.UtcNow;
         var expiresAt = now.AddMinutes(_jwtSettings.ExpiryMinutes);
@@ -26,25 +30,43 @@ public sealed class JwtTokenService : IJwtTokenService
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(JwtRegisteredClaimNames.Iss, _jwtSettings.Issuer),
-            new Claim(JwtRegisteredClaimNames.Aud, _jwtSettings.Audience)
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
         if (!string.IsNullOrWhiteSpace(mobile))
         {
-            claims.Add(new Claim(ClaimTypes.MobilePhone, mobile));
+            claims.Add(
+                new Claim(ClaimTypes.MobilePhone, mobile));
         }
 
+        // Roles
         if (roles is not null)
         {
-            claims.AddRange(roles
-                .Where(role => !string.IsNullOrWhiteSpace(role))
-                .Select(role => new Claim(ClaimTypes.Role, role!.Trim())));
+            claims.AddRange(
+                roles
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Select(x => new Claim(
+                        ClaimTypes.Role,
+                        x.Trim())));
         }
 
-        var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
-        var credentials = new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256);
+        // Permissions
+        if (permissions is not null)
+        {
+            claims.AddRange(
+                permissions
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Select(x => new Claim(
+                        "permission",
+                        x.Trim())));
+        }
+
+        var signingKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(_jwtSettings.Key));
+
+        var credentials = new SigningCredentials(
+            signingKey,
+            SecurityAlgorithms.HmacSha256);
 
         var jwt = new JwtSecurityToken(
             issuer: _jwtSettings.Issuer,
@@ -54,7 +76,8 @@ public sealed class JwtTokenService : IJwtTokenService
             expires: expiresAt,
             signingCredentials: credentials);
 
-        var token = new JwtSecurityTokenHandler().WriteToken(jwt);
+        var token =
+            new JwtSecurityTokenHandler().WriteToken(jwt);
 
         return new JwtTokenResult(token, expiresAt);
     }

@@ -6,7 +6,9 @@ public class Business : AuditableEntity
 {
     public string Name { get; private set; } = null!;
     public string? Address { get; private set; }
+    public long OwnerUserId { get; private set; }
 
+    public User OwnerUser { get; private set; } = null!;
     public double? Lat { get; private set; }
     public double? Lng { get; private set; }
 

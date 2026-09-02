@@ -10,14 +10,24 @@ public class Provider : AuditableEntity
     public double? Lat { get; private set; }
     public double? Lng { get; private set; }
 
+    public long? UserId { get; private set; }
+    public User? User { get; private set; }
+
     public double Rating { get; private set; }
     public bool IsActive { get; private set; } = true;
 
-    public ICollection<ProviderService> ProviderServices { get; private set; } = new List<ProviderService>();
+    public ICollection<ProviderService> ProviderServices { get; private set; }
+        = new List<ProviderService>();
 
-    private Provider() { }
+    private Provider()
+    {
+    }
 
-    public Provider(string name, string mobile, double? lat = null, double? lng = null)
+    public Provider(
+        string name,
+        string mobile,
+        double? lat = null,
+        double? lng = null)
     {
         Name = name;
         Mobile = mobile;
@@ -25,5 +35,10 @@ public class Provider : AuditableEntity
         Lng = lng;
         Rating = 0;
         IsActive = true;
+    }
+
+    public void SetUser(long userId)
+    {
+        UserId = userId;
     }
 }

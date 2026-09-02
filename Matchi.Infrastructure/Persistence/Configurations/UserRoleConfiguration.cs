@@ -28,5 +28,6 @@ public sealed class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
             .WithMany(x => x.UserRoles)
             .HasForeignKey(x => x.RoleId)
             .OnDelete(DeleteBehavior.Cascade);
+            builder.HasKey(x => new{x.UserId,x.RoleId}).HasName("PK_UserRoles");
     }
 }

@@ -30,4 +30,24 @@ public class ProviderRepository : IProviderRepository
 
         return await query.ToListAsync(cancellationToken);
     }
+    public async Task<Provider?> GetByUserIdAsync(
+    long userId,
+    CancellationToken cancellationToken = default)
+{
+    return await _context.Providers
+        .FirstOrDefaultAsync(
+            x => x.UserId == userId &&
+                 !x.IsDeleted,
+            cancellationToken);
+}
+    public async Task AddAsync(
+        Provider provider,
+        CancellationToken cancellationToken = default)
+    {
+        await _context.Providers.AddAsync(
+            provider,
+            cancellationToken);
+
+        await _context.SaveChangesAsync(cancellationToken);
+    }
 }

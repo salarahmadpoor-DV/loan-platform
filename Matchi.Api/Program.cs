@@ -15,6 +15,8 @@ using Microsoft.OpenApi.Models;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
+using Matchi.Api.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -82,11 +84,13 @@ builder.Services
         };
     });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("REQUEST_VIEW", policy =>
-        policy.RequireClaim("permission", "REQUEST_VIEW"));
-});
+builder.Services.AddSingleton<IAuthorizationPolicyProvider,
+    PermissionPolicyProvider>();
+
+builder.Services.AddScoped<IAuthorizationHandler,
+    PermissionAuthorizationHandler>();
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 

@@ -59,7 +59,10 @@ public VerifyOtpCommandHandler(
                 await _userRepository.UpdateAsync(user, cancellationToken);
             }
         }
-
+await _userRoleRepository.EnsureRoleAsync(
+    user.Id,
+    "USER",
+    cancellationToken);
 var roles = await _userRoleRepository
     .GetRoleCodesByUserIdAsync(
         user.Id,

@@ -37,6 +37,6 @@ public class User : AuditableEntity
 
     public Provider? Provider { get; private set; }
 
-public ICollection<Business> Businesses { get; private set; }
+    public ICollection<Business> Businesses { get; private set; }
     = new List<Business>();
 }

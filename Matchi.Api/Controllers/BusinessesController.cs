@@ -28,7 +28,7 @@ namespace Matchi.Api.Controllers
         [Authorize]
         public async Task<IActionResult> Create([FromBody] CreateBusinessDto dto, CancellationToken cancellationToken = default)
         {
-            var businessId = await _mediator.Send(new CreateBusinessCommand(dto.Name, dto.Address, dto.Location?.Lat, dto.Location?.Lng, dto.OwnerContact), cancellationToken);
+            var businessId = await _mediator.Send(new CreateBusinessCommand(dto.Name, dto.Address, dto.Location?.Lat, dto.Location?.Lng), cancellationToken);
             return CreatedAtAction(nameof(List), new { businessId }, new { businessId });
         }
 

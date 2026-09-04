@@ -86,27 +86,6 @@ public static class DatabaseSeeder
         // 4. Banks
         // =========================================================
 
-        if (!await context.Banks.AnyAsync())
-        {
-            var banks = new List<Bank>
-            {
-                new Bank(
-                    "بانک قرض الحسنه رسالت",
-                    "resalat"),
-
-                new Bank(
-                    "بانک ملت",
-                    "mellat"),
-
-                new Bank(
-                    "بانک ملی ایران",
-                    "melli")
-            };
-
-            await context.Banks.AddRangeAsync(banks);
-
-            await context.SaveChangesAsync();
-        }
 
 
         // =========================================================

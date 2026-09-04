@@ -10,7 +10,7 @@ public sealed class MatchiDbContext : DbContext
     {
     }
 
-    public DbSet<Bank> Banks => Set<Bank>();
+
     public DbSet<LoanRequest> LoanRequests => Set<LoanRequest>();
 
     public DbSet<User> Users => Set<User>();

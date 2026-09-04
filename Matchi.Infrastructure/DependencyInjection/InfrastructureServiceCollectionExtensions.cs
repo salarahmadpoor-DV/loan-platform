@@ -24,7 +24,6 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<IOtpService, InMemoryOtpService>();
         services.AddScoped<IUserRoleRepository, UserRoleRepository>();
-        services.AddScoped<IBankRepository, BankRepository>();
         services.AddScoped<ILoanRequestRepository, LoanRequestRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IIntroductionRepository, IntroductionRepository>();

@@ -1,21 +1,17 @@
 namespace Matchi.Domain.Common;
 
-public abstract class AuditableEntity : Entity
+public abstract class AuditableEntity : TimestampedEntity
 {
-    public DateTime CreateDate { get; protected set; }
-
-    public DateTime? UpdateDate { get; protected set; }
-
     public bool IsDeleted { get; protected set; }
 
     protected AuditableEntity()
     {
-        CreateDate = DateTime.UtcNow;
         IsDeleted = false;
     }
 
-    protected void SetUpdated()
+    public void SoftDelete()
     {
-        UpdateDate = DateTime.UtcNow;
+        IsDeleted = true;
+        SetUpdated();
     }
 }

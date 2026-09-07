@@ -4,13 +4,13 @@ namespace Matchi.Domain.Entities;
 
 public class Request : AuditableEntity
 {
-    public long CustomerId { get; private set; };
+    public long CustomerId { get; private set; }
 
     public string RequestType { get; private set; } = null!;
 
     public string Title { get; private set; } = null!;
 
-    public string? Description { get; private set; };
+    public string? Description { get; private set; }
 
     public string Status { get; private set; } = "Open";
 
@@ -38,10 +38,12 @@ public class Request : AuditableEntity
     {
     }
 
-    public Request(long customerId, string requestType, string title)
+    public Request(long customerId, string requestType, string title, string? description = null)
     {
         CustomerId = customerId;
         RequestType = requestType;
         Title = title;
+        Description = description;
+        Status = "Open";
     }
 }

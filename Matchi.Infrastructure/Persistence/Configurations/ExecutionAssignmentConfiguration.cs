@@ -27,7 +27,7 @@ public class ExecutionAssignmentConfiguration : IEntityTypeConfiguration<Executi
 
         builder.Property(x => x.IsPrimary)
             .IsRequired()
-            .HasDefaultValue(0);
+            .HasDefaultValue(false);
 
         builder.Property(x => x.Status)
             .IsRequired()

@@ -4,13 +4,13 @@ namespace Matchi.Domain.Entities;
 
 public class ProviderPortfolio : Entity
 {
-    public long ProviderId { get; private set; };
+    public long ProviderId { get; private set; }
 
     public string Title { get; private set; } = null!;
 
-    public string? Description { get; private set; };
+    public string? Description { get; private set; }
 
-    public DateTime CreateDate { get; private set; };
+    public DateTime CreateDate { get; private set; }
 
     public Provider Provider { get; private set; } = null!;
 

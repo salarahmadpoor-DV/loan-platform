@@ -5,24 +5,24 @@ namespace Matchi.Application.Features.Requests.Queries.GetServiceRequestsByUser;
 
 public sealed class GetServiceRequestsByUserQueryHandler : IRequestHandler<GetServiceRequestsByUserQuery, IEnumerable<ServiceRequestSummaryDto>>
 {
-    private readonly IServiceRequestRepository _serviceRequestRepository;
+    private readonly IRequestRepository _requestRepository;
 
-    public GetServiceRequestsByUserQueryHandler(IServiceRequestRepository serviceRequestRepository)
+    public GetServiceRequestsByUserQueryHandler(IRequestRepository requestRepository)
     {
-        _serviceRequestRepository = serviceRequestRepository;
+        _requestRepository = requestRepository;
     }
 
     public async Task<IEnumerable<ServiceRequestSummaryDto>> Handle(
         GetServiceRequestsByUserQuery request,
         CancellationToken cancellationToken)
     {
-        var requests = await _serviceRequestRepository.GetByUserIdAsync(request.UserId, cancellationToken);
+        var requests = await _requestRepository.GetByUserIdAsync(request.UserId, cancellationToken);
 
         return requests.Select(r => new ServiceRequestSummaryDto(
             r.Id,
             r.Title,
             r.Status,
-            r.ServiceId,
+            r.Services.OrderBy(s => s.DisplayOrder).FirstOrDefault()?.ServiceId ?? 0,
             r.CreateDate));
     }
 }

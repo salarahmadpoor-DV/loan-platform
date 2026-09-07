@@ -51,12 +51,11 @@ public sealed class CreateProviderCommandHandler
                 "The authenticated user already has a provider profile.");
 
         var provider = new Provider(
+            userId.Value,
             request.Name,
             user.Mobile,
-            request.Lat,
-            request.Lng);
-
-        provider.SetUser(userId.Value);
+            request.Lat.HasValue ? (decimal)request.Lat.Value : null,
+            request.Lng.HasValue ? (decimal)request.Lng.Value : null);
 
         await _providerRepository.AddAsync(
             provider,

@@ -4,21 +4,21 @@ namespace Matchi.Domain.Entities;
 
 public class Deal : AuditableEntity
 {
-    public long RequestId { get; private set; };
+    public long RequestId { get; private set; }
 
-    public long ProposalId { get; private set; };
+    public long ProposalId { get; private set; }
 
-    public long CustomerId { get; private set; };
+    public long CustomerId { get; private set; }
 
     public string Status { get; private set; } = "Active";
 
-    public decimal TotalPrice { get; private set; };
+    public decimal TotalPrice { get; private set; }
 
-    public DateTime AcceptedAt { get; private set; };
+    public DateTime AcceptedAt { get; private set; }
 
-    public DateTime? CompletedAt { get; private set; };
+    public DateTime? CompletedAt { get; private set; }
 
-    public DateTime? CancelledAt { get; private set; };
+    public DateTime? CancelledAt { get; private set; }
 
     public Customer Customer { get; private set; } = null!;
 

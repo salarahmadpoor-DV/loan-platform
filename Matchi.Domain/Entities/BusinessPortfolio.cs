@@ -4,13 +4,13 @@ namespace Matchi.Domain.Entities;
 
 public class BusinessPortfolio : Entity
 {
-    public long BusinessId { get; private set; };
+    public long BusinessId { get; private set; }
 
     public string Title { get; private set; } = null!;
 
-    public string? Description { get; private set; };
+    public string? Description { get; private set; }
 
-    public DateTime CreateDate { get; private set; };
+    public DateTime CreateDate { get; private set; }
 
     public Business Business { get; private set; } = null!;
 

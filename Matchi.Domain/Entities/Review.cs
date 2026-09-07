@@ -4,17 +4,17 @@ namespace Matchi.Domain.Entities;
 
 public class Review : AuditableEntity
 {
-    public long DealId { get; private set; };
+    public long DealId { get; private set; }
 
-    public long CustomerId { get; private set; };
+    public long CustomerId { get; private set; }
 
-    public long? BusinessId { get; private set; };
+    public long? BusinessId { get; private set; }
 
-    public long? ProviderId { get; private set; };
+    public long? ProviderId { get; private set; }
 
-    public byte Rating { get; private set; };
+    public byte Rating { get; private set; }
 
-    public string? Comment { get; private set; };
+    public string? Comment { get; private set; }
 
     public Business? Business { get; private set; }
 

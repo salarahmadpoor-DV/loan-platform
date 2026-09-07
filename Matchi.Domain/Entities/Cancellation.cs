@@ -4,17 +4,17 @@ namespace Matchi.Domain.Entities;
 
 public class Cancellation : Entity
 {
-    public long RequestId { get; private set; };
+    public long RequestId { get; private set; }
 
-    public long? DealId { get; private set; };
+    public long? DealId { get; private set; }
 
-    public long CancelledByUserId { get; private set; };
+    public long CancelledByUserId { get; private set; }
 
     public string Reason { get; private set; } = null!;
 
-    public string? Description { get; private set; };
+    public string? Description { get; private set; }
 
-    public DateTime CreateDate { get; private set; };
+    public DateTime CreateDate { get; private set; }
 
     public Deal? Deal { get; private set; }
 

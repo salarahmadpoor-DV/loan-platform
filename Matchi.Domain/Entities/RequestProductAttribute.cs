@@ -4,11 +4,11 @@ namespace Matchi.Domain.Entities;
 
 public class RequestProductAttribute : AuditableEntity
 {
-    public long RequestProductId { get; private set; };
+    public long RequestProductId { get; private set; }
 
-    public long ProductAttributeId { get; private set; };
+    public long ProductAttributeId { get; private set; }
 
-    public string? Value { get; private set; };
+    public string? Value { get; private set; }
 
     public ProductAttribute ProductAttribute { get; private set; } = null!;
 

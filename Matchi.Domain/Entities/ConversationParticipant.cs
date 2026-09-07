@@ -4,13 +4,13 @@ namespace Matchi.Domain.Entities;
 
 public class ConversationParticipant : Entity
 {
-    public long ConversationId { get; private set; };
+    public long ConversationId { get; private set; }
 
-    public long UserId { get; private set; };
+    public long UserId { get; private set; }
 
-    public DateTime JoinedAt { get; private set; };
+    public DateTime JoinedAt { get; private set; }
 
-    public DateTime? LeftAt { get; private set; };
+    public DateTime? LeftAt { get; private set; }
 
     public Conversation Conversation { get; private set; } = null!;
 

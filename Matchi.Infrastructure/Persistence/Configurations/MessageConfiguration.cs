@@ -25,7 +25,7 @@ public class MessageConfiguration : IEntityTypeConfiguration<Message>
 
         builder.Property(x => x.IsRead)
             .IsRequired()
-            .HasDefaultValue(0);
+            .HasDefaultValue(false);
 
         builder.Property(x => x.CreatedAt)
             .IsRequired()

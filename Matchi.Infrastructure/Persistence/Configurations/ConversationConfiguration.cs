@@ -24,10 +24,6 @@ public class ConversationConfiguration : IEntityTypeConfiguration<Conversation>
         builder.Property(x => x.CustomerId)
             .IsRequired();
 
-        builder.Property(x => x.CreateDate)
-            .IsRequired()
-            .HasDefaultValueSql("sysutcdatetime()");
-
         builder.HasOne(x => x.Business)
             .WithMany(x => x.Conversations)
             .HasForeignKey(x => x.BusinessId)

@@ -4,19 +4,19 @@ namespace Matchi.Domain.Entities;
 
 public class Product : AuditableEntity
 {
-    public long CategoryId { get; private set; };
+    public long CategoryId { get; private set; }
 
     public string Name { get; private set; } = null!;
 
-    public string? Slug { get; private set; };
+    public string? Slug { get; private set; }
 
-    public string? Description { get; private set; };
+    public string? Description { get; private set; }
 
-    public string? Brand { get; private set; };
+    public string? Brand { get; private set; }
 
-    public string? Model { get; private set; };
+    public string? Model { get; private set; }
 
-    public string? SKU { get; private set; };
+    public string? SKU { get; private set; }
 
     public bool IsActive { get; private set; } = true;
 

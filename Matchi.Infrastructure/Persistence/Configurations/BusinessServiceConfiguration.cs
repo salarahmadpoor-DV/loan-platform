@@ -30,7 +30,7 @@ public class BusinessServiceConfiguration : IEntityTypeConfiguration<BusinessSer
 
         builder.Property(x => x.CanCustomerChooseProvider)
             .IsRequired()
-            .HasDefaultValue(0);
+            .HasDefaultValue(false);
 
         builder.Property(x => x.MinPrice)
             .HasPrecision(18, 2);

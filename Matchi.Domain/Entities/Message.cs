@@ -4,15 +4,15 @@ namespace Matchi.Domain.Entities;
 
 public class Message : Entity
 {
-    public long ConversationId { get; private set; };
+    public long ConversationId { get; private set; }
 
-    public long SenderUserId { get; private set; };
+    public long SenderUserId { get; private set; }
 
     public string Text { get; private set; } = null!;
 
-    public bool IsRead { get; private set; } = 0;
+    public bool IsRead { get; private set; } = false;
 
-    public DateTime CreatedAt { get; private set; };
+    public DateTime CreatedAt { get; private set; }
 
     public Conversation Conversation { get; private set; } = null!;
 

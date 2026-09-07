@@ -24,6 +24,6 @@ public sealed class GetServiceByIdQueryHandler : IRequestHandler<GetServiceByIdQ
             service.Id,
             service.Name,
             service.CategoryId,
-            service.Questions?.Count ?? 0);
+            service.Attributes?.Count ?? 0);
     }
 }

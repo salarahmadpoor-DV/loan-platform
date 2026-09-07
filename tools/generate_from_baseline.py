@@ -269,7 +269,8 @@ PUBLIC_SETTER = {"Role", "Permission", "UserRole", "RolePermission"}
 # Extra domain methods / constructors for key entities
 SPECIAL_ENTITIES = {
     "User", "Provider", "Business", "Customer", "Service", "ServiceCategory",
-    "ProviderService", "BusinessProvider",
+    "ProviderService", "BusinessProvider", "Request", "RequestLocation",
+    "RequestServiceAttribute",
 }
 
 
@@ -318,10 +319,15 @@ def default_csharp(col):
     if not d:
         return None
     d = d.strip()
+    if col["dtype"] == "bit":
+        if d in ("((0))", "(0)"):
+            return "false"
+        if d in ("((1))", "(1)"):
+            return "true"
     if d in ("((0))", "(0)"):
         return "0" if col["dtype"] != "decimal" else "0m"
     if d in ("((1))", "(1)"):
-        return "true" if col["dtype"] == "bit" else ("1m" if col["dtype"] == "decimal" else "1")
+        return "1m" if col["dtype"] == "decimal" else "1"
     if d == "(N'Active')":
         return '"Active"'
     if d == "(N'Open')":
@@ -386,7 +392,10 @@ def emit_entity(class_name, table, cols, navs_ref, navs_col):
                 init = f" = {d}"
         if t == "string" and d and d.startswith('"'):
             init = f" = {d}"
-        lines.append(f"    public {t} {c['name']} {{ get; {setter}; }}{init};")
+        if init:
+            lines.append(f"    public {t} {c['name']} {{ get; {setter}; }}{init};")
+        else:
+            lines.append(f"    public {t} {c['name']} {{ get; {setter}; }}")
         lines.append("")
 
     # navigations: refs first then collections
@@ -538,6 +547,36 @@ def build_ctor(class_name, props):
             "        JoinedAt = DateTime.UtcNow;",
             "    }",
         ]
+    if class_name == "Request":
+        return [
+            "    public Request(long customerId, string requestType, string title, string? description = null)",
+            "    {",
+            "        CustomerId = customerId;",
+            "        RequestType = requestType;",
+            "        Title = title;",
+            "        Description = description;",
+            "        Status = \"Open\";",
+            "    }",
+        ]
+    if class_name == "RequestLocation":
+        return [
+            "    public RequestLocation(long requestId, decimal? lat = null, decimal? lng = null, string? address = null)",
+            "    {",
+            "        RequestId = requestId;",
+            "        Lat = lat;",
+            "        Lng = lng;",
+            "        Address = address;",
+            "    }",
+        ]
+    if class_name == "RequestServiceAttribute":
+        return [
+            "    public RequestServiceAttribute(long requestServiceId, long serviceAttributeId, string? value = null)",
+            "    {",
+            "        RequestServiceId = requestServiceId;",
+            "        ServiceAttributeId = serviceAttributeId;",
+            "        Value = value;",
+            "    }",
+        ]
 
     params = []
     assigns = []
@@ -603,6 +642,7 @@ def emit_config(class_name, table, cols):
         lines.append(f'        builder.HasKey(x => new {{ {inner} }}).HasName("{pk_name}");')
     lines.append("")
 
+    skip_cfg = inherited_props(base)
     if base == "AuditableEntity":
         lines.append("        builder.ConfigureAuditable();")
         lines.append("")
@@ -610,15 +650,13 @@ def emit_config(class_name, table, cols):
         lines.append("        builder.ConfigureTimestamped();")
         lines.append("")
     else:
-        # CreateDate only if present
         names = {c["name"] for c in cols}
         if "CreateDate" in names:
             lines.append("        builder.Property(x => x.CreateDate)")
             lines.append("            .IsRequired()")
             lines.append('            .HasDefaultValueSql("sysutcdatetime()");')
             lines.append("")
-
-    skip_cfg = inherited_props(base)
+            skip_cfg = skip_cfg | {"CreateDate"}
     # still configure CreateDate on UserRole
     for c in cols:
         if c["name"] in skip_cfg:

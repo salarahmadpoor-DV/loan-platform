@@ -4,13 +4,13 @@ namespace Matchi.Domain.Entities;
 
 public class RequestService : AuditableEntity
 {
-    public long RequestId { get; private set; };
+    public long RequestId { get; private set; }
 
-    public long ServiceId { get; private set; };
+    public long ServiceId { get; private set; }
 
     public decimal Quantity { get; private set; } = 1m;
 
-    public string? Description { get; private set; };
+    public string? Description { get; private set; }
 
     public int DisplayOrder { get; private set; } = 0;
 

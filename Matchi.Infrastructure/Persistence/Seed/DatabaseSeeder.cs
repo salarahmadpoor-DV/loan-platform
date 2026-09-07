@@ -7,12 +7,8 @@ public static class DatabaseSeeder
 {
     public static async Task SeedAsync(MatchiDbContext context)
     {
-        // =========================================================
-        // 1. Permissions
-        // =========================================================
-
         var requestViewPermission =
-            await context.Set<Permission>()
+            await context.Permissions
                 .FirstOrDefaultAsync(x => x.Code == "REQUEST_VIEW");
 
         if (requestViewPermission is null)
@@ -25,19 +21,12 @@ public static class DatabaseSeeder
                 IsActive = true
             };
 
-            await context.Set<Permission>()
-                .AddAsync(requestViewPermission);
-
+            await context.Permissions.AddAsync(requestViewPermission);
             await context.SaveChangesAsync();
         }
 
-
-        // =========================================================
-        // 2. Roles
-        // =========================================================
-
         var adminRole =
-            await context.Set<Role>()
+            await context.Roles
                 .FirstOrDefaultAsync(x => x.Code == "ADMIN");
 
         if (adminRole is null)
@@ -50,216 +39,115 @@ public static class DatabaseSeeder
                 IsActive = true
             };
 
-            await context.Set<Role>()
-                .AddAsync(adminRole);
-
+            await context.Roles.AddAsync(adminRole);
             await context.SaveChangesAsync();
         }
 
-
-        // =========================================================
-        // 3. Role Permissions
-        // =========================================================
-
         var rolePermissionExists =
-            await context.Set<RolePermission>()
+            await context.RolePermissions
                 .AnyAsync(x =>
                     x.RoleId == adminRole.Id &&
                     x.PermissionId == requestViewPermission.Id);
 
         if (!rolePermissionExists)
         {
-            var rolePermission = new RolePermission
+            await context.RolePermissions.AddAsync(new RolePermission
             {
                 RoleId = adminRole.Id,
                 PermissionId = requestViewPermission.Id
-            };
-
-            await context.Set<RolePermission>()
-                .AddAsync(rolePermission);
+            });
 
             await context.SaveChangesAsync();
         }
 
-
-        // =========================================================
-        // 4. Banks
-        // =========================================================
-
-
-
-        // =========================================================
-        // 5. Demo User
-        // =========================================================
-
         var demoUser =
-            await context.Set<User>()
+            await context.Users
                 .FirstOrDefaultAsync(x => x.Mobile == "09120000000");
 
         if (demoUser is null)
         {
             demoUser = new User("09120000000");
-
             demoUser.UpdateProfile("Demo User");
             demoUser.VerifyMobile();
 
-            await context.Set<User>()
-                .AddAsync(demoUser);
-
+            await context.Users.AddAsync(demoUser);
             await context.SaveChangesAsync();
         }
 
-
-        // =========================================================
-        // 6. Assign ADMIN role to Demo User
-        // =========================================================
-
         var userRoleExists =
-            await context.Set<UserRole>()
+            await context.UserRoles
                 .AnyAsync(x =>
                     x.UserId == demoUser.Id &&
                     x.RoleId == adminRole.Id);
 
         if (!userRoleExists)
         {
-            var userRole = new UserRole
+            await context.UserRoles.AddAsync(new UserRole
             {
                 UserId = demoUser.Id,
                 RoleId = adminRole.Id,
                 CreateDate = DateTime.UtcNow
-            };
-
-            await context.Set<UserRole>()
-                .AddAsync(userRole);
+            });
 
             await context.SaveChangesAsync();
         }
 
+        if (await context.ServiceCategories.AnyAsync())
+            return;
 
-        // =========================================================
-        // 7. Service Categories / Services / Providers
-        // =========================================================
+        var plumbing = new ServiceCategory("لوله‌کشی", "plumbing");
+        var financial = new ServiceCategory("وام", "loan");
 
-        if (!await context.Set<ServiceCategory>().AnyAsync())
+        await context.ServiceCategories.AddRangeAsync(plumbing, financial);
+        await context.SaveChangesAsync();
+
+        var plumbingService = new Service("رفع نشتی و لوله‌کشی", plumbing.Id, "plumbing-repair");
+        var loanService = new Service("وام خرد", financial.Id, "micro-loan");
+
+        await context.Services.AddRangeAsync(plumbingService, loanService);
+        await context.SaveChangesAsync();
+
+        var providerSpecs = new (string Name, string Mobile, decimal Lat, decimal Lng)[]
         {
-            var plumbing =
-                new ServiceCategory("لوله‌کشی", "plumbing");
+            ("علی رضایی", "09121110001", 35.832m, 50.995m),
+            ("مهدی حسینی", "09121110002", 35.843m, 50.987m),
+            ("رضا موسوی", "09121110003", 35.829m, 50.998m),
+            ("سارا احمدپور", "09121110004", 35.836m, 50.990m),
+            ("پویا کاظمی", "09121110005", 35.838m, 50.999m)
+        };
 
-            var financial =
-                new ServiceCategory("وام", "loan");
-
-            await context.Set<ServiceCategory>()
-                .AddRangeAsync(plumbing, financial);
-
+        var providers = new List<Provider>();
+        foreach (var spec in providerSpecs)
+        {
+            var user = new User(spec.Mobile);
+            user.UpdateProfile(spec.Name);
+            user.VerifyMobile();
+            await context.Users.AddAsync(user);
             await context.SaveChangesAsync();
 
-
-            var plumbingService =
-                new Service(
-                    "رفع نشتی و لوله‌کشی",
-                    plumbing.Id);
-
-            var loanService =
-                new Service(
-                    "وام خرد",
-                    financial.Id);
-
-            await context.Set<Service>()
-                .AddRangeAsync(
-                    plumbingService,
-                    loanService);
-
-            await context.SaveChangesAsync();
-
-
-            // Sample providers
-            var providers = new List<Provider>
-            {
-                new Provider(
-                    "علی رضایی",
-                    "09121110001",
-                    35.832,
-                    50.995),
-
-                new Provider(
-                    "مهدی حسینی",
-                    "09121110002",
-                    35.843,
-                    50.987),
-
-                new Provider(
-                    "رضا موسوی",
-                    "09121110003",
-                    35.829,
-                    50.998),
-
-                new Provider(
-                    "سارا احمدپور",
-                    "09121110004",
-                    35.836,
-                    50.990),
-
-                new Provider(
-                    "پویا کاظمی",
-                    "09121110005",
-                    35.838,
-                    50.999)
-            };
-
-            await context.Set<Provider>()
-                .AddRangeAsync(providers);
-
-            await context.SaveChangesAsync();
-
-
-            // Assign plumbing service to providers
-            var providerServices =
-                providers
-                    .Select(p =>
-                        new ProviderService(
-                            p.Id,
-                            plumbingService.Id))
-                    .ToList();
-
-            await context.Set<ProviderService>()
-                .AddRangeAsync(providerServices);
-
-            await context.SaveChangesAsync();
-
-
-            // Sample business
-            var biz =
-                new Business(
-                    "تأسیسات البرز",
-                    "کرج، فلان خیابان",
-                    35.835,
-                    50.994);
-
-            await context.Set<Business>()
-                .AddAsync(biz);
-
-            await context.SaveChangesAsync();
-
-
-            // Assign both providers to business
-            var businessProviders = new List<BusinessProvider>
-            {
-                new BusinessProvider(
-                    biz.Id,
-                    providers[0].Id,
-                    "Manager"),
-
-                new BusinessProvider(
-                    biz.Id,
-                    providers[1].Id,
-                    "Technician")
-            };
-
-            await context.Set<BusinessProvider>()
-                .AddRangeAsync(businessProviders);
-
-            await context.SaveChangesAsync();
+            providers.Add(new Provider(user.Id, spec.Name, spec.Mobile, spec.Lat, spec.Lng));
         }
+
+        await context.Providers.AddRangeAsync(providers);
+        await context.SaveChangesAsync();
+
+        await context.ProviderServices.AddRangeAsync(
+            providers.Select(p => new ProviderService(p.Id, plumbingService.Id)).ToList());
+        await context.SaveChangesAsync();
+
+        var business = new Business(
+            demoUser.Id,
+            "تأسیسات البرز",
+            "کرج، فلان خیابان",
+            35.835m,
+            50.994m);
+
+        await context.Businesses.AddAsync(business);
+        await context.SaveChangesAsync();
+
+        await context.BusinessProviders.AddRangeAsync(
+            new BusinessProvider(business.Id, providers[0].Id, "Manager"),
+            new BusinessProvider(business.Id, providers[1].Id, "Technician"));
+        await context.SaveChangesAsync();
     }
 }
-

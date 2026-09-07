@@ -10,11 +10,11 @@ public class Media : Entity
 
     public string ContentType { get; private set; } = null!;
 
-    public long Size { get; private set; };
+    public long Size { get; private set; }
 
-    public string? Url { get; private set; };
+    public string? Url { get; private set; }
 
-    public DateTime CreateDate { get; private set; };
+    public DateTime CreateDate { get; private set; }
 
     public ICollection<Business> LogoBusinesses { get; private set; } = new List<Business>();
 

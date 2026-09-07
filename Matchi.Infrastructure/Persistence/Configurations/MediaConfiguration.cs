@@ -38,10 +38,6 @@ public class MediaConfiguration : IEntityTypeConfiguration<Media>
         builder.Property(x => x.Url)
             .HasMaxLength(2000);
 
-        builder.Property(x => x.CreateDate)
-            .IsRequired()
-            .HasDefaultValueSql("sysutcdatetime()");
-
         builder.HasIndex(x => x.StorageKey)
             .IsUnique()
             .HasDatabaseName("UX_Media_StorageKey");

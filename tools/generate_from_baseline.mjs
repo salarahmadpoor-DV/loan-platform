@@ -104,8 +104,12 @@ function defaultCsharp(col) {
   let d = col.default;
   if (!d) return null;
   d = d.trim();
+  if (col.dtype === "bit") {
+    if (d === "((0))" || d === "(0)") return "false";
+    if (d === "((1))" || d === "(1)") return "true";
+  }
   if (d === "((0))" || d === "(0)") return col.dtype === "decimal" ? "0m" : "0";
-  if (d === "((1))" || d === "(1)") return col.dtype === "bit" ? "true" : col.dtype === "decimal" ? "1m" : "1";
+  if (d === "((1))" || d === "(1)") return col.dtype === "decimal" ? "1m" : "1";
   if (d === "(N'Active')") return '"Active"';
   if (d === "(N'Open')") return '"Open"';
   if (d === "(N'Pending')") return '"Pending"';
@@ -222,6 +226,33 @@ function buildCtor(className, props) {
       "        JoinedAt = DateTime.UtcNow;",
       "    }",
     ],
+    Request: [
+      "    public Request(long customerId, string requestType, string title, string? description = null)",
+      "    {",
+      "        CustomerId = customerId;",
+      "        RequestType = requestType;",
+      "        Title = title;",
+      "        Description = description;",
+      '        Status = "Open";',
+      "    }",
+    ],
+    RequestLocation: [
+      "    public RequestLocation(long requestId, decimal? lat = null, decimal? lng = null, string? address = null)",
+      "    {",
+      "        RequestId = requestId;",
+      "        Lat = lat;",
+      "        Lng = lng;",
+      "        Address = address;",
+      "    }",
+    ],
+    RequestServiceAttribute: [
+      "    public RequestServiceAttribute(long requestServiceId, long serviceAttributeId, string? value = null)",
+      "    {",
+      "        RequestServiceId = requestServiceId;",
+      "        ServiceAttributeId = serviceAttributeId;",
+      "        Value = value;",
+      "    }",
+    ],
   };
   if (special[className]) return special[className];
 
@@ -257,7 +288,10 @@ function emitEntity(className, table, cols, navsRef, navsCol) {
       else if (["int", "long", "byte", "decimal"].includes(t) && c.name !== "Id") init = ` = ${d}`;
     }
     if (t === "string" && d && d.startsWith('"')) init = ` = ${d}`;
-    lines.push(`    public ${t} ${c.name} { get; ${setter}; }${init};`);
+    if (init)
+      lines.push(`    public ${t} ${c.name} { get; ${setter}; }${init};`);
+    else
+      lines.push(`    public ${t} ${c.name} { get; ${setter}; }`);
     lines.push("");
   }
   for (const [nav, typ, required] of navsRef) {
@@ -315,12 +349,13 @@ function emitConfig(className, table, cols) {
     lines.push(`        builder.HasKey(x => new { ${pk.map((c) => `x.${c}`).join(", ")} }).HasName("PK_${table}");`);
   }
   lines.push("");
+  const skip = inheritedProps(base);
   if (base === "AuditableEntity") lines.push("        builder.ConfigureAuditable();", "");
   else if (base === "TimestampedEntity") lines.push("        builder.ConfigureTimestamped();", "");
   else if (cols.some((c) => c.name === "CreateDate")) {
     lines.push("        builder.Property(x => x.CreateDate)", "            .IsRequired()", '            .HasDefaultValueSql("sysutcdatetime()");', "");
+    skip.add("CreateDate");
   }
-  const skip = inheritedProps(base);
   for (const c of cols) {
     if (skip.has(c.name) || c.name === "Id") continue;
     const chain = [];

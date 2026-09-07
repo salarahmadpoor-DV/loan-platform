@@ -32,7 +32,7 @@ public class ProductAttributeConfiguration : IEntityTypeConfiguration<ProductAtt
 
         builder.Property(x => x.IsRequired)
             .IsRequired()
-            .HasDefaultValue(0);
+            .HasDefaultValue(false);
 
         builder.Property(x => x.DisplayOrder)
             .IsRequired()

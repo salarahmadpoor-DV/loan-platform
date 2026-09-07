@@ -25,7 +25,7 @@ public class ProviderRepository : IProviderRepository
         var query = _context.ProviderServices
             .Where(ps => ps.ServiceId == serviceId)
             .Join(_context.Providers, ps => ps.ProviderId, p => p.Id, (ps, p) => p)
-            .Where(p => p.IsActive)
+            .Where(p => p.Status == "Active" && !p.IsDeleted)
             .AsNoTracking();
 
         return await query.ToListAsync(cancellationToken);

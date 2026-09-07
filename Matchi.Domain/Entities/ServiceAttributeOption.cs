@@ -4,7 +4,7 @@ namespace Matchi.Domain.Entities;
 
 public class ServiceAttributeOption : AuditableEntity
 {
-    public long ServiceAttributeId { get; private set; };
+    public long ServiceAttributeId { get; private set; }
 
     public string Value { get; private set; } = null!;
 

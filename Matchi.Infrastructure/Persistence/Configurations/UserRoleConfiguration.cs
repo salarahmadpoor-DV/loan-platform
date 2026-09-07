@@ -22,10 +22,6 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
         builder.Property(x => x.RoleId)
             .IsRequired();
 
-        builder.Property(x => x.CreateDate)
-            .IsRequired()
-            .HasDefaultValueSql("sysutcdatetime()");
-
         builder.HasOne(x => x.Role)
             .WithMany(x => x.UserRoles)
             .HasForeignKey(x => x.RoleId)

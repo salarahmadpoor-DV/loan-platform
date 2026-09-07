@@ -4,19 +4,19 @@ namespace Matchi.Domain.Entities;
 
 public class VerificationDocument : Entity
 {
-    public long VerificationId { get; private set; };
+    public long VerificationId { get; private set; }
 
-    public long MediaId { get; private set; };
+    public long MediaId { get; private set; }
 
     public string DocumentType { get; private set; } = null!;
 
     public string Status { get; private set; } = null!;
 
-    public DateTime UploadedAt { get; private set; };
+    public DateTime UploadedAt { get; private set; }
 
-    public DateTime? VerifiedAt { get; private set; };
+    public DateTime? VerifiedAt { get; private set; }
 
-    public string? RejectReason { get; private set; };
+    public string? RejectReason { get; private set; }
 
     public Media Media { get; private set; } = null!;
 

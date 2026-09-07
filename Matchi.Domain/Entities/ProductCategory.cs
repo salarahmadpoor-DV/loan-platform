@@ -4,13 +4,13 @@ namespace Matchi.Domain.Entities;
 
 public class ProductCategory : AuditableEntity
 {
-    public long? ParentId { get; private set; };
+    public long? ParentId { get; private set; }
 
     public string Name { get; private set; } = null!;
 
     public string Slug { get; private set; } = null!;
 
-    public string? Description { get; private set; };
+    public string? Description { get; private set; }
 
     public int DisplayOrder { get; private set; } = 0;
 

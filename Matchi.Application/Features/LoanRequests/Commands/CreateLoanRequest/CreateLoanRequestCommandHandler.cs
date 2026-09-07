@@ -1,4 +1,3 @@
-using Matchi.Domain.Interfaces;
 using MediatR;
 
 namespace Matchi.Application.Features.LoanRequests.Commands.CreateLoanRequest;
@@ -6,21 +5,9 @@ namespace Matchi.Application.Features.LoanRequests.Commands.CreateLoanRequest;
 public sealed class CreateLoanRequestCommandHandler
     : IRequestHandler<CreateLoanRequestCommand, long>
 {
-    private readonly ILoanRequestRepository _loanRequestRepository;
-
-    public CreateLoanRequestCommandHandler(
-        ILoanRequestRepository loanRequestRepository)
+    public Task<long> Handle(CreateLoanRequestCommand request, CancellationToken cancellationToken)
     {
-        _loanRequestRepository = loanRequestRepository;
-    }
-
-    public async Task<long> Handle(
-        CreateLoanRequestCommand request,
-        CancellationToken cancellationToken)
-    {
-        return await _loanRequestRepository.CreateAsync(
-            request.BankId,
-            request.UserId,
-            cancellationToken);
+        throw new InvalidOperationException(
+            "Loan requests are not part of the Matchi baseline model. Use service requests instead.");
     }
 }

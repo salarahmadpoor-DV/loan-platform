@@ -17,8 +17,6 @@ using System.Text;
 using System.Text.Json;
 using Matchi.Api.Authorization;
 using Microsoft.AspNetCore.Authorization;
-using Matchi.Domain.Interfaces;
-using Matchi.Infrastructure.Persistence.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -91,7 +89,6 @@ builder.Services.AddSingleton<IAuthorizationPolicyProvider,
 
 builder.Services.AddScoped<IAuthorizationHandler,
     PermissionAuthorizationHandler>();
-builder.Services.AddScoped<IBusinessRepository, BusinessRepository>();
 builder.Services.AddAuthorization();
 
 var app = builder.Build();

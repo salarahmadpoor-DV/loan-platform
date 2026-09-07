@@ -32,7 +32,7 @@ public class ServiceAttributeConfiguration : IEntityTypeConfiguration<ServiceAtt
 
         builder.Property(x => x.IsRequired)
             .IsRequired()
-            .HasDefaultValue(0);
+            .HasDefaultValue(false);
 
         builder.Property(x => x.DisplayOrder)
             .IsRequired()

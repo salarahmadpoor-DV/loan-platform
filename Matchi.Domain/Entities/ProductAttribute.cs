@@ -4,7 +4,7 @@ namespace Matchi.Domain.Entities;
 
 public class ProductAttribute : AuditableEntity
 {
-    public long ProductCategoryId { get; private set; };
+    public long ProductCategoryId { get; private set; }
 
     public string Name { get; private set; } = null!;
 
@@ -12,7 +12,7 @@ public class ProductAttribute : AuditableEntity
 
     public string DataType { get; private set; } = null!;
 
-    public bool IsRequired { get; private set; } = 0;
+    public bool IsRequired { get; private set; } = false;
 
     public int DisplayOrder { get; private set; } = 0;
 

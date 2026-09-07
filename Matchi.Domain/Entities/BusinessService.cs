@@ -4,17 +4,17 @@ namespace Matchi.Domain.Entities;
 
 public class BusinessService : AuditableEntity
 {
-    public long BusinessId { get; private set; };
+    public long BusinessId { get; private set; }
 
-    public long ServiceId { get; private set; };
+    public long ServiceId { get; private set; }
 
     public bool IsActive { get; private set; } = true;
 
-    public bool CanCustomerChooseProvider { get; private set; } = 0;
+    public bool CanCustomerChooseProvider { get; private set; } = false;
 
-    public decimal? MinPrice { get; private set; };
+    public decimal? MinPrice { get; private set; }
 
-    public decimal? MaxPrice { get; private set; };
+    public decimal? MaxPrice { get; private set; }
 
     public Business Business { get; private set; } = null!;
 

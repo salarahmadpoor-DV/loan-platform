@@ -4,13 +4,13 @@ namespace Matchi.Domain.Entities;
 
 public class Conversation : Entity
 {
-    public long RequestId { get; private set; };
+    public long RequestId { get; private set; }
 
-    public long? BusinessId { get; private set; };
+    public long? BusinessId { get; private set; }
 
-    public long CustomerId { get; private set; };
+    public long CustomerId { get; private set; }
 
-    public DateTime CreateDate { get; private set; };
+    public DateTime CreateDate { get; private set; }
 
     public Business? Business { get; private set; }
 

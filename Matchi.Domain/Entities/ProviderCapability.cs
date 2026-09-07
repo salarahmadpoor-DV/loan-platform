@@ -4,9 +4,9 @@ namespace Matchi.Domain.Entities;
 
 public class ProviderCapability : AuditableEntity
 {
-    public long ProviderId { get; private set; };
+    public long ProviderId { get; private set; }
 
-    public long ServiceAttributeId { get; private set; };
+    public long ServiceAttributeId { get; private set; }
 
     public string Value { get; private set; } = null!;
 

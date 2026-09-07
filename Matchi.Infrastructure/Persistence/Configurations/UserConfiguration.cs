@@ -24,7 +24,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(x => x.IsMobileVerified)
             .IsRequired()
-            .HasDefaultValue(0);
+            .HasDefaultValue(false);
 
         builder.HasIndex(x => x.Mobile)
             .IsUnique()

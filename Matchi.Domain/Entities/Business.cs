@@ -4,27 +4,27 @@ namespace Matchi.Domain.Entities;
 
 public class Business : AuditableEntity
 {
-    public long OwnerUserId { get; private set; };
+    public long OwnerUserId { get; private set; }
 
     public string Name { get; private set; } = null!;
 
-    public string? Description { get; private set; };
+    public string? Description { get; private set; }
 
-    public string? Mobile { get; private set; };
+    public string? Mobile { get; private set; }
 
-    public string? Address { get; private set; };
+    public string? Address { get; private set; }
 
-    public string? Province { get; private set; };
+    public string? Province { get; private set; }
 
-    public string? City { get; private set; };
+    public string? City { get; private set; }
 
-    public string? District { get; private set; };
+    public string? District { get; private set; }
 
-    public decimal? Lat { get; private set; };
+    public decimal? Lat { get; private set; }
 
-    public decimal? Lng { get; private set; };
+    public decimal? Lng { get; private set; }
 
-    public long? LogoMediaId { get; private set; };
+    public long? LogoMediaId { get; private set; }
 
     public decimal Rating { get; private set; } = 0m;
 

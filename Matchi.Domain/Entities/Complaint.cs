@@ -4,15 +4,15 @@ namespace Matchi.Domain.Entities;
 
 public class Complaint : TimestampedEntity
 {
-    public long RequestId { get; private set; };
+    public long RequestId { get; private set; }
 
-    public long? DealId { get; private set; };
+    public long? DealId { get; private set; }
 
-    public long CustomerId { get; private set; };
+    public long CustomerId { get; private set; }
 
-    public long? BusinessId { get; private set; };
+    public long? BusinessId { get; private set; }
 
-    public long? ProviderId { get; private set; };
+    public long? ProviderId { get; private set; }
 
     public string Type { get; private set; } = null!;
 
@@ -20,9 +20,9 @@ public class Complaint : TimestampedEntity
 
     public string Status { get; private set; } = "Open";
 
-    public string? Resolution { get; private set; };
+    public string? Resolution { get; private set; }
 
-    public DateTime? ResolvedAt { get; private set; };
+    public DateTime? ResolvedAt { get; private set; }
 
     public Business? Business { get; private set; }
 

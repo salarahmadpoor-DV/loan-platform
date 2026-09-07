@@ -24,14 +24,11 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<IOtpService, InMemoryOtpService>();
         services.AddScoped<IUserRoleRepository, UserRoleRepository>();
-        services.AddScoped<ILoanRequestRepository, LoanRequestRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IIntroductionRepository, IntroductionRepository>();
-
-        // new repositories for MVP
         services.AddScoped<IServiceRepository, ServiceRepository>();
         services.AddScoped<IProviderRepository, ProviderRepository>();
-        services.AddScoped<IServiceRequestRepository, ServiceRequestRepository>();
+        services.AddScoped<IBusinessRepository, BusinessRepository>();
+        services.AddScoped<IRequestRepository, RequestRepository>();
 
         return services;
     }

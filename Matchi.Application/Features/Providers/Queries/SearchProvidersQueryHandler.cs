@@ -20,6 +20,6 @@ public sealed class SearchProvidersQueryHandler : IRequestHandler<SearchProvider
             ? await _providerRepository.GetProvidersByServiceIdAsync(request.ServiceId.Value, cancellationToken)
             : Array.Empty<Matchi.Domain.Entities.Provider>();
 
-        return providers.Select(x => new ProviderDto(x.Id, x.Name, x.Rating, x.IsActive, x.Lat, x.Lng));
+        return providers.Select(ProviderDto.From);
     }
 }

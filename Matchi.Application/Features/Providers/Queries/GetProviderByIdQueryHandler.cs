@@ -20,6 +20,6 @@ public sealed class GetProviderByIdQueryHandler : IRequestHandler<GetProviderByI
         if (provider is null)
             return null;
 
-        return new ProviderDto(provider.Id, provider.Name, provider.Rating, provider.IsActive, provider.Lat, provider.Lng);
+        return ProviderDto.From(provider);
     }
 }

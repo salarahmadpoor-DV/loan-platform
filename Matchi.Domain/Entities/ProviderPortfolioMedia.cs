@@ -4,9 +4,9 @@ namespace Matchi.Domain.Entities;
 
 public class ProviderPortfolioMedia : Entity
 {
-    public long PortfolioId { get; private set; };
+    public long PortfolioId { get; private set; }
 
-    public long MediaId { get; private set; };
+    public long MediaId { get; private set; }
 
     public int DisplayOrder { get; private set; } = 0;
 

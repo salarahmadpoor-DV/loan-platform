@@ -4,21 +4,21 @@ namespace Matchi.Domain.Entities;
 
 public class ExecutionAssignment : TimestampedEntity
 {
-    public long ServiceExecutionId { get; private set; };
+    public long ServiceExecutionId { get; private set; }
 
-    public long ProviderId { get; private set; };
+    public long ProviderId { get; private set; }
 
     public string Role { get; private set; } = null!;
 
-    public bool IsPrimary { get; private set; } = 0;
+    public bool IsPrimary { get; private set; } = false;
 
     public string Status { get; private set; } = "Assigned";
 
-    public DateTime AssignedAt { get; private set; };
+    public DateTime AssignedAt { get; private set; }
 
-    public DateTime? StartAt { get; private set; };
+    public DateTime? StartAt { get; private set; }
 
-    public DateTime? EndAt { get; private set; };
+    public DateTime? EndAt { get; private set; }
 
     public Provider Provider { get; private set; } = null!;
 

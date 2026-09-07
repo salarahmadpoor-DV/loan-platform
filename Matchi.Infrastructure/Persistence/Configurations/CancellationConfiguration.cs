@@ -31,10 +31,6 @@ public class CancellationConfiguration : IEntityTypeConfiguration<Cancellation>
         builder.Property(x => x.Description)
             .HasMaxLength(2000);
 
-        builder.Property(x => x.CreateDate)
-            .IsRequired()
-            .HasDefaultValueSql("sysutcdatetime()");
-
         builder.HasOne(x => x.Deal)
             .WithMany(x => x.Cancellations)
             .HasForeignKey(x => x.DealId)

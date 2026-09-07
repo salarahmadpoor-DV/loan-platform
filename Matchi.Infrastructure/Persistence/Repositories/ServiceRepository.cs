@@ -28,6 +28,9 @@ public class ServiceRepository : IServiceRepository
 
     public async Task<Service?> GetServiceByIdAsync(long serviceId, CancellationToken cancellationToken = default)
     {
-        return await _context.Services.Include(s => s.Questions).ThenInclude(q => q.Options).AsNoTracking().FirstOrDefaultAsync(s => s.Id == serviceId, cancellationToken);
+        return await _context.Services
+            .Include(s => s.Attributes)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Id == serviceId, cancellationToken);
     }
 }

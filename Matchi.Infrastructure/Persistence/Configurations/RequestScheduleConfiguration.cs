@@ -33,7 +33,7 @@ public class RequestScheduleConfiguration : IEntityTypeConfiguration<RequestSche
 
         builder.Property(x => x.IsFlexible)
             .IsRequired()
-            .HasDefaultValue(0);
+            .HasDefaultValue(false);
 
         builder.HasOne(x => x.Request)
             .WithMany(x => x.Schedules)

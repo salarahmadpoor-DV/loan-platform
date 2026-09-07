@@ -27,10 +27,6 @@ public class BusinessPortfolioConfiguration : IEntityTypeConfiguration<BusinessP
         builder.Property(x => x.Description)
             .HasMaxLength(2000);
 
-        builder.Property(x => x.CreateDate)
-            .IsRequired()
-            .HasDefaultValueSql("sysutcdatetime()");
-
         builder.HasOne(x => x.Business)
             .WithMany(x => x.Portfolios)
             .HasForeignKey(x => x.BusinessId)

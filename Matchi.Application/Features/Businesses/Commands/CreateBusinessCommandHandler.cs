@@ -42,12 +42,11 @@ public sealed class CreateBusinessCommandHandler
                 "Authenticated user was not found.");
 
         var business = new Business(
+            userId.Value,
             request.Name,
             request.Address,
-            request.Lat,
-            request.Lng);
-
-        business.SetOwner(userId.Value);
+            request.Lat.HasValue ? (decimal)request.Lat.Value : null,
+            request.Lng.HasValue ? (decimal)request.Lng.Value : null);
 
         await _businessRepository.AddAsync(
             business,

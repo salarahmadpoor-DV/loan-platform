@@ -6,9 +6,9 @@ public class User : AuditableEntity
 {
     public string Mobile { get; private set; } = null!;
 
-    public string? Name { get; private set; };
+    public string? Name { get; private set; }
 
-    public bool IsMobileVerified { get; private set; } = 0;
+    public bool IsMobileVerified { get; private set; } = false;
 
     public Customer? Customer { get; private set; }
 

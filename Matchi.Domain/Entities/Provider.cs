@@ -4,17 +4,17 @@ namespace Matchi.Domain.Entities;
 
 public class Provider : AuditableEntity
 {
-    public long UserId { get; private set; };
+    public long UserId { get; private set; }
 
     public string Name { get; private set; } = null!;
 
     public string Mobile { get; private set; } = null!;
 
-    public string? Description { get; private set; };
+    public string? Description { get; private set; }
 
-    public decimal? Lat { get; private set; };
+    public decimal? Lat { get; private set; }
 
-    public decimal? Lng { get; private set; };
+    public decimal? Lng { get; private set; }
 
     public decimal Rating { get; private set; } = 0m;
 

@@ -10,19 +10,18 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
     {
         builder.ToTable("Permissions");
 
-        builder.HasKey(x => x.Id)
-            .HasName("PK_Permissions");
+        builder.HasKey(x => x.Id).HasName("PK_Permissions");
+        builder.Property(x => x.Id).ValueGeneratedOnAdd();
 
-        builder.Property(x => x.Id)
-            .ValueGeneratedOnAdd();
+        builder.ConfigureTimestamped();
 
         builder.Property(x => x.Name)
-            .HasMaxLength(150)
-            .IsRequired();
+            .IsRequired()
+            .HasMaxLength(150);
 
         builder.Property(x => x.Code)
-            .HasMaxLength(150)
-            .IsRequired();
+            .IsRequired()
+            .HasMaxLength(150);
 
         builder.Property(x => x.Description)
             .HasMaxLength(500);
@@ -31,18 +30,12 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
             .IsRequired()
             .HasDefaultValue(true);
 
-        builder.Property(x => x.CreateDate)
-            .IsRequired()
-            .HasDefaultValueSql("SYSUTCDATETIME()");
-
-        builder.Property(x => x.UpdateDate);
-
         builder.HasIndex(x => x.Code)
             .IsUnique()
-            .HasDatabaseName("UQ_Permissions_Code");
+            .HasDatabaseName("UX_Permissions_Code");
 
         builder.HasIndex(x => x.Name)
             .IsUnique()
-            .HasDatabaseName("UQ_Permissions_Name");
+            .HasDatabaseName("UX_Permissions_Name");
     }
 }

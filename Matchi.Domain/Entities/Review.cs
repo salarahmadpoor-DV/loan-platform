@@ -4,23 +4,34 @@ namespace Matchi.Domain.Entities;
 
 public class Review : AuditableEntity
 {
-    public long IntroductionId { get; private set; }
-    public Introduction Introduction { get; private set; } = null!;
+    public long DealId { get; private set; };
 
-    public string TargetType { get; private set; } = null!; // Provider | Business
-    public long TargetId { get; private set; }
+    public long CustomerId { get; private set; };
 
-    public int Rating { get; private set; }
-    public string? Comment { get; private set; }
+    public long? BusinessId { get; private set; };
 
-    private Review() { }
+    public long? ProviderId { get; private set; };
 
-    public Review(long introductionId, string targetType, long targetId, int rating, string? comment)
+    public byte Rating { get; private set; };
+
+    public string? Comment { get; private set; };
+
+    public Business? Business { get; private set; }
+
+    public Customer Customer { get; private set; } = null!;
+
+    public Deal Deal { get; private set; } = null!;
+
+    public Provider? Provider { get; private set; }
+
+    private Review()
     {
-        IntroductionId = introductionId;
-        TargetType = targetType;
-        TargetId = targetId;
+    }
+
+    public Review(long dealId, long customerId, byte rating)
+    {
+        DealId = dealId;
+        CustomerId = customerId;
         Rating = rating;
-        Comment = comment;
     }
 }

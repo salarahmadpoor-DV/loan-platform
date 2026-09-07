@@ -10,19 +10,25 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     {
         builder.ToTable("Users");
 
-        builder.HasKey(u => u.Id);
+        builder.HasKey(x => x.Id).HasName("PK_Users");
+        builder.Property(x => x.Id).ValueGeneratedOnAdd();
 
-        builder.Property(u => u.Mobile)
+        builder.ConfigureAuditable();
+
+        builder.Property(x => x.Mobile)
             .IsRequired()
             .HasMaxLength(20);
 
-        builder.HasIndex(u => u.Mobile)
-            .IsUnique();
-
-        builder.Property(u => u.Name)
+        builder.Property(x => x.Name)
             .HasMaxLength(200);
 
-        builder.Property(u => u.IsMobileVerified)
-            .HasDefaultValue(false);
+        builder.Property(x => x.IsMobileVerified)
+            .IsRequired()
+            .HasDefaultValue(0);
+
+        builder.HasIndex(x => x.Mobile)
+            .IsUnique()
+            .HasFilter("([IsDeleted]=(0))")
+            .HasDatabaseName("UX_Users_Mobile");
     }
 }

@@ -1,0 +1,482 @@
+BusinessAvailabilities	Id	1	bigint		19	0	NO	
+BusinessAvailabilities	BusinessId	2	bigint		19	0	NO	
+BusinessAvailabilities	DayOfWeek	3	tinyint		3	0	NO	
+BusinessAvailabilities	TimeFrom	4	time				NO	
+BusinessAvailabilities	TimeTo	5	time				NO	
+BusinessAvailabilities	IsAvailable	6	bit				NO	((1))
+BusinessAvailabilities	CreateDate	7	datetime2				NO	(sysutcdatetime())
+BusinessAvailabilities	UpdateDate	8	datetime2				YES	
+BusinessAvailabilities	IsDeleted	9	bit				NO	((0))
+Businesses	Id	1	bigint		19	0	NO	
+Businesses	OwnerUserId	2	bigint		19	0	NO	
+Businesses	Name	3	nvarchar	200			NO	
+Businesses	Description	4	nvarchar	2000			YES	
+Businesses	Mobile	5	nvarchar	20			YES	
+Businesses	Address	6	nvarchar	1000			YES	
+Businesses	Province	7	nvarchar	100			YES	
+Businesses	City	8	nvarchar	100			YES	
+Businesses	District	9	nvarchar	100			YES	
+Businesses	Lat	10	decimal		9	6	YES	
+Businesses	Lng	11	decimal		9	6	YES	
+Businesses	LogoMediaId	12	bigint		19	0	YES	
+Businesses	Rating	13	decimal		3	2	NO	((0))
+Businesses	ReviewCount	14	int		10	0	NO	((0))
+Businesses	CompletedJobCount	15	int		10	0	NO	((0))
+Businesses	Status	16	nvarchar	30			NO	(N'Active')
+Businesses	CreateDate	17	datetime2				NO	(sysutcdatetime())
+Businesses	UpdateDate	18	datetime2				YES	
+Businesses	IsDeleted	19	bit				NO	((0))
+BusinessPortfolioMedia	Id	1	bigint		19	0	NO	
+BusinessPortfolioMedia	PortfolioId	2	bigint		19	0	NO	
+BusinessPortfolioMedia	MediaId	3	bigint		19	0	NO	
+BusinessPortfolioMedia	DisplayOrder	4	int		10	0	NO	((0))
+BusinessPortfolios	Id	1	bigint		19	0	NO	
+BusinessPortfolios	BusinessId	2	bigint		19	0	NO	
+BusinessPortfolios	Title	3	nvarchar	300			NO	
+BusinessPortfolios	Description	4	nvarchar	2000			YES	
+BusinessPortfolios	CreateDate	5	datetime2				NO	(sysutcdatetime())
+BusinessProducts	Id	1	bigint		19	0	NO	
+BusinessProducts	BusinessId	2	bigint		19	0	NO	
+BusinessProducts	ProductId	3	bigint		19	0	NO	
+BusinessProducts	Price	4	decimal		18	2	YES	
+BusinessProducts	IsAvailable	5	bit				NO	((1))
+BusinessProducts	MinOrderQuantity	6	decimal		18	3	YES	
+BusinessProducts	LeadTimeDays	7	int		10	0	YES	
+BusinessProducts	CreateDate	8	datetime2				NO	(sysutcdatetime())
+BusinessProducts	UpdateDate	9	datetime2				YES	
+BusinessProducts	IsDeleted	10	bit				NO	((0))
+BusinessProviders	Id	1	bigint		19	0	NO	
+BusinessProviders	BusinessId	2	bigint		19	0	NO	
+BusinessProviders	ProviderId	3	bigint		19	0	NO	
+BusinessProviders	Role	4	nvarchar	100			NO	
+BusinessProviders	Status	5	nvarchar	30			NO	(N'Active')
+BusinessProviders	JoinedAt	6	datetime2				NO	(sysutcdatetime())
+BusinessProviders	LeftAt	7	datetime2				YES	
+BusinessProviders	CreateDate	8	datetime2				NO	(sysutcdatetime())
+BusinessProviders	UpdateDate	9	datetime2				YES	
+BusinessProviders	IsDeleted	10	bit				NO	((0))
+BusinessServiceAreas	Id	1	bigint		19	0	NO	
+BusinessServiceAreas	BusinessId	2	bigint		19	0	NO	
+BusinessServiceAreas	AreaType	3	nvarchar	30			NO	
+BusinessServiceAreas	Province	4	nvarchar	100			YES	
+BusinessServiceAreas	City	5	nvarchar	100			YES	
+BusinessServiceAreas	District	6	nvarchar	100			YES	
+BusinessServiceAreas	Lat	7	decimal		9	6	YES	
+BusinessServiceAreas	Lng	8	decimal		9	6	YES	
+BusinessServiceAreas	Radius	9	decimal		10	2	YES	
+BusinessServiceAreas	IsActive	10	bit				NO	((1))
+BusinessServiceAreas	CreateDate	11	datetime2				NO	(sysutcdatetime())
+BusinessServiceAreas	UpdateDate	12	datetime2				YES	
+BusinessServiceAreas	IsDeleted	13	bit				NO	((0))
+BusinessServices	Id	1	bigint		19	0	NO	
+BusinessServices	BusinessId	2	bigint		19	0	NO	
+BusinessServices	ServiceId	3	bigint		19	0	NO	
+BusinessServices	IsActive	4	bit				NO	((1))
+BusinessServices	CanCustomerChooseProvider	5	bit				NO	((0))
+BusinessServices	MinPrice	6	decimal		18	2	YES	
+BusinessServices	MaxPrice	7	decimal		18	2	YES	
+BusinessServices	CreateDate	8	datetime2				NO	(sysutcdatetime())
+BusinessServices	UpdateDate	9	datetime2				YES	
+BusinessServices	IsDeleted	10	bit				NO	((0))
+Cancellations	Id	1	bigint		19	0	NO	
+Cancellations	RequestId	2	bigint		19	0	NO	
+Cancellations	DealId	3	bigint		19	0	YES	
+Cancellations	CancelledByUserId	4	bigint		19	0	NO	
+Cancellations	Reason	5	nvarchar	500			NO	
+Cancellations	Description	6	nvarchar	2000			YES	
+Cancellations	CreateDate	7	datetime2				NO	(sysutcdatetime())
+Complaints	Id	1	bigint		19	0	NO	
+Complaints	RequestId	2	bigint		19	0	NO	
+Complaints	DealId	3	bigint		19	0	YES	
+Complaints	CustomerId	4	bigint		19	0	NO	
+Complaints	BusinessId	5	bigint		19	0	YES	
+Complaints	ProviderId	6	bigint		19	0	YES	
+Complaints	Type	7	nvarchar	50			NO	
+Complaints	Description	8	nvarchar	4000			NO	
+Complaints	Status	9	nvarchar	30			NO	(N'Open')
+Complaints	Resolution	10	nvarchar	4000			YES	
+Complaints	ResolvedAt	11	datetime2				YES	
+Complaints	CreateDate	12	datetime2				NO	(sysutcdatetime())
+Complaints	UpdateDate	13	datetime2				YES	
+ConversationParticipants	Id	1	bigint		19	0	NO	
+ConversationParticipants	ConversationId	2	bigint		19	0	NO	
+ConversationParticipants	UserId	3	bigint		19	0	NO	
+ConversationParticipants	JoinedAt	4	datetime2				NO	(sysutcdatetime())
+ConversationParticipants	LeftAt	5	datetime2				YES	
+Conversations	Id	1	bigint		19	0	NO	
+Conversations	RequestId	2	bigint		19	0	NO	
+Conversations	BusinessId	3	bigint		19	0	YES	
+Conversations	CustomerId	4	bigint		19	0	NO	
+Conversations	CreateDate	5	datetime2				NO	(sysutcdatetime())
+Customers	Id	1	bigint		19	0	NO	
+Customers	UserId	2	bigint		19	0	NO	
+Customers	CreateDate	3	datetime2				NO	(sysutcdatetime())
+Customers	UpdateDate	4	datetime2				YES	
+Customers	IsDeleted	5	bit				NO	((0))
+Deals	Id	1	bigint		19	0	NO	
+Deals	RequestId	2	bigint		19	0	NO	
+Deals	ProposalId	3	bigint		19	0	NO	
+Deals	CustomerId	4	bigint		19	0	NO	
+Deals	Status	5	nvarchar	30			NO	(N'Active')
+Deals	TotalPrice	6	decimal		18	2	NO	
+Deals	AcceptedAt	7	datetime2				NO	(sysutcdatetime())
+Deals	CompletedAt	8	datetime2				YES	
+Deals	CancelledAt	9	datetime2				YES	
+Deals	CreateDate	10	datetime2				NO	(sysutcdatetime())
+Deals	UpdateDate	11	datetime2				YES	
+Deals	IsDeleted	12	bit				NO	((0))
+ExecutionAssignments	Id	1	bigint		19	0	NO	
+ExecutionAssignments	ServiceExecutionId	2	bigint		19	0	NO	
+ExecutionAssignments	ProviderId	3	bigint		19	0	NO	
+ExecutionAssignments	Role	4	nvarchar	100			NO	
+ExecutionAssignments	IsPrimary	5	bit				NO	((0))
+ExecutionAssignments	Status	6	nvarchar	30			NO	(N'Assigned')
+ExecutionAssignments	AssignedAt	7	datetime2				NO	(sysutcdatetime())
+ExecutionAssignments	StartAt	8	datetime2				YES	
+ExecutionAssignments	EndAt	9	datetime2				YES	
+ExecutionAssignments	CreateDate	10	datetime2				NO	(sysutcdatetime())
+ExecutionAssignments	UpdateDate	11	datetime2				YES	
+Media	Id	1	bigint		19	0	NO	
+Media	FileName	2	nvarchar	500			NO	
+Media	StorageKey	3	nvarchar	1000			NO	
+Media	ContentType	4	nvarchar	200			NO	
+Media	Size	5	bigint		19	0	NO	
+Media	Url	6	nvarchar	2000			YES	
+Media	CreateDate	7	datetime2				NO	(sysutcdatetime())
+Messages	Id	1	bigint		19	0	NO	
+Messages	ConversationId	2	bigint		19	0	NO	
+Messages	SenderUserId	3	bigint		19	0	NO	
+Messages	Text	4	nvarchar	-1			NO	
+Messages	IsRead	5	bit				NO	((0))
+Messages	CreatedAt	6	datetime2				NO	(sysutcdatetime())
+Permissions	Id	1	bigint		19	0	NO	
+Permissions	Name	2	nvarchar	150			NO	
+Permissions	Code	3	nvarchar	150			NO	
+Permissions	Description	4	nvarchar	500			YES	
+Permissions	IsActive	5	bit				NO	((1))
+Permissions	CreateDate	6	datetime2				NO	(sysutcdatetime())
+Permissions	UpdateDate	7	datetime2				YES	
+ProductAttributeOptions	Id	1	bigint		19	0	NO	
+ProductAttributeOptions	ProductAttributeId	2	bigint		19	0	NO	
+ProductAttributeOptions	Value	3	nvarchar	200			NO	
+ProductAttributeOptions	DisplayName	4	nvarchar	200			NO	
+ProductAttributeOptions	DisplayOrder	5	int		10	0	NO	((0))
+ProductAttributeOptions	IsActive	6	bit				NO	((1))
+ProductAttributeOptions	CreateDate	7	datetime2				NO	(sysutcdatetime())
+ProductAttributeOptions	UpdateDate	8	datetime2				YES	
+ProductAttributeOptions	IsDeleted	9	bit				NO	((0))
+ProductAttributes	Id	1	bigint		19	0	NO	
+ProductAttributes	ProductCategoryId	2	bigint		19	0	NO	
+ProductAttributes	Name	3	nvarchar	200			NO	
+ProductAttributes	Code	4	nvarchar	100			NO	
+ProductAttributes	DataType	5	nvarchar	30			NO	
+ProductAttributes	IsRequired	6	bit				NO	((0))
+ProductAttributes	DisplayOrder	7	int		10	0	NO	((0))
+ProductAttributes	IsActive	8	bit				NO	((1))
+ProductAttributes	CreateDate	9	datetime2				NO	(sysutcdatetime())
+ProductAttributes	UpdateDate	10	datetime2				YES	
+ProductAttributes	IsDeleted	11	bit				NO	((0))
+ProductAttributeValues	Id	1	bigint		19	0	NO	
+ProductAttributeValues	ProductId	2	bigint		19	0	NO	
+ProductAttributeValues	ProductAttributeId	3	bigint		19	0	NO	
+ProductAttributeValues	Value	4	nvarchar	2000			NO	
+ProductAttributeValues	CreateDate	5	datetime2				NO	(sysutcdatetime())
+ProductAttributeValues	UpdateDate	6	datetime2				YES	
+ProductAttributeValues	IsDeleted	7	bit				NO	((0))
+ProductCategories	Id	1	bigint		19	0	NO	
+ProductCategories	ParentId	2	bigint		19	0	YES	
+ProductCategories	Name	3	nvarchar	200			NO	
+ProductCategories	Slug	4	nvarchar	200			NO	
+ProductCategories	Description	5	nvarchar	2000			YES	
+ProductCategories	DisplayOrder	6	int		10	0	NO	((0))
+ProductCategories	IsActive	7	bit				NO	((1))
+ProductCategories	CreateDate	8	datetime2				NO	(sysutcdatetime())
+ProductCategories	UpdateDate	9	datetime2				YES	
+ProductCategories	IsDeleted	10	bit				NO	((0))
+ProductDeliveries	Id	1	bigint		19	0	NO	
+ProductDeliveries	DealId	2	bigint		19	0	NO	
+ProductDeliveries	Status	3	nvarchar	30			NO	(N'Pending')
+ProductDeliveries	Address	4	nvarchar	1000			YES	
+ProductDeliveries	Province	5	nvarchar	100			YES	
+ProductDeliveries	City	6	nvarchar	100			YES	
+ProductDeliveries	District	7	nvarchar	100			YES	
+ProductDeliveries	Lat	8	decimal		9	6	YES	
+ProductDeliveries	Lng	9	decimal		9	6	YES	
+ProductDeliveries	ScheduledDate	10	date				YES	
+ProductDeliveries	DeliveredAt	11	datetime2				YES	
+ProductDeliveries	TrackingCode	12	nvarchar	200			YES	
+ProductDeliveries	CreateDate	13	datetime2				NO	(sysutcdatetime())
+ProductDeliveries	UpdateDate	14	datetime2				YES	
+Products	Id	1	bigint		19	0	NO	
+Products	CategoryId	2	bigint		19	0	NO	
+Products	Name	3	nvarchar	300			NO	
+Products	Slug	4	nvarchar	300			YES	
+Products	Description	5	nvarchar	4000			YES	
+Products	Brand	6	nvarchar	200			YES	
+Products	Model	7	nvarchar	200			YES	
+Products	SKU	8	nvarchar	100			YES	
+Products	IsActive	9	bit				NO	((1))
+Products	CreateDate	10	datetime2				NO	(sysutcdatetime())
+Products	UpdateDate	11	datetime2				YES	
+Products	IsDeleted	12	bit				NO	((0))
+ProposalItems	Id	1	bigint		19	0	NO	
+ProposalItems	ProposalId	2	bigint		19	0	NO	
+ProposalItems	ItemType	3	nvarchar	20			NO	
+ProposalItems	ProductId	4	bigint		19	0	YES	
+ProposalItems	ServiceId	5	bigint		19	0	YES	
+ProposalItems	Description	6	nvarchar	2000			YES	
+ProposalItems	Quantity	7	decimal		18	3	NO	((1))
+ProposalItems	UnitPrice	8	decimal		18	2	NO	
+ProposalItems	TotalPrice	9	decimal		18	2	NO	
+ProposalItems	DisplayOrder	10	int		10	0	NO	((0))
+ProposalItems	CreateDate	11	datetime2				NO	(sysutcdatetime())
+ProposalItems	UpdateDate	12	datetime2				YES	
+Proposals	Id	1	bigint		19	0	NO	
+Proposals	RequestId	2	bigint		19	0	NO	
+Proposals	BusinessId	3	bigint		19	0	YES	
+Proposals	ProviderId	4	bigint		19	0	YES	
+Proposals	TotalPrice	5	decimal		18	2	NO	
+Proposals	DeliveryFee	6	decimal		18	2	NO	((0))
+Proposals	Message	7	nvarchar	2000			YES	
+Proposals	ProposedDate	8	date				YES	
+Proposals	ProposedTimeFrom	9	time				YES	
+Proposals	ProposedTimeTo	10	time				YES	
+Proposals	Status	11	nvarchar	30			NO	(N'Pending')
+Proposals	ExpireAt	12	datetime2				YES	
+Proposals	CreateDate	13	datetime2				NO	(sysutcdatetime())
+Proposals	UpdateDate	14	datetime2				YES	
+Proposals	IsDeleted	15	bit				NO	((0))
+ProviderAvailabilities	Id	1	bigint		19	0	NO	
+ProviderAvailabilities	ProviderId	2	bigint		19	0	NO	
+ProviderAvailabilities	DayOfWeek	3	tinyint		3	0	NO	
+ProviderAvailabilities	TimeFrom	4	time				NO	
+ProviderAvailabilities	TimeTo	5	time				NO	
+ProviderAvailabilities	IsAvailable	6	bit				NO	((1))
+ProviderAvailabilities	CreateDate	7	datetime2				NO	(sysutcdatetime())
+ProviderAvailabilities	UpdateDate	8	datetime2				YES	
+ProviderAvailabilities	IsDeleted	9	bit				NO	((0))
+ProviderCapabilities	Id	1	bigint		19	0	NO	
+ProviderCapabilities	ProviderId	2	bigint		19	0	NO	
+ProviderCapabilities	ServiceAttributeId	3	bigint		19	0	NO	
+ProviderCapabilities	Value	4	nvarchar	500			NO	
+ProviderCapabilities	CreateDate	5	datetime2				NO	(sysutcdatetime())
+ProviderCapabilities	UpdateDate	6	datetime2				YES	
+ProviderCapabilities	IsDeleted	7	bit				NO	((0))
+ProviderPortfolioMedia	Id	1	bigint		19	0	NO	
+ProviderPortfolioMedia	PortfolioId	2	bigint		19	0	NO	
+ProviderPortfolioMedia	MediaId	3	bigint		19	0	NO	
+ProviderPortfolioMedia	DisplayOrder	4	int		10	0	NO	((0))
+ProviderPortfolios	Id	1	bigint		19	0	NO	
+ProviderPortfolios	ProviderId	2	bigint		19	0	NO	
+ProviderPortfolios	Title	3	nvarchar	300			NO	
+ProviderPortfolios	Description	4	nvarchar	2000			YES	
+ProviderPortfolios	CreateDate	5	datetime2				NO	(sysutcdatetime())
+ProviderProducts	Id	1	bigint		19	0	NO	
+ProviderProducts	ProviderId	2	bigint		19	0	NO	
+ProviderProducts	ProductId	3	bigint		19	0	NO	
+ProviderProducts	Price	4	decimal		18	2	YES	
+ProviderProducts	IsAvailable	5	bit				NO	((1))
+ProviderProducts	MinOrderQuantity	6	decimal		18	3	YES	
+ProviderProducts	LeadTimeDays	7	int		10	0	YES	
+ProviderProducts	CreateDate	8	datetime2				NO	(sysutcdatetime())
+ProviderProducts	UpdateDate	9	datetime2				YES	
+ProviderProducts	IsDeleted	10	bit				NO	((0))
+Providers	Id	1	bigint		19	0	NO	
+Providers	UserId	2	bigint		19	0	NO	
+Providers	Name	3	nvarchar	200			NO	
+Providers	Mobile	4	nvarchar	20			NO	
+Providers	Description	5	nvarchar	2000			YES	
+Providers	Lat	6	decimal		9	6	YES	
+Providers	Lng	7	decimal		9	6	YES	
+Providers	Rating	8	decimal		3	2	NO	((0))
+Providers	ReviewCount	9	int		10	0	NO	((0))
+Providers	CompletedJobCount	10	int		10	0	NO	((0))
+Providers	Status	11	nvarchar	30			NO	(N'Active')
+Providers	CreateDate	12	datetime2				NO	(sysutcdatetime())
+Providers	UpdateDate	13	datetime2				YES	
+Providers	IsDeleted	14	bit				NO	((0))
+ProviderServiceAreas	Id	1	bigint		19	0	NO	
+ProviderServiceAreas	ProviderId	2	bigint		19	0	NO	
+ProviderServiceAreas	AreaType	3	nvarchar	30			NO	
+ProviderServiceAreas	Province	4	nvarchar	100			YES	
+ProviderServiceAreas	City	5	nvarchar	100			YES	
+ProviderServiceAreas	District	6	nvarchar	100			YES	
+ProviderServiceAreas	Lat	7	decimal		9	6	YES	
+ProviderServiceAreas	Lng	8	decimal		9	6	YES	
+ProviderServiceAreas	Radius	9	decimal		10	2	YES	
+ProviderServiceAreas	IsActive	10	bit				NO	((1))
+ProviderServiceAreas	CreateDate	11	datetime2				NO	(sysutcdatetime())
+ProviderServiceAreas	UpdateDate	12	datetime2				YES	
+ProviderServiceAreas	IsDeleted	13	bit				NO	((0))
+ProviderServices	Id	1	bigint		19	0	NO	
+ProviderServices	ProviderId	2	bigint		19	0	NO	
+ProviderServices	ServiceId	3	bigint		19	0	NO	
+ProviderServices	IsActive	4	bit				NO	((1))
+ProviderServices	CreateDate	5	datetime2				NO	(sysutcdatetime())
+ProviderServices	UpdateDate	6	datetime2				YES	
+ProviderServices	IsDeleted	7	bit				NO	((0))
+RequestLocations	Id	1	bigint		19	0	NO	
+RequestLocations	RequestId	2	bigint		19	0	NO	
+RequestLocations	Address	3	nvarchar	1000			YES	
+RequestLocations	Province	4	nvarchar	100			YES	
+RequestLocations	City	5	nvarchar	100			YES	
+RequestLocations	District	6	nvarchar	100			YES	
+RequestLocations	Lat	7	decimal		9	6	YES	
+RequestLocations	Lng	8	decimal		9	6	YES	
+RequestLocations	CreateDate	9	datetime2				NO	(sysutcdatetime())
+RequestLocations	UpdateDate	10	datetime2				YES	
+RequestProductAttributes	Id	1	bigint		19	0	NO	
+RequestProductAttributes	RequestProductId	2	bigint		19	0	NO	
+RequestProductAttributes	ProductAttributeId	3	bigint		19	0	NO	
+RequestProductAttributes	Value	4	nvarchar	2000			YES	
+RequestProductAttributes	CreateDate	5	datetime2				NO	(sysutcdatetime())
+RequestProductAttributes	UpdateDate	6	datetime2				YES	
+RequestProductAttributes	IsDeleted	7	bit				NO	((0))
+RequestProducts	Id	1	bigint		19	0	NO	
+RequestProducts	RequestId	2	bigint		19	0	NO	
+RequestProducts	ProductId	3	bigint		19	0	YES	
+RequestProducts	ProductCategoryId	4	bigint		19	0	YES	
+RequestProducts	Quantity	5	decimal		18	3	NO	((1))
+RequestProducts	Unit	6	nvarchar	50			YES	
+RequestProducts	Description	7	nvarchar	2000			YES	
+RequestProducts	DisplayOrder	8	int		10	0	NO	((0))
+RequestProducts	CreateDate	9	datetime2				NO	(sysutcdatetime())
+RequestProducts	UpdateDate	10	datetime2				YES	
+RequestProducts	IsDeleted	11	bit				NO	((0))
+Requests	Id	1	bigint		19	0	NO	
+Requests	CustomerId	2	bigint		19	0	NO	
+Requests	RequestType	3	nvarchar	30			NO	
+Requests	Title	4	nvarchar	500			NO	
+Requests	Description	5	nvarchar	-1			YES	
+Requests	Status	6	nvarchar	50			NO	(N'Open')
+Requests	CreateDate	7	datetime2				NO	(sysutcdatetime())
+Requests	UpdateDate	8	datetime2				YES	
+Requests	IsDeleted	9	bit				NO	((0))
+RequestSchedules	Id	1	bigint		19	0	NO	
+RequestSchedules	RequestId	2	bigint		19	0	NO	
+RequestSchedules	Date	3	date				NO	
+RequestSchedules	TimeFrom	4	time				YES	
+RequestSchedules	TimeTo	5	time				YES	
+RequestSchedules	IsFlexible	6	bit				NO	((0))
+RequestSchedules	CreateDate	7	datetime2				NO	(sysutcdatetime())
+RequestSchedules	UpdateDate	8	datetime2				YES	
+RequestServiceAttributes	Id	1	bigint		19	0	NO	
+RequestServiceAttributes	RequestServiceId	2	bigint		19	0	NO	
+RequestServiceAttributes	ServiceAttributeId	3	bigint		19	0	NO	
+RequestServiceAttributes	Value	4	nvarchar	2000			YES	
+RequestServiceAttributes	CreateDate	5	datetime2				NO	(sysutcdatetime())
+RequestServiceAttributes	UpdateDate	6	datetime2				YES	
+RequestServiceAttributes	IsDeleted	7	bit				NO	((0))
+RequestServices	Id	1	bigint		19	0	NO	
+RequestServices	RequestId	2	bigint		19	0	NO	
+RequestServices	ServiceId	3	bigint		19	0	NO	
+RequestServices	Quantity	4	decimal		18	3	NO	((1))
+RequestServices	Description	5	nvarchar	2000			YES	
+RequestServices	DisplayOrder	6	int		10	0	NO	((0))
+RequestServices	CreateDate	7	datetime2				NO	(sysutcdatetime())
+RequestServices	UpdateDate	8	datetime2				YES	
+RequestServices	IsDeleted	9	bit				NO	((0))
+Reviews	Id	1	bigint		19	0	NO	
+Reviews	DealId	2	bigint		19	0	NO	
+Reviews	CustomerId	3	bigint		19	0	NO	
+Reviews	BusinessId	4	bigint		19	0	YES	
+Reviews	ProviderId	5	bigint		19	0	YES	
+Reviews	Rating	6	tinyint		3	0	NO	
+Reviews	Comment	7	nvarchar	2000			YES	
+Reviews	CreateDate	8	datetime2				NO	(sysutcdatetime())
+Reviews	UpdateDate	9	datetime2				YES	
+Reviews	IsDeleted	10	bit				NO	((0))
+RolePermissions	RoleId	1	bigint		19	0	NO	
+RolePermissions	PermissionId	2	bigint		19	0	NO	
+RolePermissions	CreateDate	3	datetime2				NO	(sysutcdatetime())
+Roles	Id	1	bigint		19	0	NO	
+Roles	Name	2	nvarchar	100			NO	
+Roles	Code	3	nvarchar	100			NO	
+Roles	Description	4	nvarchar	500			YES	
+Roles	IsActive	5	bit				NO	((1))
+Roles	CreateDate	6	datetime2				NO	(sysutcdatetime())
+Roles	UpdateDate	7	datetime2				YES	
+ServiceAttributeOptions	Id	1	bigint		19	0	NO	
+ServiceAttributeOptions	ServiceAttributeId	2	bigint		19	0	NO	
+ServiceAttributeOptions	Value	3	nvarchar	200			NO	
+ServiceAttributeOptions	DisplayName	4	nvarchar	200			NO	
+ServiceAttributeOptions	DisplayOrder	5	int		10	0	NO	((0))
+ServiceAttributeOptions	IsActive	6	bit				NO	((1))
+ServiceAttributeOptions	CreateDate	7	datetime2				NO	(sysutcdatetime())
+ServiceAttributeOptions	UpdateDate	8	datetime2				YES	
+ServiceAttributeOptions	IsDeleted	9	bit				NO	((0))
+ServiceAttributes	Id	1	bigint		19	0	NO	
+ServiceAttributes	ServiceId	2	bigint		19	0	NO	
+ServiceAttributes	Name	3	nvarchar	200			NO	
+ServiceAttributes	Code	4	nvarchar	100			NO	
+ServiceAttributes	DataType	5	nvarchar	30			NO	
+ServiceAttributes	IsRequired	6	bit				NO	((0))
+ServiceAttributes	DisplayOrder	7	int		10	0	NO	((0))
+ServiceAttributes	IsActive	8	bit				NO	((1))
+ServiceAttributes	CreateDate	9	datetime2				NO	(sysutcdatetime())
+ServiceAttributes	UpdateDate	10	datetime2				YES	
+ServiceAttributes	IsDeleted	11	bit				NO	((0))
+ServiceCategories	Id	1	bigint		19	0	NO	
+ServiceCategories	Name	2	nvarchar	200			NO	
+ServiceCategories	Slug	3	nvarchar	200			NO	
+ServiceCategories	DisplayOrder	4	int		10	0	NO	((0))
+ServiceCategories	IsActive	5	bit				NO	((1))
+ServiceCategories	CreateDate	6	datetime2				NO	(sysutcdatetime())
+ServiceCategories	UpdateDate	7	datetime2				YES	
+ServiceCategories	IsDeleted	8	bit				NO	((0))
+ServiceExecutions	Id	1	bigint		19	0	NO	
+ServiceExecutions	DealId	2	bigint		19	0	NO	
+ServiceExecutions	BusinessId	3	bigint		19	0	YES	
+ServiceExecutions	Status	4	nvarchar	30			NO	(N'Pending')
+ServiceExecutions	ScheduledDate	5	date				YES	
+ServiceExecutions	ScheduledTimeFrom	6	time				YES	
+ServiceExecutions	ScheduledTimeTo	7	time				YES	
+ServiceExecutions	StartedAt	8	datetime2				YES	
+ServiceExecutions	CompletedAt	9	datetime2				YES	
+ServiceExecutions	CreateDate	10	datetime2				NO	(sysutcdatetime())
+ServiceExecutions	UpdateDate	11	datetime2				YES	
+Services	Id	1	bigint		19	0	NO	
+Services	CategoryId	2	bigint		19	0	NO	
+Services	Name	3	nvarchar	200			NO	
+Services	Slug	4	nvarchar	200			YES	
+Services	Description	5	nvarchar	2000			YES	
+Services	DisplayOrder	6	int		10	0	NO	((0))
+Services	IsActive	7	bit				NO	((1))
+Services	CreateDate	8	datetime2				NO	(sysutcdatetime())
+Services	UpdateDate	9	datetime2				YES	
+Services	IsDeleted	10	bit				NO	((0))
+TrustScores	Id	1	bigint		19	0	NO	
+TrustScores	EntityType	2	nvarchar	30			NO	
+TrustScores	EntityId	3	bigint		19	0	NO	
+TrustScores	Score	4	decimal		5	2	NO	
+TrustScores	CalculatedAt	5	datetime2				NO	(sysutcdatetime())
+UserRoles	UserId	1	bigint		19	0	NO	
+UserRoles	RoleId	2	bigint		19	0	NO	
+UserRoles	CreateDate	3	datetime2				NO	(sysutcdatetime())
+Users	Id	1	bigint		19	0	NO	
+Users	Mobile	2	nvarchar	20			NO	
+Users	Name	3	nvarchar	200			YES	
+Users	IsMobileVerified	4	bit				NO	((0))
+Users	CreateDate	5	datetime2				NO	(sysutcdatetime())
+Users	UpdateDate	6	datetime2				YES	
+Users	IsDeleted	7	bit				NO	((0))
+VerificationDocuments	Id	1	bigint		19	0	NO	
+VerificationDocuments	VerificationId	2	bigint		19	0	NO	
+VerificationDocuments	MediaId	3	bigint		19	0	NO	
+VerificationDocuments	DocumentType	4	nvarchar	50			NO	
+VerificationDocuments	Status	5	nvarchar	30			NO	
+VerificationDocuments	UploadedAt	6	datetime2				NO	(sysutcdatetime())
+VerificationDocuments	VerifiedAt	7	datetime2				YES	
+VerificationDocuments	RejectReason	8	nvarchar	1000			YES	
+Verifications	Id	1	bigint		19	0	NO	
+Verifications	EntityType	2	nvarchar	30			NO	
+Verifications	EntityId	3	bigint		19	0	NO	
+Verifications	VerificationType	4	nvarchar	50			NO	
+Verifications	Status	5	nvarchar	30			NO	
+Verifications	Provider	6	nvarchar	100			YES	
+Verifications	Reference	7	nvarchar	200			YES	
+Verifications	VerifiedAt	8	datetime2				YES	
+Verifications	ExpireAt	9	datetime2				YES	
+Verifications	RejectReason	10	nvarchar	1000			YES	
+Verifications	CreateDate	11	datetime2				NO	(sysutcdatetime())
+Verifications	UpdateDate	12	datetime2				YES	

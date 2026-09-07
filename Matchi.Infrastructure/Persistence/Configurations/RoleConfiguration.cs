@@ -10,19 +10,18 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
     {
         builder.ToTable("Roles");
 
-        builder.HasKey(x => x.Id)
-            .HasName("PK_Roles");
+        builder.HasKey(x => x.Id).HasName("PK_Roles");
+        builder.Property(x => x.Id).ValueGeneratedOnAdd();
 
-        builder.Property(x => x.Id)
-            .ValueGeneratedOnAdd();
+        builder.ConfigureTimestamped();
 
         builder.Property(x => x.Name)
-            .HasMaxLength(100)
-            .IsRequired();
+            .IsRequired()
+            .HasMaxLength(100);
 
         builder.Property(x => x.Code)
-            .HasMaxLength(100)
-            .IsRequired();
+            .IsRequired()
+            .HasMaxLength(100);
 
         builder.Property(x => x.Description)
             .HasMaxLength(500);
@@ -31,18 +30,12 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
             .IsRequired()
             .HasDefaultValue(true);
 
-        builder.Property(x => x.CreateDate)
-            .IsRequired()
-            .HasDefaultValueSql("SYSUTCDATETIME()");
-
-        builder.Property(x => x.UpdateDate);
-
         builder.HasIndex(x => x.Code)
             .IsUnique()
-            .HasDatabaseName("UQ_Roles_Code");
+            .HasDatabaseName("UX_Roles_Code");
 
         builder.HasIndex(x => x.Name)
             .IsUnique()
-            .HasDatabaseName("UQ_Roles_Name");
+            .HasDatabaseName("UX_Roles_Name");
     }
 }

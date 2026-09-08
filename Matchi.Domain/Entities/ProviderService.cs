@@ -24,4 +24,16 @@ public class ProviderService : AuditableEntity
         ServiceId = serviceId;
         IsActive = true;
     }
+
+    public void SetActive(bool isActive)
+    {
+        IsActive = isActive;
+        SetUpdated();
+    }
+
+    public void Reactivate()
+    {
+        Restore();
+        IsActive = true;
+    }
 }

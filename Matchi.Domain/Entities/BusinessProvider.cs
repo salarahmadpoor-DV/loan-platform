@@ -32,4 +32,29 @@ public class BusinessProvider : AuditableEntity
         Status = "Active";
         JoinedAt = DateTime.UtcNow;
     }
+
+    public void UpdateMembership(string role, string status)
+    {
+        Role = role;
+        Status = status;
+        if (string.Equals(status, "Active", StringComparison.OrdinalIgnoreCase))
+            LeftAt = null;
+        SetUpdated();
+    }
+
+    public void Leave()
+    {
+        Status = "Inactive";
+        LeftAt = DateTime.UtcNow;
+        SoftDelete();
+    }
+
+    public void Reactivate(string role)
+    {
+        Restore();
+        Role = role;
+        Status = "Active";
+        LeftAt = null;
+        JoinedAt = DateTime.UtcNow;
+    }
 }

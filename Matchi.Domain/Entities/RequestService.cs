@@ -24,9 +24,30 @@ public class RequestService : AuditableEntity
     {
     }
 
-    public RequestService(long requestId, long serviceId)
+    public RequestService(
+        long requestId,
+        long serviceId,
+        decimal quantity = 1m,
+        string? description = null,
+        int displayOrder = 0)
     {
         RequestId = requestId;
         ServiceId = serviceId;
+        Quantity = quantity;
+        Description = description;
+        DisplayOrder = displayOrder;
+    }
+
+    public void AddAttribute(long serviceAttributeId, string? value)
+    {
+        Attributes.Add(new RequestServiceAttribute(Id, serviceAttributeId, value));
+    }
+
+    public void Retire()
+    {
+        foreach (var attribute in Attributes)
+            attribute.SoftDelete();
+
+        SoftDelete();
     }
 }

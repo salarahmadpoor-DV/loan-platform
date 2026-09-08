@@ -40,11 +40,27 @@ public class Deal : AuditableEntity
     {
     }
 
-    public Deal(long requestId, long proposalId, long customerId, decimal totalPrice)
+    private Deal(long requestId, long proposalId, long customerId, decimal totalPrice, DateTime acceptedAt)
     {
+        if (requestId <= 0)
+            throw new InvalidOperationException("RequestId must be greater than zero.");
+        if (proposalId <= 0)
+            throw new InvalidOperationException("ProposalId must be greater than zero.");
+        if (customerId <= 0)
+            throw new InvalidOperationException("CustomerId must be greater than zero.");
+        if (totalPrice < 0m)
+            throw new InvalidOperationException("TotalPrice cannot be negative.");
+
         RequestId = requestId;
         ProposalId = proposalId;
         CustomerId = customerId;
         TotalPrice = totalPrice;
+        Status = "Active";
+        AcceptedAt = acceptedAt;
+    }
+
+    public static Deal Create(long requestId, long proposalId, long customerId, decimal totalPrice)
+    {
+        return new Deal(requestId, proposalId, customerId, totalPrice, DateTime.UtcNow);
     }
 }

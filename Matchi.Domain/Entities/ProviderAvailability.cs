@@ -26,5 +26,15 @@ public class ProviderAvailability : AuditableEntity
         DayOfWeek = dayOfWeek;
         TimeFrom = timeFrom;
         TimeTo = timeTo;
+        IsAvailable = true;
+    }
+
+    public void UpdateSlot(byte dayOfWeek, TimeSpan timeFrom, TimeSpan timeTo, bool isAvailable)
+    {
+        DayOfWeek = dayOfWeek;
+        TimeFrom = timeFrom;
+        TimeTo = timeTo;
+        IsAvailable = isAvailable;
+        SetUpdated();
     }
 }

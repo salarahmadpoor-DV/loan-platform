@@ -28,5 +28,21 @@ public class BusinessService : AuditableEntity
     {
         BusinessId = businessId;
         ServiceId = serviceId;
+        IsActive = true;
+    }
+
+    public void UpdateOffer(bool isActive, bool canCustomerChooseProvider, decimal? minPrice, decimal? maxPrice)
+    {
+        IsActive = isActive;
+        CanCustomerChooseProvider = canCustomerChooseProvider;
+        MinPrice = minPrice;
+        MaxPrice = maxPrice;
+        SetUpdated();
+    }
+
+    public void Reactivate(bool isActive, bool canCustomerChooseProvider, decimal? minPrice, decimal? maxPrice)
+    {
+        Restore();
+        UpdateOffer(isActive, canCustomerChooseProvider, minPrice, maxPrice);
     }
 }

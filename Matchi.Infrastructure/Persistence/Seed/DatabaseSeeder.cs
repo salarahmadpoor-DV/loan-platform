@@ -7,57 +7,36 @@ public static class DatabaseSeeder
 {
     public static async Task SeedAsync(MatchiDbContext context)
     {
-        var requestViewPermission =
-            await context.Permissions
-                .FirstOrDefaultAsync(x => x.Code == "REQUEST_VIEW");
+        var userRole = await EnsureRoleAsync(context, "USER", "کاربر", "Authenticated marketplace user");
+        var adminRole = await EnsureRoleAsync(context, "ADMIN", "مدیر سیستم", "مدیر سیستم با دسترسی کامل");
 
-        if (requestViewPermission is null)
+        var selfService = new[]
         {
-            requestViewPermission = new Permission
-            {
-                Name = "مشاهده درخواست‌ها",
-                Code = "REQUEST_VIEW",
-                Description = "اجازه مشاهده درخواست‌ها",
-                IsActive = true
-            };
+            ("PROVIDER_VIEW", "مشاهده ارائه‌دهنده"),
+            ("PROVIDER_CREATE", "ایجاد ارائه‌دهنده"),
+            ("PROVIDER_EDIT", "ویرایش ارائه‌دهنده"),
+            ("BUSINESS_VIEW", "مشاهده کسب‌وکار"),
+            ("BUSINESS_CREATE", "ایجاد کسب‌وکار"),
+            ("BUSINESS_EDIT", "ویرایش کسب‌وکار")
+        };
 
-            await context.Permissions.AddAsync(requestViewPermission);
-            await context.SaveChangesAsync();
-        }
-
-        var adminRole =
-            await context.Roles
-                .FirstOrDefaultAsync(x => x.Code == "ADMIN");
-
-        if (adminRole is null)
+        var catalogAdmin = new[]
         {
-            adminRole = new Role
-            {
-                Name = "مدیر سیستم",
-                Code = "ADMIN",
-                Description = "مدیر سیستم با دسترسی کامل",
-                IsActive = true
-            };
+            ("SERVICE_VIEW", "مشاهده خدمت"),
+            ("SERVICE_CREATE", "ایجاد خدمت"),
+            ("SERVICE_EDIT", "ویرایش خدمت"),
+            ("PRODUCT_VIEW", "مشاهده محصول"),
+            ("PRODUCT_CREATE", "ایجاد محصول"),
+            ("PRODUCT_EDIT", "ویرایش محصول"),
+            ("REQUEST_VIEW", "مشاهده درخواست‌ها")
+        };
 
-            await context.Roles.AddAsync(adminRole);
-            await context.SaveChangesAsync();
-        }
-
-        var rolePermissionExists =
-            await context.RolePermissions
-                .AnyAsync(x =>
-                    x.RoleId == adminRole.Id &&
-                    x.PermissionId == requestViewPermission.Id);
-
-        if (!rolePermissionExists)
+        foreach (var (code, name) in selfService.Concat(catalogAdmin))
         {
-            await context.RolePermissions.AddAsync(new RolePermission
-            {
-                RoleId = adminRole.Id,
-                PermissionId = requestViewPermission.Id
-            });
-
-            await context.SaveChangesAsync();
+            var permission = await EnsurePermissionAsync(context, code, name);
+            await EnsureRolePermissionAsync(context, adminRole.Id, permission.Id);
+            if (selfService.Any(x => x.Item1 == code))
+                await EnsureRolePermissionAsync(context, userRole.Id, permission.Id);
         }
 
         var demoUser =
@@ -96,15 +75,13 @@ public static class DatabaseSeeder
             return;
 
         var plumbing = new ServiceCategory("لوله‌کشی", "plumbing");
-        var financial = new ServiceCategory("وام", "loan");
 
-        await context.ServiceCategories.AddRangeAsync(plumbing, financial);
+        await context.ServiceCategories.AddAsync(plumbing);
         await context.SaveChangesAsync();
 
         var plumbingService = new Service("رفع نشتی و لوله‌کشی", plumbing.Id, "plumbing-repair");
-        var loanService = new Service("وام خرد", financial.Id, "micro-loan");
 
-        await context.Services.AddRangeAsync(plumbingService, loanService);
+        await context.Services.AddAsync(plumbingService);
         await context.SaveChangesAsync();
 
         var providerSpecs = new (string Name, string Mobile, decimal Lat, decimal Lng)[]
@@ -148,6 +125,68 @@ public static class DatabaseSeeder
         await context.BusinessProviders.AddRangeAsync(
             new BusinessProvider(business.Id, providers[0].Id, "Manager"),
             new BusinessProvider(business.Id, providers[1].Id, "Technician"));
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task<Role> EnsureRoleAsync(
+        MatchiDbContext context,
+        string code,
+        string name,
+        string description)
+    {
+        var role = await context.Roles.FirstOrDefaultAsync(x => x.Code == code);
+        if (role is not null)
+            return role;
+
+        role = new Role
+        {
+            Name = name,
+            Code = code,
+            Description = description,
+            IsActive = true
+        };
+        await context.Roles.AddAsync(role);
+        await context.SaveChangesAsync();
+        return role;
+    }
+
+    private static async Task<Permission> EnsurePermissionAsync(
+        MatchiDbContext context,
+        string code,
+        string name)
+    {
+        var permission = await context.Permissions.FirstOrDefaultAsync(x => x.Code == code);
+        if (permission is not null)
+            return permission;
+
+        permission = new Permission
+        {
+            Name = name,
+            Code = code,
+            Description = name,
+            IsActive = true
+        };
+        await context.Permissions.AddAsync(permission);
+        await context.SaveChangesAsync();
+        return permission;
+    }
+
+    private static async Task EnsureRolePermissionAsync(
+        MatchiDbContext context,
+        long roleId,
+        long permissionId)
+    {
+        var exists = await context.RolePermissions.AnyAsync(
+            x => x.RoleId == roleId && x.PermissionId == permissionId);
+        if (exists)
+            return;
+
+        await context.RolePermissions.AddAsync(new RolePermission
+        {
+            RoleId = roleId,
+            PermissionId = permissionId,
+            CreateDate = DateTime.UtcNow
+        });
         await context.SaveChangesAsync();
     }
 }

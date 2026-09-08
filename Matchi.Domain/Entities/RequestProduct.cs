@@ -30,8 +30,34 @@ public class RequestProduct : AuditableEntity
     {
     }
 
-    public RequestProduct(long requestId)
+    public RequestProduct(
+        long requestId,
+        long? productId,
+        long? productCategoryId,
+        decimal quantity = 1m,
+        string? unit = null,
+        string? description = null,
+        int displayOrder = 0)
     {
         RequestId = requestId;
+        ProductId = productId;
+        ProductCategoryId = productCategoryId;
+        Quantity = quantity;
+        Unit = unit;
+        Description = description;
+        DisplayOrder = displayOrder;
+    }
+
+    public void AddAttribute(long productAttributeId, string? value)
+    {
+        Attributes.Add(new RequestProductAttribute(Id, productAttributeId, value));
+    }
+
+    public void Retire()
+    {
+        foreach (var attribute in Attributes)
+            attribute.SoftDelete();
+
+        SoftDelete();
     }
 }

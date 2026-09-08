@@ -76,4 +76,29 @@ public class Business : AuditableEntity
         CompletedJobCount = 0;
         Status = "Active";
     }
+
+    public void UpdateProfile(
+        string name,
+        string? description,
+        string? mobile,
+        string? address,
+        string? province,
+        string? city,
+        string? district,
+        decimal? lat,
+        decimal? lng,
+        long? logoMediaId)
+    {
+        Name = name;
+        Description = description;
+        Mobile = mobile;
+        Address = address;
+        Province = province;
+        City = city;
+        District = district;
+        Lat = lat;
+        Lng = lng;
+        LogoMediaId = logoMediaId;
+        SetUpdated();
+    }
 }

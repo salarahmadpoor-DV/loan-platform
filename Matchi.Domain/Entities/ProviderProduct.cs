@@ -28,5 +28,29 @@ public class ProviderProduct : AuditableEntity
     {
         ProviderId = providerId;
         ProductId = productId;
+        IsAvailable = true;
+    }
+
+    public void UpdateOffer(
+        decimal? price,
+        bool isAvailable,
+        decimal? minOrderQuantity,
+        int? leadTimeDays)
+    {
+        Price = price;
+        IsAvailable = isAvailable;
+        MinOrderQuantity = minOrderQuantity;
+        LeadTimeDays = leadTimeDays;
+        SetUpdated();
+    }
+
+    public void Reactivate(
+        decimal? price,
+        bool isAvailable,
+        decimal? minOrderQuantity,
+        int? leadTimeDays)
+    {
+        Restore();
+        UpdateOffer(price, isAvailable, minOrderQuantity, leadTimeDays);
     }
 }

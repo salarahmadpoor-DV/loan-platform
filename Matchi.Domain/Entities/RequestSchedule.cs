@@ -20,9 +20,17 @@ public class RequestSchedule : TimestampedEntity
     {
     }
 
-    public RequestSchedule(long requestId, DateOnly date)
+    public RequestSchedule(
+        long requestId,
+        DateOnly date,
+        TimeSpan? timeFrom = null,
+        TimeSpan? timeTo = null,
+        bool isFlexible = false)
     {
         RequestId = requestId;
         Date = date;
+        TimeFrom = timeFrom;
+        TimeTo = timeTo;
+        IsFlexible = isFlexible;
     }
 }

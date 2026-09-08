@@ -46,4 +46,39 @@ public class Request : AuditableEntity
         Description = description;
         Status = "Open";
     }
+
+    public void UpdateDetails(string requestType, string title, string? description)
+    {
+        RequestType = requestType;
+        Title = title;
+        Description = description;
+        SetUpdated();
+    }
+
+    public bool CanBeModified() => !IsDeleted && Status == "Open";
+
+    public void Cancel()
+    {
+        Status = "Cancelled";
+        SetUpdated();
+    }
+
+    public void RetireLineItems()
+    {
+        foreach (var service in Services)
+            service.Retire();
+
+        foreach (var product in Products)
+            product.Retire();
+
+        SetUpdated();
+    }
+
+    public void AddService(RequestService service) => Services.Add(service);
+
+    public void AddProduct(RequestProduct product) => Products.Add(product);
+
+    public void AddLocation(RequestLocation location) => Locations.Add(location);
+
+    public void AddSchedule(RequestSchedule schedule) => Schedules.Add(schedule);
 }

@@ -24,4 +24,16 @@ public class ProviderCapability : AuditableEntity
         ServiceAttributeId = serviceAttributeId;
         Value = value;
     }
+
+    public void UpdateValue(string value)
+    {
+        Value = value;
+        SetUpdated();
+    }
+
+    public void Reactivate(string value)
+    {
+        Restore();
+        UpdateValue(value);
+    }
 }

@@ -14,4 +14,10 @@ public abstract class AuditableEntity : TimestampedEntity
         IsDeleted = true;
         SetUpdated();
     }
+
+    public void Restore()
+    {
+        IsDeleted = false;
+        SetUpdated();
+    }
 }

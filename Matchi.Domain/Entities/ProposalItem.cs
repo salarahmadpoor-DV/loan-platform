@@ -32,11 +32,45 @@ public class ProposalItem : TimestampedEntity
     {
     }
 
-    public ProposalItem(long proposalId, string itemType, decimal unitPrice, decimal totalPrice)
+    private ProposalItem(
+        string itemType,
+        long? productId,
+        long? serviceId,
+        string? description,
+        decimal quantity,
+        decimal unitPrice,
+        decimal totalPrice,
+        int displayOrder)
     {
-        ProposalId = proposalId;
         ItemType = itemType;
+        ProductId = productId;
+        ServiceId = serviceId;
+        Description = description;
+        Quantity = quantity;
         UnitPrice = unitPrice;
         TotalPrice = totalPrice;
+        DisplayOrder = displayOrder;
+    }
+
+    public static ProposalItem ForService(
+        long serviceId,
+        decimal quantity,
+        decimal unitPrice,
+        decimal totalPrice,
+        string? description = null,
+        int displayOrder = 0)
+    {
+        return new ProposalItem("Service", null, serviceId, description, quantity, unitPrice, totalPrice, displayOrder);
+    }
+
+    public static ProposalItem ForProduct(
+        long productId,
+        decimal quantity,
+        decimal unitPrice,
+        decimal totalPrice,
+        string? description = null,
+        int displayOrder = 0)
+    {
+        return new ProposalItem("Product", productId, null, description, quantity, unitPrice, totalPrice, displayOrder);
     }
 }

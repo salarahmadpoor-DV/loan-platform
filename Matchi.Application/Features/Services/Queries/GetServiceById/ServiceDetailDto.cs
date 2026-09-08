@@ -5,13 +5,13 @@ public sealed class ServiceDetailDto
     public long Id { get; init; }
     public string Name { get; init; } = null!;
     public long CategoryId { get; init; }
-    public int QuestionCount { get; init; }
+    public int AttributeCount { get; init; }
 
-    public ServiceDetailDto(long id, string name, long categoryId, int questionCount)
+    public ServiceDetailDto(long id, string name, long categoryId, int attributeCount)
     {
         Id = id;
         Name = name;
         CategoryId = categoryId;
-        QuestionCount = questionCount;
+        AttributeCount = attributeCount;
     }
 }

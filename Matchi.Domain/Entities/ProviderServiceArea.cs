@@ -32,5 +32,27 @@ public class ProviderServiceArea : AuditableEntity
     {
         ProviderId = providerId;
         AreaType = areaType;
+        IsActive = true;
+    }
+
+    public void UpdateArea(
+        string areaType,
+        string? province,
+        string? city,
+        string? district,
+        decimal? lat,
+        decimal? lng,
+        decimal? radius,
+        bool isActive)
+    {
+        AreaType = areaType;
+        Province = province;
+        City = city;
+        District = district;
+        Lat = lat;
+        Lng = lng;
+        Radius = radius;
+        IsActive = isActive;
+        SetUpdated();
     }
 }

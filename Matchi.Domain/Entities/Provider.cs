@@ -65,4 +65,20 @@ public class Provider : AuditableEntity
         CompletedJobCount = 0;
         Status = "Active";
     }
+
+    public void UpdateProfile(
+        string name,
+        string? description,
+        string? mobile,
+        decimal? lat,
+        decimal? lng)
+    {
+        Name = name;
+        Description = description;
+        if (!string.IsNullOrWhiteSpace(mobile))
+            Mobile = mobile;
+        Lat = lat;
+        Lng = lng;
+        SetUpdated();
+    }
 }

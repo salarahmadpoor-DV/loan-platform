@@ -1,85 +1,140 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Matchi.Application.Features.Matching;
+using Matchi.Application.Features.Proposals.Commands.CreateProposal;
+using Matchi.Application.Features.Proposals.Queries.GetRequestProposals;
+using Matchi.Application.Features.Requests.Commands.CancelRequest;
+using Matchi.Application.Features.Requests.Commands.CreateRequest;
+using Matchi.Application.Features.Requests.Commands.DeleteRequest;
+using Matchi.Application.Features.Requests.Commands.UpdateRequest;
+using Matchi.Application.Features.Requests.Queries.GetMyRequests;
+using Matchi.Application.Features.Requests.Queries.GetRequestById;
 using MediatR;
-using Matchi.Application.Features.Requests.Commands;
-using Matchi.Application.Features.Requests.Queries.GetServiceRequestById;
-using Matchi.Application.Features.Requests.Queries.GetServiceRequestsByUser;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Matchi.Api.Controllers
+namespace Matchi.Api.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class RequestsController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class RequestsController : ControllerBase
+    private readonly IMediator _mediator;
+
+    public RequestsController(IMediator mediator)
     {
-        private readonly IMediator _mediator;
-        private readonly Matchi.Application.Common.Interfaces.ICurrentUserService _currentUserService;
+        _mediator = mediator;
+    }
 
-        public RequestsController(
-            IMediator mediator,
-            Matchi.Application.Common.Interfaces.ICurrentUserService currentUserService)
-        {
-            _mediator = mediator;
-            _currentUserService = currentUserService;
-        }
+    [HttpPost]
+    public async Task<IActionResult> Create(
+        [FromBody] CreateRequestCommand command,
+        CancellationToken cancellationToken = default)
+    {
+        var requestId = await _mediator.Send(command, cancellationToken);
+        return CreatedAtAction(nameof(Get), new { requestId }, new { requestId });
+    }
 
-        public record AnswerDto(
-            long QuestionId,
-            long? OptionId,
-            string? Text);
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMine(CancellationToken cancellationToken = default)
+    {
+        var requests = await _mediator.Send(new GetMyRequestsQuery(), cancellationToken);
+        return Ok(requests);
+    }
 
-        public record CreateRequestDto(
-            long ServiceId,
-            string Title,
-            string? Description,
-            RequestLocationDto Location,
-            PreferredTimeDto? PreferredTime,
-            IEnumerable<AnswerDto>? Answers,
-            IEnumerable<string>? Attachments);
+    [HttpGet("{requestId:long}")]
+    public async Task<IActionResult> Get(long requestId, CancellationToken cancellationToken = default)
+    {
+        var request = await _mediator.Send(new GetRequestByIdQuery(requestId), cancellationToken);
+        if (request is null)
+            return NotFound();
 
-        public record RequestLocationDto(
-            double Lat,
-            double Lng,
-            string? Address);
+        return Ok(request);
+    }
 
-        public record PreferredTimeDto(
-            DateTime? From,
-            DateTime? To);
+    [HttpGet("{requestId:long}/matches")]
+    public async Task<IActionResult> GetMatches(long requestId, CancellationToken cancellationToken = default)
+    {
+        var matches = await _mediator.Send(new GetRequestMatchesQuery(requestId), cancellationToken);
+        return Ok(matches);
+    }
 
-        [HttpPost]
-        [Authorize]
-        public async Task<IActionResult> Create([FromBody] CreateRequestDto dto, CancellationToken cancellationToken)
-        {
-            var userId = _currentUserService.UserId;
-            if (userId is null)
-                return Unauthorized();
+    [HttpGet("{requestId:long}/proposals")]
+    public async Task<IActionResult> GetProposals(long requestId, CancellationToken cancellationToken = default)
+    {
+        var proposals = await _mediator.Send(new GetRequestProposalsQuery(requestId), cancellationToken);
+        return Ok(proposals);
+    }
 
-            var answers = dto.Answers?.Select(a => new RequestAnswerDto(a.QuestionId, a.OptionId, a.Text));
-            var cmd = new CreateServiceRequestCommand(userId.Value, dto.ServiceId, dto.Title, dto.Description, dto.Location?.Lat, dto.Location?.Lng, answers);
-            var id = await _mediator.Send(cmd, cancellationToken);
+    [HttpPost("{requestId:long}/proposals")]
+    public async Task<IActionResult> CreateProposal(
+        long requestId,
+        [FromBody] CreateProposalBody body,
+        CancellationToken cancellationToken = default)
+    {
+        var proposalId = await _mediator.Send(
+            new CreateProposalCommand(
+                requestId,
+                body.ProposerType,
+                body.TotalPrice,
+                body.DeliveryFee,
+                body.Message,
+                body.ProposedDate,
+                body.ProposedTimeFrom,
+                body.ProposedTimeTo,
+                body.ExpireAt,
+                body.BusinessId,
+                body.Items),
+            cancellationToken);
 
-            return CreatedAtAction(nameof(GetById), new { requestId = id }, new { requestId = id, status = "Created", matchingStatus = "Pending" });
-        }
+        return CreatedAtAction(
+            nameof(ProposalsController.Get),
+            "Proposals",
+            new { proposalId },
+            new { proposalId });
+    }
 
-        [HttpGet("{requestId}")]
-        [Authorize]
-        public async Task<IActionResult> GetById(long requestId, CancellationToken cancellationToken)
-        {
-            var result = await _mediator.Send(new GetServiceRequestByIdQuery(requestId), cancellationToken);
-            if (result is null)
-                return NotFound();
+    [HttpPut("{requestId:long}")]
+    public async Task<IActionResult> Update(
+        long requestId,
+        [FromBody] CreateRequestCommand body,
+        CancellationToken cancellationToken = default)
+    {
+        var updated = await _mediator.Send(new UpdateRequestCommand(requestId, body), cancellationToken);
+        if (!updated)
+            return NotFound();
 
-            return Ok(result);
-        }
+        return Ok(new { requestId, success = true });
+    }
 
-        [HttpGet("user/{userId}")]
-        [Authorize]
-        public async Task<IActionResult> GetByUser(long userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
-        {
-            var result = await _mediator.Send(new GetServiceRequestsByUserQuery(userId), cancellationToken);
-            return Ok(new { page, pageSize, items = result });
-        }
+    [HttpPost("{requestId:long}/cancel")]
+    public async Task<IActionResult> Cancel(long requestId, CancellationToken cancellationToken = default)
+    {
+        var cancelled = await _mediator.Send(new CancelRequestCommand(requestId), cancellationToken);
+        if (!cancelled)
+            return NotFound();
+
+        return Ok(new { requestId, status = "Cancelled" });
+    }
+
+    [HttpDelete("{requestId:long}")]
+    public async Task<IActionResult> Delete(long requestId, CancellationToken cancellationToken = default)
+    {
+        var deleted = await _mediator.Send(new DeleteRequestCommand(requestId), cancellationToken);
+        if (!deleted)
+            return NotFound();
+
+        return NoContent();
     }
 }
+
+public sealed record CreateProposalBody(
+    string ProposerType,
+    decimal TotalPrice,
+    decimal DeliveryFee = 0m,
+    string? Message = null,
+    DateOnly? ProposedDate = null,
+    TimeSpan? ProposedTimeFrom = null,
+    TimeSpan? ProposedTimeTo = null,
+    DateTime? ExpireAt = null,
+    long? BusinessId = null,
+    IReadOnlyList<Matchi.Application.Features.Proposals.CreateProposalItemDto>? Items = null);

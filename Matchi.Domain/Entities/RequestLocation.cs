@@ -24,11 +24,21 @@ public class RequestLocation : TimestampedEntity
     {
     }
 
-    public RequestLocation(long requestId, decimal? lat = null, decimal? lng = null, string? address = null)
+    public RequestLocation(
+        long requestId,
+        string? province = null,
+        string? city = null,
+        string? district = null,
+        string? address = null,
+        decimal? lat = null,
+        decimal? lng = null)
     {
         RequestId = requestId;
+        Province = province;
+        City = city;
+        District = district;
+        Address = address;
         Lat = lat;
         Lng = lng;
-        Address = address;
     }
 }

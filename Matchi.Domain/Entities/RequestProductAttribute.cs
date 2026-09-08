@@ -18,9 +18,10 @@ public class RequestProductAttribute : AuditableEntity
     {
     }
 
-    public RequestProductAttribute(long requestProductId, long productAttributeId)
+    public RequestProductAttribute(long requestProductId, long productAttributeId, string? value = null)
     {
         RequestProductId = requestProductId;
         ProductAttributeId = productAttributeId;
+        Value = value;
     }
 }

@@ -40,9 +40,99 @@ public class Proposal : AuditableEntity
     {
     }
 
-    public Proposal(long requestId, decimal totalPrice)
+    private Proposal(
+        long requestId,
+        long? providerId,
+        long? businessId,
+        decimal totalPrice,
+        decimal deliveryFee,
+        string? message,
+        DateOnly? proposedDate,
+        TimeSpan? proposedTimeFrom,
+        TimeSpan? proposedTimeTo,
+        DateTime? expireAt)
     {
+        if ((providerId is null) == (businessId is null))
+            throw new InvalidOperationException("A proposal must have exactly one of ProviderId or BusinessId.");
+
         RequestId = requestId;
+        ProviderId = providerId;
+        BusinessId = businessId;
         TotalPrice = totalPrice;
+        DeliveryFee = deliveryFee;
+        Message = message;
+        ProposedDate = proposedDate;
+        ProposedTimeFrom = proposedTimeFrom;
+        ProposedTimeTo = proposedTimeTo;
+        ExpireAt = expireAt;
+        Status = "Pending";
+    }
+
+    public static Proposal ForProvider(
+        long requestId,
+        long providerId,
+        decimal totalPrice,
+        decimal deliveryFee = 0m,
+        string? message = null,
+        DateOnly? proposedDate = null,
+        TimeSpan? proposedTimeFrom = null,
+        TimeSpan? proposedTimeTo = null,
+        DateTime? expireAt = null)
+    {
+        return new Proposal(
+            requestId,
+            providerId,
+            null,
+            totalPrice,
+            deliveryFee,
+            message,
+            proposedDate,
+            proposedTimeFrom,
+            proposedTimeTo,
+            expireAt);
+    }
+
+    public static Proposal ForBusiness(
+        long requestId,
+        long businessId,
+        decimal totalPrice,
+        decimal deliveryFee = 0m,
+        string? message = null,
+        DateOnly? proposedDate = null,
+        TimeSpan? proposedTimeFrom = null,
+        TimeSpan? proposedTimeTo = null,
+        DateTime? expireAt = null)
+    {
+        return new Proposal(
+            requestId,
+            null,
+            businessId,
+            totalPrice,
+            deliveryFee,
+            message,
+            proposedDate,
+            proposedTimeFrom,
+            proposedTimeTo,
+            expireAt);
+    }
+
+    public void AddItem(ProposalItem item) => Items.Add(item);
+
+    public void Accept()
+    {
+        if (!string.Equals(Status, "Pending", StringComparison.Ordinal))
+            throw new InvalidOperationException("Only a pending proposal can be accepted.");
+
+        Status = "Accepted";
+        SetUpdated();
+    }
+
+    public void Reject()
+    {
+        if (!string.Equals(Status, "Pending", StringComparison.Ordinal))
+            throw new InvalidOperationException("Only a pending proposal can be rejected.");
+
+        Status = "Rejected";
+        SetUpdated();
     }
 }

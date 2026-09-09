@@ -60,5 +60,15 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
 
         builder.HasIndex(x => x.DealId)
             .HasDatabaseName("IX_Reviews_DealId");
+
+        builder.HasIndex(x => new { x.DealId, x.CustomerId, x.BusinessId })
+            .IsUnique()
+            .HasFilter("([IsDeleted]=(0) AND [BusinessId] IS NOT NULL)")
+            .HasDatabaseName("UX_Reviews_Deal_Customer_Business");
+
+        builder.HasIndex(x => new { x.DealId, x.CustomerId, x.ProviderId })
+            .IsUnique()
+            .HasFilter("([IsDeleted]=(0) AND [ProviderId] IS NOT NULL)")
+            .HasDatabaseName("UX_Reviews_Deal_Customer_Provider");
     }
 }

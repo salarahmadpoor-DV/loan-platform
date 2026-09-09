@@ -51,6 +51,7 @@ public class ServiceExecutionConfiguration : IEntityTypeConfiguration<ServiceExe
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasIndex(x => x.DealId)
-            .HasDatabaseName("IX_ServiceExecutions_DealId");
+            .IsUnique()
+            .HasDatabaseName("UX_ServiceExecutions_DealId");
     }
 }

@@ -1,6 +1,6 @@
-# MATCHI_PROJECT_CONTEXT v1.1
+# MATCHI_PROJECT_CONTEXT v1.2
 
-**Updated:** 2026-09-08  
+**Updated:** 2026-09-09  
 **Scope:** Architectural baseline and implementation log for the Matchi .NET 8 marketplace.
 
 This file is the documented Matchi baseline and decision log. It was **not present in the repository at the start of Task 03**. Task 03 therefore treated the Task 02 Request implementation, existing Domain/EF baseline, `docs/api-endpoints-mvp.md`, and the Task 03 specification as the source of truth, then created this file as the required living context.
@@ -21,6 +21,10 @@ Provider / Business
 Proposal
    ↓
 Deal
+   ↓
+ServiceExecution → ExecutionAssignment → Start → Complete
+   ↓
+Review
 ```
 
 - There is **no Seller** entity.
@@ -29,7 +33,7 @@ Deal
 - A **Business** may have multiple Providers.
 - `BusinessProvider` is membership only. It does not convert a Provider into a Business and does not transfer ownership of Provider services/products.
 - The Request is **customer-owned**. Provider/Business targeting happens later in Matching/Proposal.
-- Proposal is implemented (Task 05). Deal foundation is implemented (Task 06). Execution, Delivery, Review, Payment, Commission, Chat, Complaint, Verification, and TrustScore wait for later tasks.
+- Proposal is implemented (Task 05). Deal foundation is implemented (Task 06). Execution and Review are implemented (Task 07). ProductDelivery, Payment, Commission, Chat, Complaint, Verification, and TrustScore wait for later tasks.
 
 ---
 
@@ -43,7 +47,7 @@ Deal
 | Task 04 — Matching | COMPLETED |
 | Task 05 — Proposal | COMPLETED |
 | Task 06 — Deal | COMPLETED |
-| Task 07 — Execution & Review | NOT STARTED |
+| Task 07 — Execution & Review | COMPLETE |
 | Task 08 — Migration & Final Hardening | NOT STARTED |
 
 ---
@@ -245,7 +249,66 @@ Reuses existing `Deals` table. No `ProviderId` / `BusinessId` on Deal. Party is 
 | GET | `/api/deals` |
 | GET | `/api/deals/{dealId}` |
 
-Non-owned → `404`. No proposer Deal APIs. Cancel / Complete / Execution / Delivery are not implemented.
+Non-owned → `404`. No proposer Deal APIs. Deal cancel / complete and ProductDelivery are not implemented.
+
+---
+
+## Task 07 — Execution & Review (completed)
+
+**Task 7 — COMPLETE**
+
+Reuses existing `ServiceExecutions`, `ExecutionAssignments`, and `Reviews` tables. `BusinessProvider` is membership only (assignment eligibility), not visibility or party authorization. ProductDelivery is **not** implemented.
+
+### ServiceExecution
+
+Create is allowed only for an **Active** Deal whose Request is `Service` or `Hybrid`, by the Proposal Provider **or** Business owner. `BusinessId` is copied from `Proposal.BusinessId` (null for independent Provider). One execution per Deal (`UX_ServiceExecutions_DealId`). Domain owns transitions:
+
+| From | Action | To | Timestamps |
+|---|---|---|---|
+| (new) | Create | Pending | — |
+| Pending | UpdateSchedule | Pending | `ScheduledTimeFrom < ScheduledTimeTo` when both set |
+| Pending | Start | InProgress | `StartedAt = UtcNow` |
+| InProgress | Complete | Completed | `CompletedAt = UtcNow` |
+| Pending / InProgress | Cancel | Cancelled | Assigned assignments cancelled in the same `SaveChanges` |
+
+Schedule / cancel: Proposal party only. Start / complete: Proposal party **or** primary `Assigned` execution Provider.
+
+### ExecutionAssignment
+
+Business-owner only. Execution must belong to a Business Proposal. Assigned Provider must exist and have **active** `BusinessProvider` membership on that Business. First assignment becomes primary if none exists; a second primary is rejected (`UX_ExecutionAssignments_Primary` filtered unique). Remove sets `Status = Cancelled` while execution is Pending. Cancelled rows remain visible on GET.
+
+### Review
+
+Customer who owns `Deal.Request` only. Deal must be `Active`. Service/Hybrid requires a **Completed** ServiceExecution. Target is XOR: Proposal Business, or Proposal Provider / any assigned execution Provider. Rating 1–5 (`CK_Reviews_Rating`). At least one target (`CK_Reviews_Target`). Duplicate non-deleted review per Deal+Customer+target (`UX_Reviews_Deal_Customer_Business` / `UX_Reviews_Deal_Customer_Provider`). GET lists exclude `IsDeleted`.
+
+### Authorization / visibility
+
+Customer (Request owner), Proposal Provider, Business owner, and assigned Providers can **read** executions/assignments. Mutations do not use membership as authorization. JWT `[Authorize]` on Deal/Execution write paths; public GET reviews unchanged.
+
+### APIs
+
+| Method | Route | Who |
+|---|---|---|
+| GET | `/api/deals/{dealId}/executions` | Visible party |
+| POST | `/api/deals/{dealId}/executions` | Proposal Provider or Business owner |
+| GET | `/api/executions/{executionId}` | Visible party |
+| PUT | `/api/executions/{executionId}` | Proposal party (schedule) |
+| POST | `/api/executions/{executionId}/start` | Party or primary assignee |
+| POST | `/api/executions/{executionId}/complete` | Party or primary assignee |
+| POST | `/api/executions/{executionId}/cancel` | Proposal party |
+| GET/POST | `/api/executions/{executionId}/assignments` | Read: visible; write: Business owner |
+| DELETE | `/api/executions/{executionId}/assignments/{assignmentId}` | Business owner |
+| POST | `/api/deals/{dealId}/reviews` | Deal customer |
+| GET | `/api/providers/{providerId}/reviews` | public |
+| GET | `/api/businesses/{businessId}/reviews` | public |
+
+### DB constraints (Task 07 migration)
+
+`Task07ExecutionReviewIndexes`: unique Deal execution; filtered unique primary assignment; filtered unique review targets. Existing `CK_ServiceExecutions_Time`, `CK_Reviews_Rating`, `CK_Reviews_Target` unchanged.
+
+### Tests / verification
+
+`Matchi.Application.Tests` (xUnit): domain transitions, create/schedule/start/complete/cancel, assignment membership/primary/remove, review create/query including deleted exclusion.
 
 ---
 
@@ -264,19 +327,19 @@ Non-owned → `404`. No proposer Deal APIs. Cancel / Complete / Execution / Deli
 
 ## Known limitations
 
-- Matching is a read-only query. Proposal create/list/get/accept/reject and Deal create-via-accept + customer GET are implemented. Execution, delivery, review write-path, chat, complaint, payment, commission, verification, TrustScore: **not implemented**.
+- Matching is a read-only query. Proposal, Deal, ServiceExecution, ExecutionAssignment, and Review write/read paths are implemented. ProductDelivery, Deal cancel/complete, chat, complaint, payment, commission, verification, TrustScore: **not implemented**.
 - `UX_Deals_ProposalId` is not filtered; a soft-deleted Deal still blocks another Deal for that Proposal.
 - Sibling Pending proposals are not auto-rejected. Multiple Deals per Request are allowed.
 - Historical Task 05 Accepts may have `Accepted` Proposal with no Deal row.
 - Proposal expiration processing and uniqueness of (Request, Provider/Business) are deferred.
-- Review GET endpoints remain empty stubs.
+- Provider/Business `Rating` / `ReviewCount` denormalized counters are not updated when a Review is created.
 - Provider public search still ignores radius/sort/true pagination.
 - Business public list ignores page/pageSize.
 - `AreaType` allow-list is Application-level, not a DB check constraint.
 - Overlap rejection for availability is Application-level.
 - `ProviderCapability` DB index is non-unique; uniqueness of one active row per `(ProviderId, ServiceAttributeId)` is enforced in Application.
 - Logo/media upload and portfolio APIs are not in this task.
-- No EF migration in this task (Task 08). Schema already had the required tables/indexes.
+- Task 07 added migration `Task07ExecutionReviewIndexes` (unique execution/review/primary assignment). It is **not** applied to the database in this session. Broader hardening remains Task 08.
 - Runtime HTTP/Swagger UI was **not** executed (no running API/database in this session).
 - Existing JWTs issued before the new seed will lack Provider/Business permission claims until re-login.
 
@@ -290,15 +353,15 @@ Non-owned → `404`. No proposer Deal APIs. Cancel / Complete / Execution / Deli
 | `dotnet build MatchiSolution.sln` | Succeeded, **0 warnings, 0 errors** |
 | Swagger | Swashbuckle is referenced by `Matchi.Api`; the API project compiled. Swagger UI was **not** opened at runtime. |
 | Runtime/API tests | **Not performed** |
-| Database / `dotnet ef database update` | **Not run**. No new migration created. |
+| Database / `dotnet ef database update` | **Not run**. Migration `Task07ExecutionReviewIndexes` was created. |
 | Guid/long | Request/Provider/Business IDs remain `long`. |
 | Legacy Loan/Question/Option/RequestAnswer | Not reintroduced in Application/API for this task. |
 | Independent Provider | Create Provider does not require a Business. Removing membership does not delete Provider data. |
 | Multiple Business memberships | Unique index is per `(BusinessId, ProviderId)` not per Provider. |
-| Task 04 Matching | Application query + API compiled. No test project (NuGet test SDK restore failed). Runtime HTTP not executed. |
+| Task 04 Matching | Application query + API compiled. Runtime HTTP not executed. |
 | Task 05 Proposal | Application + API compiled. No migration. Runtime HTTP not executed. |
 | Task 06 Deal | Accept creates Deal; GET list/detail customer-owned. No migration. Runtime HTTP not executed. |
-| Task 07+ | Not implemented. |
+| Task 07 Execution & Review | Application + API compiled. `Matchi.Application.Tests` 36 passed. Migration created, not applied. Runtime HTTP not executed. |
 
 ---
 

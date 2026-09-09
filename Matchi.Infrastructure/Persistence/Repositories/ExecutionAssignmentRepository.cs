@@ -1,5 +1,6 @@
 using Matchi.Domain.Entities;
 using Matchi.Domain.Interfaces;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace Matchi.Infrastructure.Persistence.Repositories;
@@ -45,9 +46,29 @@ public sealed class ExecutionAssignmentRepository : IExecutionAssignmentReposito
         _context.ExecutionAssignments.Add(assignment);
     }
 
-    public Task SaveChangesAsync(CancellationToken cancellationToken = default)
+    public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        return _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsDuplicatePrimary(ex))
+        {
+            throw new InvalidOperationException("A primary assignment already exists.", ex);
+        }
+    }
+
+    private static bool IsDuplicatePrimary(DbUpdateException exception)
+    {
+        var sql = exception.InnerException as SqlException
+                  ?? exception.InnerException?.InnerException as SqlException;
+        if (sql is null)
+            return false;
+
+        if (sql.Number is not (2601 or 2627))
+            return false;
+
+        return sql.Message.Contains("UX_ExecutionAssignments_Primary", StringComparison.OrdinalIgnoreCase);
     }
 
     public async Task<IReadOnlyList<ExecutionAssignment>> ListVisibleAsync(

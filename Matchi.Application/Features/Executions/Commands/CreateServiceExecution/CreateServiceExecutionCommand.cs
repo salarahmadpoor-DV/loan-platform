@@ -78,7 +78,19 @@ public sealed class CreateServiceExecutionCommandHandler : IRequestHandler<Creat
             command.ScheduledTimeTo);
 
         _executions.Add(execution);
-        await _executions.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await _executions.SaveChangesAsync(cancellationToken);
+        }
+        catch (InvalidOperationException ex) when (ex.Message == "An execution already exists for this deal.")
+        {
+            throw new ValidationException(new[]
+            {
+                new ValidationFailure("dealId", "An execution already exists for this deal.")
+            });
+        }
+
         return execution.Id;
     }
 

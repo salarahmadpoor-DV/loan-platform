@@ -54,5 +54,13 @@ public class ExecutionAssignmentConfiguration : IEntityTypeConfiguration<Executi
 
         builder.HasIndex(x => new { x.ProviderId, x.Status })
             .HasDatabaseName("IX_ExecutionAssignments_ProviderId");
+
+        builder.HasIndex(x => new { x.ServiceExecutionId, x.Status })
+            .HasDatabaseName("IX_ExecutionAssignments_ExecutionId_Status");
+
+        builder.HasIndex(x => x.ServiceExecutionId)
+            .IsUnique()
+            .HasFilter("([IsPrimary]=(1) AND [Status]=N'Assigned')")
+            .HasDatabaseName("UX_ExecutionAssignments_Primary");
     }
 }

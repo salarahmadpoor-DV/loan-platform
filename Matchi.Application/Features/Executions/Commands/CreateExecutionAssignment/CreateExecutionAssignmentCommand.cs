@@ -100,7 +100,19 @@ public sealed class CreateExecutionAssignmentCommandHandler : IRequestHandler<Cr
             isPrimary);
 
         _assignments.Add(assignment);
-        await _assignments.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await _assignments.SaveChangesAsync(cancellationToken);
+        }
+        catch (InvalidOperationException ex) when (ex.Message == "A primary assignment already exists.")
+        {
+            throw new ValidationException(new[]
+            {
+                new ValidationFailure("isPrimary", "A primary assignment already exists.")
+            });
+        }
+
         return assignment.Id;
     }
 }

@@ -1,14 +1,28 @@
 using Matchi.Application.Features.Reviews.Queries;
+using Matchi.Domain.Interfaces;
 using MediatR;
 
 namespace Matchi.Application.Features.Reviews.Queries.GetProviderReviews;
 
 public sealed class GetProviderReviewsQueryHandler : IRequestHandler<GetProviderReviewsQuery, IEnumerable<ReviewDto>>
 {
-    public Task<IEnumerable<ReviewDto>> Handle(
+    private readonly IReviewRepository _reviews;
+
+    public GetProviderReviewsQueryHandler(IReviewRepository reviews)
+    {
+        _reviews = reviews;
+    }
+
+    public async Task<IEnumerable<ReviewDto>> Handle(
         GetProviderReviewsQuery request,
         CancellationToken cancellationToken)
     {
-        return Task.FromResult((IEnumerable<ReviewDto>)Array.Empty<ReviewDto>());
+        var reviews = await _reviews.ListByProviderAsync(request.ProviderId, cancellationToken);
+        return reviews.Select(r => new ReviewDto(
+            r.Id,
+            r.ProviderId!.Value,
+            "Provider",
+            r.Rating,
+            r.Comment));
     }
 }

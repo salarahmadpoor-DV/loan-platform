@@ -1,5 +1,6 @@
 using Matchi.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
 namespace Matchi.Infrastructure.Persistence;
 
@@ -82,5 +83,12 @@ public sealed class MatchiDbContext : DbContext
 
         modelBuilder.HasDefaultSchema("dbo");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MatchiDbContext).Assembly);
+    }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        // Live MatchiDb has many FKs without covering indexes. The default convention
+        // would invent those indexes and make the baseline diverge from the database.
+        configurationBuilder.Conventions.Remove(typeof(ForeignKeyIndexConvention));
     }
 }

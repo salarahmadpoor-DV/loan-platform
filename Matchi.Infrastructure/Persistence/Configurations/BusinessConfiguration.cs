@@ -80,6 +80,8 @@ public class BusinessConfiguration : IEntityTypeConfiguration<Business>
             .HasConstraintName("FK_Businesses_Users")
             .OnDelete(DeleteBehavior.NoAction);
 
+        builder.WithoutSingleColumnIndex(nameof(Business.LogoMediaId));
+        builder.WithoutSingleColumnIndex(nameof(Business.OwnerUserId));
         builder.HasIndex(x => x.OwnerUserId)
             .HasDatabaseName("IX_Businesses_OwnerUserId");
     }

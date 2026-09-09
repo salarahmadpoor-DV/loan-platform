@@ -40,6 +40,23 @@ internal static class EntityTypeBuilderExtensions
             .HasDefaultValue(false);
     }
 
+    /// <summary>
+    /// Removes a conventional single-column index so the EF model can match a live schema
+    /// that has the FK but not the supporting index.
+    /// </summary>
+    public static void WithoutSingleColumnIndex<T>(this EntityTypeBuilder<T> builder, string propertyName)
+        where T : class
+    {
+        var indexes = builder.Metadata.GetIndexes()
+            .Where(index =>
+                index.Properties.Count == 1
+                && index.Properties[0].Name == propertyName)
+            .ToList();
+
+        foreach (var index in indexes)
+            builder.Metadata.RemoveIndex(index);
+    }
+
     public static void Restrict<T, TRelated>(
         this ReferenceCollectionBuilder<TRelated, T> builder,
         string constraintName)

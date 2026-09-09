@@ -17,10 +17,17 @@
 
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Historical migrations that must not run against live MatchiDb. Not part of the active EF chain. -->
+    <Compile Remove="Persistence\Migrations\ArchivedIncompatible\**\*" />
+    <None Include="Persistence\Migrations\ArchivedIncompatible\**\*" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
 
 </Project>

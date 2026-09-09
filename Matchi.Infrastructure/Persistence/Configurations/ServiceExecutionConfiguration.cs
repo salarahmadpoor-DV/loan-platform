@@ -50,6 +50,8 @@ public class ServiceExecutionConfiguration : IEntityTypeConfiguration<ServiceExe
             .HasConstraintName("FK_ServiceExecutions_Deals")
             .OnDelete(DeleteBehavior.NoAction);
 
+        builder.WithoutSingleColumnIndex(nameof(ServiceExecution.BusinessId));
+        builder.WithoutSingleColumnIndex(nameof(ServiceExecution.DealId));
         builder.HasIndex(x => x.DealId)
             .IsUnique()
             .HasDatabaseName("UX_ServiceExecutions_DealId");

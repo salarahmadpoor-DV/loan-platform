@@ -1,4 +1,4 @@
-# MATCHI_PROJECT_CONTEXT v1.2
+# MATCHI_PROJECT_CONTEXT v1.4
 
 **Updated:** 2026-09-09  
 **Scope:** Architectural baseline and implementation log for the Matchi .NET 8 marketplace.
@@ -49,6 +49,83 @@ Review
 | Task 06 — Deal | COMPLETED |
 | Task 07 — Execution & Review | COMPLETE |
 | Task 08 — Migration & Final Hardening | NOT STARTED |
+
+---
+
+## EF / MatchiDb baseline (authoritative)
+
+**Live `MatchiDb` is the source of truth.** The EF model and migration chain must represent the existing database. The database must not be rewritten to match old migrations.
+
+### Decisions
+
+- The live schema is an externally created marketplace schema. It is **not** the result of applying `InitialCreate` + `MatchiBaselineAlignment`.
+- Those historical migrations (plus `Task07ExecutionReviewIndexes`) are **incompatible** with live `MatchiDb` and must **not** be replayed. They are archived at `Matchi.Infrastructure/Persistence/Migrations/ArchivedIncompatible/` and excluded from compilation.
+- Active compiled migration assembly contains:
+  - `20260909065436_MatchiDbExistingBaseline` (stamped; `Up()` never executed)
+  - `20260909070502_Task07IndexDelta` (applied to live `MatchiDb`)
+- That baseline is a **greenfield** `Up()` (creates the existing marketplace schema). It **must not** be executed against live `MatchiDb`.
+- `MatchiDbContextModelSnapshot` represents the post–Task 7 index model.
+
+### Stamp (2026-09-09)
+
+- Baseline migration: `20260909065436_MatchiDbExistingBaseline`
+- Stamped into `dbo.__EFMigrationsHistory` with `ProductVersion` `8.0.11`
+- Baseline `Up()` was **not** executed (`dotnet ef database update` was **not** run)
+- Existing database **schema was not changed**
+- Existing database **data was not changed**
+- The only database write was the single `__EFMigrationsHistory` insert
+- After stamp: `__EFMigrationsHistory` has **exactly one row** (`20260909065436_MatchiDbExistingBaseline`)
+- User table count remained **54**
+- Full index list before vs after stamp: **identical**
+
+### Task 7 delta (applied 2026-09-09)
+
+Migration: `20260909070502_Task07IndexDelta`
+
+Applied with `dotnet ef database update 20260909070502_Task07IndexDelta`. EF applied **only** this pending migration. Baseline `Up()` was **not** executed.
+
+Indexes removed:
+
+- `IX_ServiceExecutions_DealId`
+
+Indexes added:
+
+- `UX_ServiceExecutions_DealId` — unique on `ServiceExecutions.DealId`
+- `UX_ExecutionAssignments_Primary` — unique on `ExecutionAssignments.ServiceExecutionId`, filter `([IsPrimary]=(1) AND [Status]=N'Assigned')`
+- `UX_Reviews_Deal_Customer_Business` — unique on `(DealId, CustomerId, BusinessId)`, filter `([IsDeleted]=(0) AND [BusinessId] IS NOT NULL)`
+- `UX_Reviews_Deal_Customer_Provider` — unique on `(DealId, CustomerId, ProviderId)`, filter `([IsDeleted]=(0) AND [ProviderId] IS NOT NULL)`
+- `IX_ExecutionAssignments_ExecutionId_Status` — non-unique on `(ServiceExecutionId, Status)`
+
+Not dropped (does not exist): `IX_ExecutionAssignments_ServiceExecutionId` — still absent after apply.
+
+Archived `20260909060203_Task07ExecutionReviewIndexes` was **not** compiled or applied.
+
+### Final migration history
+
+| MigrationId | ProductVersion |
+|---|---|
+| `20260909065436_MatchiDbExistingBaseline` | `8.0.11` |
+| `20260909070502_Task07IndexDelta` | `8.0.11` |
+
+Exactly two rows. No `InitialCreate` / `MatchiBaselineAlignment` / archived Task07 IDs.
+
+### Schema / data after Task 7 delta
+
+- User tables: **54** (unchanged)
+- Index list delta vs pre-apply: dropped `ServiceExecutions|IX_ServiceExecutions_DealId`; added the five Task 7 indexes above. No other index add/drop.
+- Row counts unchanged: Businesses 1, Requests 1, Deals 1, ServiceExecutions 1, ExecutionAssignments 1, Reviews 1
+- `IX_ServiceExecutions_DealId` = absent
+- Task 7 unique/status indexes = present as listed
+- `IX_ExecutionAssignments_ProviderId`, `IX_Reviews_DealId`, `IX_Businesses_OwnerUserId` remain present
+
+### Task 8
+
+**NOT STARTED.**
+
+### Build / tests (Task 7 delta session)
+
+- `dotnet build MatchiSolution.sln` — succeeded, 0 warnings, 0 errors
+- `dotnet test Matchi.Application.Tests` — 36 passed, 0 failed
 
 ---
 
@@ -302,9 +379,9 @@ Customer (Request owner), Proposal Provider, Business owner, and assigned Provid
 | GET | `/api/providers/{providerId}/reviews` | public |
 | GET | `/api/businesses/{businessId}/reviews` | public |
 
-### DB constraints (Task 07 migration)
+### DB constraints (Task 07)
 
-`Task07ExecutionReviewIndexes`: unique Deal execution; filtered unique primary assignment; filtered unique review targets. Existing `CK_ServiceExecutions_Time`, `CK_Reviews_Rating`, `CK_Reviews_Target` unchanged.
+Live `MatchiDb` now has unique Deal execution (`UX_ServiceExecutions_DealId`), filtered unique primary assignment (`UX_ExecutionAssignments_Primary`), filtered unique review targets, and `IX_ExecutionAssignments_ExecutionId_Status`. Applied via `20260909070502_Task07IndexDelta`. Archived `Task07ExecutionReviewIndexes` was not used. Existing `CK_ServiceExecutions_Time`, `CK_Reviews_Rating`, `CK_Reviews_Target` unchanged.
 
 ### Tests / verification
 
@@ -339,7 +416,7 @@ Customer (Request owner), Proposal Provider, Business owner, and assigned Provid
 - Overlap rejection for availability is Application-level.
 - `ProviderCapability` DB index is non-unique; uniqueness of one active row per `(ProviderId, ServiceAttributeId)` is enforced in Application.
 - Logo/media upload and portfolio APIs are not in this task.
-- Task 07 added migration `Task07ExecutionReviewIndexes` (unique execution/review/primary assignment). It is **not** applied to the database in this session. Broader hardening remains Task 08.
+- Task 7 unique indexes are **on live `MatchiDb`** via `20260909070502_Task07IndexDelta`. Historical `Task07ExecutionReviewIndexes` remains archived and was not applied. Broader hardening remains Task 08.
 - Runtime HTTP/Swagger UI was **not** executed (no running API/database in this session).
 - Existing JWTs issued before the new seed will lack Provider/Business permission claims until re-login.
 
@@ -353,7 +430,7 @@ Customer (Request owner), Proposal Provider, Business owner, and assigned Provid
 | `dotnet build MatchiSolution.sln` | Succeeded, **0 warnings, 0 errors** |
 | Swagger | Swashbuckle is referenced by `Matchi.Api`; the API project compiled. Swagger UI was **not** opened at runtime. |
 | Runtime/API tests | **Not performed** |
-| Database / `dotnet ef database update` | **Not run**. Migration `Task07ExecutionReviewIndexes` was created. |
+| Database / `dotnet ef database update` | Baseline `Up()` never executed. `20260909070502_Task07IndexDelta` **was applied**. History: baseline stamp + Task 7 delta. |
 | Guid/long | Request/Provider/Business IDs remain `long`. |
 | Legacy Loan/Question/Option/RequestAnswer | Not reintroduced in Application/API for this task. |
 | Independent Provider | Create Provider does not require a Business. Removing membership does not delete Provider data. |
@@ -361,7 +438,7 @@ Customer (Request owner), Proposal Provider, Business owner, and assigned Provid
 | Task 04 Matching | Application query + API compiled. Runtime HTTP not executed. |
 | Task 05 Proposal | Application + API compiled. No migration. Runtime HTTP not executed. |
 | Task 06 Deal | Accept creates Deal; GET list/detail customer-owned. No migration. Runtime HTTP not executed. |
-| Task 07 Execution & Review | Application + API compiled. `Matchi.Application.Tests` 36 passed. Migration created, not applied. Runtime HTTP not executed. |
+| Task 07 Execution & Review | Application + API compiled. Unique indexes applied via `Task07IndexDelta`. `Matchi.Application.Tests` 36 passed. Runtime HTTP not executed. |
 
 ---
 

@@ -31,6 +31,8 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IRequestRepository, RequestRepository>();
         services.AddScoped<IProposalRepository, ProposalRepository>();
         services.AddScoped<IDealRepository, DealRepository>();
+        services.AddScoped<IServiceExecutionRepository, ServiceExecutionRepository>();
+        services.AddScoped<IExecutionAssignmentRepository, ExecutionAssignmentRepository>();
         services.AddScoped<IMatchingReadRepository, MatchingReadRepository>();
 
         return services;

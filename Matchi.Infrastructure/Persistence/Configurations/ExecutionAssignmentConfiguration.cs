@@ -60,6 +60,10 @@ public class ExecutionAssignmentConfiguration : IEntityTypeConfiguration<Executi
             .IsUnique()
             .HasFilter("[IsPrimary] = 1 AND [Status] = N'Assigned'")
             .HasDatabaseName("UX_ExecutionAssignments_Primary");
+        builder.HasIndex(x => new { x.ServiceExecutionId, x.ProviderId })
+            .IsUnique()
+            .HasFilter("[Status] = N'Assigned'")
+            .HasDatabaseName("UX_ExecutionAssignments_AssignedProvider");
         builder.HasIndex(x => new { x.ServiceExecutionId, x.Status })
             .HasDatabaseName("IX_ExecutionAssignments_ExecutionId_Status");
     }

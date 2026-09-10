@@ -26,7 +26,7 @@ Customer
   → Proposal (exactly one of BusinessId / ProviderId)
   → Deal
   → ServiceExecution / ProductDelivery
-  → Review (Deal + Customer; target Business and/or Provider)
+  → Review (Deal + Customer; exactly one of Business or Provider)
 ```
 
 ---
@@ -66,12 +66,12 @@ No auth.
 
 `202 Accepted`: `{ "requestId": "..." }`
 
-OTP is in-memory for development (fixed code `123456`).
+OTP is generated per request, stored in memory, expires after a short TTL, and is limited by failed attempts. The API returns only `requestId`. The OTP is not a fixed code.
 
 **verify-otp**
 
 ```json
-{ "mobile": "0912...", "otp": "123456", "requestId": "..." }
+{ "mobile": "0912...", "otp": "<issued-otp>", "requestId": "..." }
 ```
 
 `200 OK`:
@@ -92,10 +92,9 @@ OTP is in-memory for development (fixed code `123456`).
 ```http
 GET /api/users/me
 PUT /api/users/me
-GET /api/users/request-view-test
 ```
 
-Bearer required. `request-view-test` also requires permission `REQUEST_VIEW`.
+Bearer required.
 
 **GET me**
 
@@ -130,7 +129,7 @@ Categories: `{ "id", "name" }`
 
 Services list: `{ "page", "pageSize", "items": [ { "id", "name", "categoryId" } ] }`
 
-`q` is accepted but not applied. Pagination is returned, not applied in the query.
+`q` filters by service name (`Contains`). Results are ordered by `DisplayOrder`, then `Id`. `page` defaults to 1; `pageSize` defaults to 20 and is capped at 100. Filtering is applied before skip/take.
 
 Service detail: `{ "id", "name", "categoryId", "attributeCount" }`
 
@@ -169,7 +168,7 @@ Creates a provider for the current user. `201` `{ "providerId" }`.
 }
 ```
 
-`isActive` is derived from `Status == "Active"`. Search by `serviceId` is implemented; radius/sort/pagination are not fully applied.
+`isActive` is derived from `Status == "Active"`. Search requires `serviceId` (otherwise `items` is empty). Pagination (`page` / `pageSize`, max 100) is applied in the query after ordering by `Id`. `lat` / `lng` / `radiusKm` / `sort` are accepted but not applied.
 
 Provider catalog APIs (services, products, capabilities, areas, availability) are **Target**.
 
@@ -199,7 +198,7 @@ Create / invite / accept require Bearer. List is public.
 
 `ownerContact` is ignored. Owner is the current user.
 
-**GET list item:** `{ "id", "name", "address" }` — pagination envelope is returned; listing is currently an empty stub.
+**GET list item:** `{ "id", "name", "address" }` — public list of non-deleted businesses, ordered by `Id`, paginated (`page` / `pageSize`, max 100).
 
 **Invite**
 
@@ -207,9 +206,11 @@ Create / invite / accept require Bearer. List is public.
 { "providerId": 1, "role": "Technician" }
 ```
 
-`202` `{ "inviteId", "status": "Pending" }` — **Stub** (does not persist).
+`202` `{ "inviteId", "status": "Pending" }` — persists membership as `Pending` (owner-checked).
 
-**Accept:** `200` `{ "businessProviderId", "status": "Active" }` — **Stub**.
+**Accept:** `200` `{ "businessProviderId", "status": "Active" }` — Provider user activates their membership (`PROVIDER_EDIT`).
+
+Owner `POST /api/businesses/me/providers` can also create membership (`Active` by default). This is owner membership management, not an anonymous invite bypass.
 
 Business catalog APIs (services, products, areas, availability) are **Target**.
 
@@ -295,8 +296,11 @@ Location and schedule are optional. Domain can store multiple locations/schedule
 
 `201` create: `{ "requestId" }`.  
 `PUT`: `{ "requestId", "success": true }`.  
-`POST .../cancel` sets `Status` to `Cancelled` (row remains readable): `{ "requestId", "status": "Cancelled" }`.  
+`POST .../cancel` sets `Status` to `Cancelled` (row remains readable): `{ "requestId", "status": "Cancelled" }`.
+If the Request has a non-deleted Deal with `Status = Active`, cancel returns **409 Conflict** and does not change the Request or Deal.
 `DELETE` soft-deletes (`IsDeleted`); `204`.
+If the Request has a non-deleted Active Deal, delete returns **409 Conflict** and does not change the Request or Deal.
+Non-owners receive **404** for cancel/delete (same as get); Active Deal existence is not queried until ownership is established.
 
 **GET one / GET me item**
 
@@ -357,21 +361,9 @@ GET /api/providers/{providerId}/reviews
 GET /api/businesses/{businessId}/reviews
 ```
 
-No auth. Handlers currently return empty lists (**Stub**).
+No auth. Non-deleted reviews for that Provider or Business. A review with both targets (legacy data) can appear in both lists; `targetType` follows the list being queried. Deleted reviews are excluded.
 
-Intended item shape:
-
-```json
-{
-  "id": 1,
-  "targetId": 1,
-  "targetType": "Provider",
-  "rating": 5,
-  "comment": "..."
-}
-```
-
-Create-review is **Target** (Deal-based). The old `POST /api/introductions/{introductionId}/reviews` was removed.
+Create-review is implemented: `POST /api/deals/{dealId}/reviews` (Bearer, Deal customer). Target is XOR: exactly one of `businessId` / `providerId`. The old `POST /api/introductions/{introductionId}/reviews` was removed.
 
 ---
 
@@ -510,7 +502,7 @@ GET  /api/deals/{dealId}/deliveries
 POST /api/deals/{dealId}/reviews
 ```
 
-Bearer. Customer of the Deal. Body includes `rating` (1–5), `comment`, and at least one of `businessId` / `providerId`.
+Bearer. Customer of the Deal. Body includes `rating` (1–5), optional `comment`, and **exactly one** of `businessId` / `providerId`. Duplicate active reviews for the same target return **409** on unique-index race (pre-check remains **400**).
 
 ---
 ### Catalog (provider / business capabilities)
@@ -562,16 +554,19 @@ Media, verification, and trust-score APIs are out of MVP unless explicitly pulle
 - Permission `REQUEST_VIEW` is seeded for `ADMIN`; Request CRUD uses `[Authorize]` plus owner checks (non-owners → `404`)
 - FluentValidation → `400` problem details
 - `KeyNotFoundException` → `404`
-- Other unhandled → `500`
+- `ConflictException` → `409` (unique/concurrency conflicts; Request cancel/delete while an Active Deal exists)
+- Other unhandled → `500` (production detail is sanitized; `traceId` is always present)
 
-JWT settings: `Jwt:Key` (min 32 chars), `Jwt:Issuer`, `Jwt:Audience`.
+JWT settings: `Jwt:Key` (min 32 chars), `Jwt:Issuer`, `Jwt:Audience`. Values must come from User Secrets or environment variables; committed `appsettings.json` keys are empty.
+
+CORS is not configured in the API. Origins are a deployment concern; do not enable `AllowAnyOrigin` with credentials.
 
 ---
 
 ## 5. Notes for implementers
 
 - Domain already has Request, Proposal (XOR party), Deal, execution, delivery, Review.
-- Task 02 implemented Request CRUD. Task 04 implemented matching. Task 05 implemented Proposal. Task 06 implemented Accept → Deal and customer Deal GET. Execution, delivery, review create, and later steps are still Target.
-- List endpoints that wrap `{ page, pageSize, items }` may not actually page yet.
-- Invite/accept business membership and review GETs are stubs.
-- Seed: admin + demo user `09120000000`, plumbing category/service, sample providers and one business. No loan category.
+- Task 02 implemented Request CRUD. Task 04 implemented matching (read-only). Task 05 implemented Proposal. Task 06 implemented Accept → Deal. Task 07 implemented execution and reviews.
+- Public catalog lists that wrap `{ page, pageSize, items }` apply skip/take (`GET /api/services`, `GET /api/businesses`, `GET /api/providers` with `serviceId`). Provider `lat`/`lng`/`radiusKm`/`sort` remain unused.
+- Invite/accept business membership persist; owner `/me/providers` can set Active membership.
+- Seed: admin + demo user `09120000000`, plumbing category/service, sample providers and one business. No loan category. Seed runs only when `Seed:Enabled` is true **and** the environment is Development.

@@ -1,3 +1,4 @@
+using Matchi.Application.Common;
 using Matchi.Domain.Interfaces;
 using MediatR;
 
@@ -16,9 +17,15 @@ public sealed class SearchProvidersQueryHandler : IRequestHandler<SearchProvider
         SearchProvidersQuery request,
         CancellationToken cancellationToken)
     {
-        var providers = request.ServiceId.HasValue
-            ? await _providerRepository.GetProvidersByServiceIdAsync(request.ServiceId.Value, cancellationToken)
-            : Array.Empty<Matchi.Domain.Entities.Provider>();
+        if (!request.ServiceId.HasValue)
+            return Array.Empty<ProviderDto>();
+
+        var paging = ListPaging.Normalize(request.Page, request.PageSize);
+        var providers = await _providerRepository.GetProvidersByServiceIdAsync(
+            request.ServiceId.Value,
+            paging.Skip,
+            paging.PageSize,
+            cancellationToken);
 
         return providers.Select(ProviderDto.From);
     }

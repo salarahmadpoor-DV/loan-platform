@@ -1,4 +1,5 @@
 using Matchi.Application.Common.Interfaces;
+using Matchi.Application.Common.Models;
 using Matchi.Domain.Interfaces;
 using Matchi.Infrastructure.Persistence;
 using Matchi.Infrastructure.Persistence.Repositories;
@@ -22,7 +23,16 @@ public static class InfrastructureServiceCollectionExtensions
         });
 
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
-        services.AddSingleton<IOtpService, InMemoryOtpService>();
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton<IOtpService>(sp =>
+        {
+            var otpOptions = new OtpOptions
+            {
+                TtlMinutes = ParsePositiveInt(configuration["Otp:TtlMinutes"], 5),
+                MaxAttempts = ParsePositiveInt(configuration["Otp:MaxAttempts"], 5)
+            };
+            return new InMemoryOtpService(sp.GetRequiredService<TimeProvider>(), otpOptions);
+        });
         services.AddScoped<IUserRoleRepository, UserRoleRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IServiceRepository, ServiceRepository>();
@@ -37,5 +47,10 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IMatchingReadRepository, MatchingReadRepository>();
 
         return services;
+    }
+
+    private static int ParsePositiveInt(string? value, int fallback)
+    {
+        return int.TryParse(value, out var parsed) && parsed > 0 ? parsed : fallback;
     }
 }

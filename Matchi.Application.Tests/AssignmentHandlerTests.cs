@@ -1,4 +1,5 @@
 using FluentValidation;
+using Matchi.Application.Common;
 using Matchi.Application.Features.Executions.Commands.CreateExecutionAssignment;
 using Matchi.Application.Features.Executions.Commands.RemoveExecutionAssignment;
 using Matchi.Domain.Entities;
@@ -81,6 +82,55 @@ public sealed class ExecutionAssignmentCommandTests
             new FakeExecutionAssignmentRepository { HasPrimary = true });
 
         await Assert.ThrowsAsync<ValidationException>(() =>
+            handler.Handle(new CreateExecutionAssignmentCommand(3, 44, "Technician", true), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task DuplicateAssignedProvider_IsConflict()
+    {
+        var handler = new CreateExecutionAssignmentCommandHandler(
+            new FakeCurrentUser(MarketplaceGraph.BusinessOwnerUserId),
+            new FakeServiceExecutionRepository { Tracked = BusinessExecution() },
+            new FakeExecutionAssignmentRepository { HasAssignedProvider = true });
+
+        await Assert.ThrowsAsync<ConflictException>(() =>
+            handler.Handle(new CreateExecutionAssignmentCommand(3, 44, "Technician"), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Reassignment_AfterCancel_IsAllowedWhenNoAssignedRow()
+    {
+        var assignment = ExecutionAssignment.Create(3, 44, "Technician", true);
+        assignment.Cancel();
+        Assert.Equal("Cancelled", assignment.Status);
+
+        var assignments = new FakeExecutionAssignmentRepository { HasAssignedProvider = false };
+        var handler = new CreateExecutionAssignmentCommandHandler(
+            new FakeCurrentUser(MarketplaceGraph.BusinessOwnerUserId),
+            new FakeServiceExecutionRepository { Tracked = BusinessExecution() },
+            assignments);
+
+        var id = await handler.Handle(
+            new CreateExecutionAssignmentCommand(3, 44, "Technician"),
+            CancellationToken.None);
+
+        Assert.Equal(1, id);
+        Assert.Equal("Assigned", assignments.Added[0].Status);
+    }
+
+    [Fact]
+    public async Task DuplicatePrimaryRace_IsConflict()
+    {
+        var handler = new CreateExecutionAssignmentCommandHandler(
+            new FakeCurrentUser(MarketplaceGraph.BusinessOwnerUserId),
+            new FakeServiceExecutionRepository { Tracked = BusinessExecution() },
+            new FakeExecutionAssignmentRepository
+            {
+                HasPrimary = false,
+                SaveException = new ConflictException("A primary assignment already exists.")
+            });
+
+        await Assert.ThrowsAsync<ConflictException>(() =>
             handler.Handle(new CreateExecutionAssignmentCommand(3, 44, "Technician", true), CancellationToken.None));
     }
 

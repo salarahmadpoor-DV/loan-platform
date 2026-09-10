@@ -1,6 +1,6 @@
+using Matchi.Application.Common;
 using Matchi.Domain.Entities;
 using Matchi.Domain.Interfaces;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace Matchi.Infrastructure.Persistence.Repositories;
@@ -19,6 +19,18 @@ public sealed class ExecutionAssignmentRepository : IExecutionAssignmentReposito
         return _context.ExecutionAssignments.AnyAsync(
             a => a.ServiceExecutionId == executionId
                  && a.IsPrimary
+                 && a.Status == "Assigned",
+            cancellationToken);
+    }
+
+    public Task<bool> HasAssignedProviderAsync(
+        long executionId,
+        long providerId,
+        CancellationToken cancellationToken = default)
+    {
+        return _context.ExecutionAssignments.AnyAsync(
+            a => a.ServiceExecutionId == executionId
+                 && a.ProviderId == providerId
                  && a.Status == "Assigned",
             cancellationToken);
     }
@@ -54,21 +66,22 @@ public sealed class ExecutionAssignmentRepository : IExecutionAssignmentReposito
         }
         catch (DbUpdateException ex) when (IsDuplicatePrimary(ex))
         {
-            throw new InvalidOperationException("A primary assignment already exists.", ex);
+            throw new ConflictException("A primary assignment already exists.", ex);
+        }
+        catch (DbUpdateException ex) when (IsDuplicateAssignedProvider(ex))
+        {
+            throw new ConflictException("This provider is already assigned to the execution.", ex);
         }
     }
 
     private static bool IsDuplicatePrimary(DbUpdateException exception)
     {
-        var sql = exception.InnerException as SqlException
-                  ?? exception.InnerException?.InnerException as SqlException;
-        if (sql is null)
-            return false;
+        return SqlServerUpdateConflicts.IsUniqueIndex(exception, "UX_ExecutionAssignments_Primary");
+    }
 
-        if (sql.Number is not (2601 or 2627))
-            return false;
-
-        return sql.Message.Contains("UX_ExecutionAssignments_Primary", StringComparison.OrdinalIgnoreCase);
+    private static bool IsDuplicateAssignedProvider(DbUpdateException exception)
+    {
+        return SqlServerUpdateConflicts.IsUniqueIndex(exception, "UX_ExecutionAssignments_AssignedProvider");
     }
 
     public async Task<IReadOnlyList<ExecutionAssignment>> ListVisibleAsync(

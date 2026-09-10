@@ -14,7 +14,10 @@ public interface IBusinessRepository
         long ownerUserId,
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<Business>> ListAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Business>> ListAsync(
+        int skip,
+        int take,
+        CancellationToken cancellationToken = default);
 
     Task<bool> ServiceExistsActiveAsync(long serviceId, CancellationToken cancellationToken = default);
 

@@ -44,6 +44,11 @@ public interface IExecutionAssignmentRepository
 {
     Task<bool> HasPrimaryAsync(long executionId, CancellationToken cancellationToken = default);
 
+    Task<bool> HasAssignedProviderAsync(
+        long executionId,
+        long providerId,
+        CancellationToken cancellationToken = default);
+
     Task<bool> HasActiveMembershipAsync(
         long businessId,
         long providerId,

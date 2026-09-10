@@ -123,18 +123,7 @@ public sealed class CreateReviewCommandHandler : IRequestHandler<CreateReviewCom
         }
 
         _reviews.Add(review);
-
-        try
-        {
-            await _reviews.SaveChangesAsync(cancellationToken);
-        }
-        catch (InvalidOperationException ex) when (ex.Message == "A review already exists for this target.")
-        {
-            throw new ValidationException(new[]
-            {
-                new ValidationFailure("dealId", "A review already exists for this target.")
-            });
-        }
+        await _reviews.SaveChangesAsync(cancellationToken);
 
         return review.Id;
     }

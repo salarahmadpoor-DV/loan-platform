@@ -4,6 +4,7 @@ using Matchi.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Matchi.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(MatchiDbContext))]
-    partial class MatchiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260909083411_Task08IntegrityConcurrency")]
+    partial class Task08IntegrityConcurrency
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2326,7 +2329,7 @@ namespace Matchi.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_Reviews_Rating", "[Rating]>=(1) AND [Rating]<=(5)");
 
-                            t.HasCheckConstraint("CK_Reviews_Target", "([BusinessId] IS NOT NULL AND [ProviderId] IS NULL) OR ([BusinessId] IS NULL AND [ProviderId] IS NOT NULL)");
+                            t.HasCheckConstraint("CK_Reviews_Target", "[BusinessId] IS NOT NULL OR [ProviderId] IS NOT NULL");
                         });
                 });
 

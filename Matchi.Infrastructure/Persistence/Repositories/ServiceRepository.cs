@@ -18,12 +18,29 @@ public class ServiceRepository : IServiceRepository
         return await _context.ServiceCategories.AsNoTracking().ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<Service>> GetServicesAsync(long? categoryId = null, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Service>> GetServicesAsync(
+        long? categoryId,
+        string? query,
+        int skip,
+        int take,
+        CancellationToken cancellationToken = default)
     {
         var q = _context.Services.AsNoTracking().AsQueryable();
         if (categoryId.HasValue)
             q = q.Where(s => s.CategoryId == categoryId.Value);
-        return await q.ToListAsync(cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var term = query.Trim();
+            q = q.Where(s => s.Name.Contains(term));
+        }
+
+        return await q
+            .OrderBy(s => s.DisplayOrder)
+            .ThenBy(s => s.Id)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<Service?> GetServiceByIdAsync(long serviceId, CancellationToken cancellationToken = default)

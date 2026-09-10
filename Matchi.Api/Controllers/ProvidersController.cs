@@ -1,3 +1,4 @@
+using Matchi.Application.Common;
 using Matchi.Application.Features.Providers;
 using Matchi.Application.Features.Providers.Commands;
 using Matchi.Application.Features.Providers.Queries;
@@ -270,10 +271,11 @@ public class ProvidersController : ControllerBase
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
+        var paging = ListPaging.Normalize(page, pageSize);
         var providers = await _mediator.Send(
-            new SearchProvidersQuery(serviceId, lat, lng, radiusKm, sort, page, pageSize),
+            new SearchProvidersQuery(serviceId, lat, lng, radiusKm, sort, paging.Page, paging.PageSize),
             cancellationToken);
-        return Ok(new { page, pageSize, items = providers });
+        return Ok(new { page = paging.Page, pageSize = paging.PageSize, items = providers });
     }
 
     public sealed record UpdateProviderServiceBody(bool IsActive);

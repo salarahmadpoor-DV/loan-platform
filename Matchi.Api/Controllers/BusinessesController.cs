@@ -1,3 +1,4 @@
+using Matchi.Application.Common;
 using Matchi.Application.Features.Businesses;
 using Matchi.Application.Features.Businesses.Commands;
 using Matchi.Application.Features.Businesses.Queries;
@@ -35,8 +36,11 @@ public class BusinessesController : ControllerBase
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        var businesses = await _mediator.Send(new GetBusinessesQuery(page, pageSize), cancellationToken);
-        return Ok(new { page, pageSize, items = businesses });
+        var paging = ListPaging.Normalize(page, pageSize);
+        var businesses = await _mediator.Send(
+            new GetBusinessesQuery(paging.Page, paging.PageSize),
+            cancellationToken);
+        return Ok(new { page = paging.Page, pageSize = paging.PageSize, items = businesses });
     }
 
     [HttpGet("me")]

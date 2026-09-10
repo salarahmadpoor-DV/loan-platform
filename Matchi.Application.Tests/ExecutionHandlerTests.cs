@@ -1,4 +1,5 @@
 using FluentValidation;
+using Matchi.Application.Common;
 using Matchi.Application.Features.Executions.Commands.CancelServiceExecution;
 using Matchi.Application.Features.Executions.Commands.CompleteServiceExecution;
 using Matchi.Application.Features.Executions.Commands.CreateServiceExecution;
@@ -132,6 +133,23 @@ public sealed class ServiceExecutionLifecycleHandlerTests
         var status = await handler.Handle(new StartServiceExecutionCommand(1), CancellationToken.None);
         Assert.Equal("InProgress", status);
         await Assert.ThrowsAsync<ValidationException>(() =>
+            handler.Handle(new StartServiceExecutionCommand(1), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Start_ConcurrentUpdate_IsConflict()
+    {
+        var execution = ServiceExecution.Create(1, null).WithId(1);
+        var executions = new FakeServiceExecutionRepository
+        {
+            Tracked = execution,
+            SaveException = new ConflictException("The execution was modified by another request.")
+        };
+        var handler = new StartServiceExecutionCommandHandler(
+            new FakeCurrentUser(MarketplaceGraph.ProviderUserId),
+            executions);
+
+        await Assert.ThrowsAsync<ConflictException>(() =>
             handler.Handle(new StartServiceExecutionCommand(1), CancellationToken.None));
     }
 

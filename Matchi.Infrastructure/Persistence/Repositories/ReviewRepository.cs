@@ -1,6 +1,6 @@
+using Matchi.Application.Common;
 using Matchi.Domain.Entities;
 using Matchi.Domain.Interfaces;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace Matchi.Infrastructure.Persistence.Repositories;
@@ -86,20 +86,12 @@ public sealed class ReviewRepository : IReviewRepository
         }
         catch (DbUpdateException ex) when (IsDuplicateReview(ex))
         {
-            throw new InvalidOperationException("A review already exists for this target.", ex);
+            throw new ConflictException("A review already exists for this target.", ex);
         }
     }
 
     private static bool IsDuplicateReview(DbUpdateException exception)
     {
-        var sql = exception.InnerException as SqlException
-                  ?? exception.InnerException?.InnerException as SqlException;
-        if (sql is null)
-            return false;
-
-        if (sql.Number is not (2601 or 2627))
-            return false;
-
-        return sql.Message.Contains("UX_Reviews_Deal_Customer", StringComparison.OrdinalIgnoreCase);
+        return SqlServerUpdateConflicts.IsUniqueIndex(exception, "UX_Reviews_Deal_Customer");
     }
 }

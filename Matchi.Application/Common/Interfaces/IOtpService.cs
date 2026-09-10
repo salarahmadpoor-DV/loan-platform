@@ -1,11 +1,10 @@
-using System.Threading;
-using System.Threading.Tasks;
+using Matchi.Application.Common.Models;
 
 namespace Matchi.Application.Common.Interfaces;
 
 public interface IOtpService
 {
-    Task<string> CreateOtpRequestAsync(string mobile, CancellationToken cancellationToken = default);
+    Task<OtpIssueResult> CreateOtpRequestAsync(string mobile, CancellationToken cancellationToken = default);
 
     Task<bool> ValidateOtpAsync(
         string mobile,

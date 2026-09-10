@@ -66,18 +66,7 @@ public sealed class AcceptProposalCommandHandler : IRequestHandler<AcceptProposa
             proposal.TotalPrice);
 
         _dealRepository.Add(deal);
-
-        try
-        {
-            await _dealRepository.SaveChangesAsync(cancellationToken);
-        }
-        catch (InvalidOperationException ex) when (ex.Message == "A deal already exists for this proposal.")
-        {
-            throw new ValidationException(new[]
-            {
-                new ValidationFailure("proposalId", "A deal already exists for this proposal.")
-            });
-        }
+        await _dealRepository.SaveChangesAsync(cancellationToken);
 
         return new AcceptProposalResult(proposal.Id, proposal.Status, deal.Id);
     }

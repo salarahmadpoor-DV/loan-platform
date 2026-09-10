@@ -25,6 +25,7 @@ internal sealed class FakeServiceExecutionRepository : IServiceExecutionReposito
     public ServiceExecution? Tracked { get; set; }
     public bool Exists { get; set; }
     public bool DealVisible { get; set; } = true;
+    public Exception? SaveException { get; set; }
     public List<ServiceExecution> Added { get; } = [];
     public int SaveCount { get; private set; }
 
@@ -45,6 +46,8 @@ internal sealed class FakeServiceExecutionRepository : IServiceExecutionReposito
 
     public Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        if (SaveException is not null)
+            throw SaveException;
         SaveCount++;
         return Task.CompletedTask;
     }
@@ -83,14 +86,22 @@ internal sealed class FakeServiceExecutionRepository : IServiceExecutionReposito
 internal sealed class FakeExecutionAssignmentRepository : IExecutionAssignmentRepository
 {
     public bool HasPrimary { get; set; }
+    public bool HasAssignedProvider { get; set; }
     public bool HasMembership { get; set; } = true;
     public bool ProviderExists { get; set; } = true;
+    public Exception? SaveException { get; set; }
     public ExecutionAssignment? Tracked { get; set; }
     public List<ExecutionAssignment> Added { get; } = [];
     public int SaveCount { get; private set; }
 
     public Task<bool> HasPrimaryAsync(long executionId, CancellationToken cancellationToken = default) =>
         Task.FromResult(HasPrimary);
+
+    public Task<bool> HasAssignedProviderAsync(
+        long executionId,
+        long providerId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(HasAssignedProvider);
 
     public Task<bool> HasActiveMembershipAsync(
         long businessId,
@@ -109,6 +120,8 @@ internal sealed class FakeExecutionAssignmentRepository : IExecutionAssignmentRe
 
     public Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        if (SaveException is not null)
+            throw SaveException;
         SaveCount++;
         return Task.CompletedTask;
     }
@@ -131,6 +144,7 @@ internal sealed class FakeReviewRepository : IReviewRepository
 {
     public Deal? Deal { get; set; }
     public bool Exists { get; set; }
+    public Exception? SaveException { get; set; }
     public List<Review> Added { get; } = [];
     public List<Review> ProviderReviews { get; } = [];
     public List<Review> BusinessReviews { get; } = [];
@@ -172,5 +186,175 @@ internal sealed class FakeReviewRepository : IReviewRepository
         Added.Add(review);
     }
 
-    public Task SaveChangesAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        if (SaveException is not null)
+            throw SaveException;
+        return Task.CompletedTask;
+    }
+}
+
+internal sealed class FakeDealRepository : IDealRepository
+{
+    public bool HasActiveDeal { get; set; }
+    public bool ThrowIfActiveDealQueried { get; set; }
+    public int ActiveDealQueryCount { get; private set; }
+    public List<Deal> Added { get; } = [];
+    public int SaveCount { get; private set; }
+
+    public void Add(Deal deal)
+    {
+        deal.WithId(Added.Count + 1);
+        Added.Add(deal);
+    }
+
+    public Task SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        SaveCount++;
+        return Task.CompletedTask;
+    }
+
+    public Task<IReadOnlyList<Deal>> ListOwnedByUserAsync(
+        long userId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<Deal>>([]);
+
+    public Task<Deal?> GetOwnedByIdAsync(
+        long dealId,
+        long userId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<Deal?>(null);
+
+    public Task<bool> HasActiveDealForRequestAsync(
+        long requestId,
+        CancellationToken cancellationToken = default)
+    {
+        if (ThrowIfActiveDealQueried)
+            throw new InvalidOperationException("Active deal state must not be queried before ownership is established.");
+
+        ActiveDealQueryCount++;
+        return Task.FromResult(HasActiveDeal);
+    }
+}
+
+internal sealed class FakeRequestRepository : IRequestRepository
+{
+    public Request? Owned { get; set; }
+    public int UpdateCount { get; private set; }
+
+    public Task<Customer> GetOrCreateCustomerAsync(long userId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<bool> ServiceExistsAsync(long serviceId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<ServiceAttribute?> GetServiceAttributeAsync(
+        long serviceId,
+        long serviceAttributeId,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<Product?> GetProductAsync(long productId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<bool> ProductCategoryExistsAsync(long productCategoryId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<ProductAttribute?> GetProductAttributeAsync(
+        long productCategoryId,
+        long productAttributeId,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task AddAsync(Request request, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task UpdateAsync(Request request, CancellationToken cancellationToken = default)
+    {
+        UpdateCount++;
+        return Task.CompletedTask;
+    }
+
+    public void RemoveLocationsAndSchedules(Request request) => throw new NotSupportedException();
+
+    public Task<Request?> GetByIdAsync(
+        long requestId,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<Request?> GetOwnedByIdAsync(
+        long requestId,
+        long userId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(Owned is not null && Owned.Id == requestId ? Owned : null);
+
+    public Task<IReadOnlyList<Request>> GetByUserIdAsync(
+        long userId,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+}
+
+internal sealed class FakeProposalRepository : IProposalRepository
+{
+    public Proposal? Tracked { get; set; }
+    public Func<long, Proposal?>? ResolveTracked { get; set; }
+
+    public Task AddAsync(Proposal proposal, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task UpdateAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+    public Task<bool> IsRequestOwnedByUserAsync(
+        long requestId,
+        long userId,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<Proposal?> GetTrackedOwnedByRequestOwnerAsync(
+        long proposalId,
+        long userId,
+        CancellationToken cancellationToken = default)
+    {
+        if (ResolveTracked is not null)
+            return Task.FromResult(ResolveTracked(proposalId));
+
+        return Task.FromResult(
+            Tracked is not null && Tracked.Id == proposalId ? Tracked : null);
+    }
+
+    public Task<IReadOnlyList<Proposal>> ListOwnedRequestProposalsAsync(
+        long requestId,
+        long userId,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<Proposal?> GetOwnedDetailAsync(
+        long proposalId,
+        long userId,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<IReadOnlyList<long>> GetActiveServiceIdsAsync(
+        IReadOnlyCollection<long> serviceIds,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<IReadOnlyList<long>> GetActiveProductIdsAsync(
+        IReadOnlyCollection<long> productIds,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<IReadOnlyList<long>> GetOfferedServiceIdsAsync(
+        bool asProvider,
+        long partyId,
+        IReadOnlyCollection<long> serviceIds,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<IReadOnlyList<long>> GetOfferedProductIdsAsync(
+        bool asProvider,
+        long partyId,
+        IReadOnlyCollection<long> productIds,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
 }

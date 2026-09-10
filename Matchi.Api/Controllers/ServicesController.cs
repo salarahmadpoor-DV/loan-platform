@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
+using Matchi.Application.Common;
 using Matchi.Application.Features.Services.Queries.GetServiceById;
 using Matchi.Application.Features.Services.Queries.GetServiceCategories;
 using Matchi.Application.Features.Services.Queries;
@@ -28,10 +29,18 @@ namespace Matchi.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetServices([FromQuery] long? categoryId, [FromQuery] string? q = null, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetServices(
+            [FromQuery] long? categoryId,
+            [FromQuery] string? q = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20,
+            CancellationToken cancellationToken = default)
         {
-            var services = await _mediator.Send(new GetServicesQuery(categoryId), cancellationToken);
-            return Ok(new { page, pageSize, items = services });
+            var paging = ListPaging.Normalize(page, pageSize);
+            var services = await _mediator.Send(
+                new GetServicesQuery(categoryId, q, paging.Page, paging.PageSize),
+                cancellationToken);
+            return Ok(new { page = paging.Page, pageSize = paging.PageSize, items = services });
         }
 
         [HttpGet("{serviceId}")]

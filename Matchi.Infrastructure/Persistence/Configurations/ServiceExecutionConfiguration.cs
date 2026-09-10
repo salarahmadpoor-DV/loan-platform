@@ -25,7 +25,8 @@ public class ServiceExecutionConfiguration : IEntityTypeConfiguration<ServiceExe
         builder.Property(x => x.Status)
             .IsRequired()
             .HasMaxLength(30)
-            .HasDefaultValue("Pending");
+            .HasDefaultValue("Pending")
+            .IsConcurrencyToken();
 
         builder.Property(x => x.ScheduledDate)
             .HasColumnType("date");

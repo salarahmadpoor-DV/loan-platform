@@ -16,4 +16,8 @@ public interface IDealRepository
         long dealId,
         long userId,
         CancellationToken cancellationToken = default);
+
+    Task<bool> HasActiveDealForRequestAsync(
+        long requestId,
+        CancellationToken cancellationToken = default);
 }

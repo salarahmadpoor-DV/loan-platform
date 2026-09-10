@@ -1,4 +1,5 @@
 using FluentValidation;
+using Matchi.Application.Common;
 using Matchi.Application.Features.Reviews.Commands.CreateReview;
 using Matchi.Application.Features.Reviews.Queries.GetBusinessReviews;
 using Matchi.Application.Features.Reviews.Queries.GetProviderReviews;
@@ -79,6 +80,21 @@ public sealed class CreateReviewCommandHandlerTests
     }
 
     [Fact]
+    public async Task DuplicateReviewRace_IsConflict()
+    {
+        var handler = new CreateReviewCommandHandler(
+            new FakeCurrentUser(MarketplaceGraph.CustomerUserId),
+            new FakeReviewRepository
+            {
+                Deal = CompletedProviderDeal(),
+                SaveException = new ConflictException("A review already exists for this target.")
+            });
+
+        await Assert.ThrowsAsync<ConflictException>(() =>
+            handler.Handle(new CreateReviewCommand(1, 5, null, null, 5), CancellationToken.None));
+    }
+
+    [Fact]
     public async Task ServiceReview_RequiresCompletedExecution()
     {
         var handler = new CreateReviewCommandHandler(
@@ -128,5 +144,31 @@ public sealed class GetReviewsQueryHandlerTests
         Assert.Single(result);
         Assert.Equal("Business", result[0].TargetType);
         Assert.Equal(7, result[0].TargetId);
+    }
+
+    [Fact]
+    public async Task DualTargetLegacyRow_DoesNotThrowOnProviderOrBusinessLists()
+    {
+        var dual = Review.Create(1, 2, 5, "legacy", null, 8).WithId(1);
+        dual.Set(nameof(Review.BusinessId), 7L);
+
+        var providerHandler = new GetProviderReviewsQueryHandler(new FakeReviewRepository
+        {
+            ProviderReviews = { dual }
+        });
+        var businessHandler = new GetBusinessReviewsQueryHandler(new FakeReviewRepository
+        {
+            BusinessReviews = { dual }
+        });
+
+        var provider = (await providerHandler.Handle(new GetProviderReviewsQuery(8), CancellationToken.None)).ToList();
+        var business = (await businessHandler.Handle(new GetBusinessReviewsQuery(7), CancellationToken.None)).ToList();
+
+        Assert.Single(provider);
+        Assert.Equal("Provider", provider[0].TargetType);
+        Assert.Equal(8, provider[0].TargetId);
+        Assert.Single(business);
+        Assert.Equal("Business", business[0].TargetType);
+        Assert.Equal(7, business[0].TargetId);
     }
 }

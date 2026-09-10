@@ -18,11 +18,13 @@ public sealed class GetProviderReviewsQueryHandler : IRequestHandler<GetProvider
         CancellationToken cancellationToken)
     {
         var reviews = await _reviews.ListByProviderAsync(request.ProviderId, cancellationToken);
-        return reviews.Select(r => new ReviewDto(
-            r.Id,
-            r.ProviderId!.Value,
-            "Provider",
-            r.Rating,
-            r.Comment));
+        return reviews
+            .Where(r => r.ProviderId.HasValue)
+            .Select(r => new ReviewDto(
+                r.Id,
+                r.ProviderId!.Value,
+                "Provider",
+                r.Rating,
+                r.Comment));
     }
 }

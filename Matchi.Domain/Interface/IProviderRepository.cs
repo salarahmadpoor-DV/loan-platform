@@ -14,6 +14,8 @@ public interface IProviderRepository
 
     Task<IEnumerable<Provider>> GetProvidersByServiceIdAsync(
         long serviceId,
+        int skip,
+        int take,
         CancellationToken cancellationToken = default);
 
     Task<bool> ServiceExistsActiveAsync(long serviceId, CancellationToken cancellationToken = default);

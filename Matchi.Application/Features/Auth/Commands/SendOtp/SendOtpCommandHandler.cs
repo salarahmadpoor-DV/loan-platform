@@ -12,10 +12,11 @@ public sealed class SendOtpCommandHandler : IRequestHandler<SendOtpCommand, stri
         _otpService = otpService;
     }
 
-    public Task<string> Handle(
+    public async Task<string> Handle(
         SendOtpCommand request,
         CancellationToken cancellationToken)
     {
-        return _otpService.CreateOtpRequestAsync(request.Mobile.Trim(), cancellationToken);
+        var issued = await _otpService.CreateOtpRequestAsync(request.Mobile.Trim(), cancellationToken);
+        return issued.RequestId;
     }
 }

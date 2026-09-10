@@ -56,14 +56,5 @@ namespace Matchi.Api.Controllers
 
             return Ok(new { success = true });
         }
-        [HttpGet("request-view-test")]
-        [Authorize(Policy = "REQUEST_VIEW")]
-        public IActionResult RequestViewTest()
-        {
-            return Ok(new
-            {
-                message = "REQUEST_VIEW permission granted"
-            });
-        }
     }
 }

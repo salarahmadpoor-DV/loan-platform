@@ -68,6 +68,7 @@ public class DealConfiguration : IEntityTypeConfiguration<Deal>
 
         builder.HasIndex(x => x.ProposalId)
             .IsUnique()
+            .HasFilter("[IsDeleted] = 0")
             .HasDatabaseName("UX_Deals_ProposalId");
     }
 }

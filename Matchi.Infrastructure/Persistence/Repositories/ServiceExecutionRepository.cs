@@ -1,6 +1,6 @@
+using Matchi.Application.Common;
 using Matchi.Domain.Entities;
 using Matchi.Domain.Interfaces;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace Matchi.Infrastructure.Persistence.Repositories;
@@ -57,23 +57,19 @@ public sealed class ServiceExecutionRepository : IServiceExecutionRepository
         {
             await _context.SaveChangesAsync(cancellationToken);
         }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            throw new ConflictException("The execution was modified by another request.", ex);
+        }
         catch (DbUpdateException ex) when (IsDuplicateDealExecution(ex))
         {
-            throw new InvalidOperationException("An execution already exists for this deal.", ex);
+            throw new ConflictException("An execution already exists for this deal.", ex);
         }
     }
 
     private static bool IsDuplicateDealExecution(DbUpdateException exception)
     {
-        var sql = exception.InnerException as SqlException
-                  ?? exception.InnerException?.InnerException as SqlException;
-        if (sql is null)
-            return false;
-
-        if (sql.Number is not (2601 or 2627))
-            return false;
-
-        return sql.Message.Contains("UX_ServiceExecutions_DealId", StringComparison.OrdinalIgnoreCase);
+        return SqlServerUpdateConflicts.IsUniqueIndex(exception, "UX_ServiceExecutions_DealId");
     }
 
     public async Task<IReadOnlyList<ServiceExecution>> ListVisibleByDealAsync(

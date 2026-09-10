@@ -1,5 +1,6 @@
 using FluentValidation;
 using FluentValidation.Results;
+using Matchi.Application.Common;
 using Matchi.Application.Common.Interfaces;
 using Matchi.Application.Features.Providers;
 using Matchi.Domain.Entities;
@@ -90,6 +91,9 @@ public sealed class CreateExecutionAssignmentCommandHandler : IRequestHandler<Cr
             });
         }
 
+        if (await _assignments.HasAssignedProviderAsync(execution.Id, command.ProviderId, cancellationToken))
+            throw new ConflictException("This provider is already assigned to the execution.");
+
         if (command.IsPrimary != true && !hasPrimary)
             isPrimary = true;
 
@@ -100,18 +104,7 @@ public sealed class CreateExecutionAssignmentCommandHandler : IRequestHandler<Cr
             isPrimary);
 
         _assignments.Add(assignment);
-
-        try
-        {
-            await _assignments.SaveChangesAsync(cancellationToken);
-        }
-        catch (InvalidOperationException ex) when (ex.Message == "A primary assignment already exists.")
-        {
-            throw new ValidationException(new[]
-            {
-                new ValidationFailure("isPrimary", "A primary assignment already exists.")
-            });
-        }
+        await _assignments.SaveChangesAsync(cancellationToken);
 
         return assignment.Id;
     }

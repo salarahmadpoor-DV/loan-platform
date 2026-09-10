@@ -1,5 +1,6 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Matchi.Application.Common;
 using Matchi.Application.Common.Interfaces;
 using Matchi.Application.Common.Models;
 using Matchi.Application.DependencyInjection;
@@ -31,7 +32,6 @@ if (string.IsNullOrWhiteSpace(jwtSettings.Audience))
 if (jwtSettings.Key.Length < 32)
     throw new InvalidOperationException("JWT configuration Jwt:Key must be at least 32 characters long.");
 
-// Services
 builder.Services.Configure<JwtSettings>(jwtSection);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
@@ -93,48 +93,54 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// Database Seed
-using (var scope = app.Services.CreateScope())
+var seedEnabled = app.Configuration.GetValue("Seed:Enabled", false);
+if (seedEnabled && app.Environment.IsDevelopment())
 {
-    var dbContext = scope.ServiceProvider
-        .GetRequiredService<MatchiDbContext>();
-
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<MatchiDbContext>();
     await DatabaseSeeder.SeedAsync(dbContext);
 }
+else if (seedEnabled)
+{
+    app.Logger.LogWarning("Seed:Enabled is ignored because the environment is not Development.");
+}
 
-// Middleware
 app.UseExceptionHandler(errorApp =>
 {
     errorApp.Run(async context =>
     {
         var exceptionFeature = context.Features.Get<IExceptionHandlerFeature>();
         var exception = exceptionFeature?.Error;
+        var traceId = context.TraceIdentifier;
+        var exposeDetails = context.RequestServices
+            .GetRequiredService<IHostEnvironment>()
+            .IsDevelopment();
 
-        var statusCode = exception switch
+        if (exception is not null
+            && exception is not ValidationException
+            && exception is not UnauthorizedAccessException
+            && exception is not KeyNotFoundException
+            && exception is not ConflictException)
         {
-            FluentValidation.ValidationException => StatusCodes.Status400BadRequest,
-            UnauthorizedAccessException => StatusCodes.Status401Unauthorized,
-            KeyNotFoundException => StatusCodes.Status404NotFound,
-            _ => StatusCodes.Status500InternalServerError
-        };
+            var logger = context.RequestServices.GetRequiredService<ILoggerFactory>()
+                .CreateLogger("Matchi.Api.ExceptionHandler");
+            logger.LogError(exception, "Unhandled exception. TraceId {TraceId}", traceId);
+        }
+
+        var mapped = ExceptionHttpMapper.Map(exception, traceId, exposeDetails);
 
         var problemDetails = new ProblemDetails
         {
-    Status = statusCode,
-    Title = exception?.GetType().Name,
-    Detail = exception?.Message
+            Status = mapped.Status,
+            Title = mapped.Title,
+            Detail = mapped.Detail
         };
-
-        if (exception is FluentValidation.ValidationException validationException)
-        {
-            problemDetails.Detail = "One or more validation errors occurred.";
-            problemDetails.Extensions["errors"] = validationException.Errors
-                .GroupBy(e => e.PropertyName)
-                .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
-        }
+        problemDetails.Extensions["traceId"] = mapped.TraceId;
+        if (mapped.Errors is not null)
+            problemDetails.Extensions["errors"] = mapped.Errors;
 
         context.Response.ContentType = MediaTypeNames.Application.Json;
-        context.Response.StatusCode = statusCode;
+        context.Response.StatusCode = mapped.Status;
 
         await JsonSerializer.SerializeAsync(context.Response.Body, problemDetails, new JsonSerializerOptions
         {

@@ -103,14 +103,35 @@ public sealed class ReviewDomainTests
     [Fact]
     public void Create_RequiresXorTargetAndRatingRange()
     {
-        var review = Review.Create(1, 2, 5, "good", null, 9);
-        Assert.Equal((byte)5, review.Rating);
-        Assert.Equal(9, review.ProviderId);
-        Assert.Null(review.BusinessId);
+        var providerReview = Review.Create(1, 2, 5, "good", null, 9);
+        Assert.Equal((byte)5, providerReview.Rating);
+        Assert.Equal(9, providerReview.ProviderId);
+        Assert.Null(providerReview.BusinessId);
+
+        var businessReview = Review.Create(1, 2, 4, "ok", 3, null);
+        Assert.Equal(3, businessReview.BusinessId);
+        Assert.Null(businessReview.ProviderId);
 
         Assert.Throws<InvalidOperationException>(() => Review.Create(1, 2, 0, null, 3, null));
         Assert.Throws<InvalidOperationException>(() => Review.Create(1, 2, 6, null, 3, null));
         Assert.Throws<InvalidOperationException>(() => Review.Create(1, 2, 4, null, 3, 9));
         Assert.Throws<InvalidOperationException>(() => Review.Create(1, 2, 4, null, null, null));
+    }
+}
+
+public sealed class DealDomainTests
+{
+    [Fact]
+    public void Create_AllowsSameProposalIdInMemory_SoftDeleteMarksDeleted()
+    {
+        var first = Deal.Create(1, 8, 2, 10m);
+        var second = Deal.Create(1, 8, 2, 10m);
+        Assert.Equal(8, first.ProposalId);
+        Assert.Equal(8, second.ProposalId);
+        Assert.False(first.IsDeleted);
+
+        first.SoftDelete();
+        Assert.True(first.IsDeleted);
+        Assert.False(second.IsDeleted);
     }
 }

@@ -1,4 +1,4 @@
-# MATCHI_PROJECT_CONTEXT v1.4
+# MATCHI_PROJECT_CONTEXT v2.0
 
 **Updated:** 2026-09-09  
 **Scope:** Architectural baseline and implementation log for the Matchi .NET 8 marketplace.
@@ -48,7 +48,7 @@ Review
 | Task 05 — Proposal | COMPLETED |
 | Task 06 — Deal | COMPLETED |
 | Task 07 — Execution & Review | COMPLETE |
-| Task 08 — Migration & Final Hardening | NOT STARTED |
+| Task 08 — Migration & Final Hardening | COMPLETE (Phases 1–5, 8.6, 8.7A, 8.7B; Review XOR on live DB) |
 
 ---
 
@@ -63,8 +63,10 @@ Review
 - Active compiled migration assembly contains:
   - `20260909065436_MatchiDbExistingBaseline` (stamped; `Up()` never executed)
   - `20260909070502_Task07IndexDelta` (applied to live `MatchiDb`)
+  - `20260909083411_Task08IntegrityConcurrency` (**applied** 2026-09-09)
+  - `20260909092717_Task08ReviewTargetXor` (**applied** 2026-09-09)
 - That baseline is a **greenfield** `Up()` (creates the existing marketplace schema). It **must not** be executed against live `MatchiDb`.
-- `MatchiDbContextModelSnapshot` represents the post–Task 7 index model.
+- `MatchiDbContextModelSnapshot` represents the post–Task 8.7B model (integrity indexes + XOR `CK_Reviews_Target`). Live `MatchiDb` includes the Task 8.2 index delta and XOR Review check.
 
 ### Stamp (2026-09-09)
 
@@ -100,14 +102,16 @@ Not dropped (does not exist): `IX_ExecutionAssignments_ServiceExecutionId` — s
 
 Archived `20260909060203_Task07ExecutionReviewIndexes` was **not** compiled or applied.
 
-### Final migration history
+### Final migration history (live `MatchiDb`)
 
 | MigrationId | ProductVersion |
 |---|---|
 | `20260909065436_MatchiDbExistingBaseline` | `8.0.11` |
 | `20260909070502_Task07IndexDelta` | `8.0.11` |
+| `20260909083411_Task08IntegrityConcurrency` | `8.0.11` |
+| `20260909092717_Task08ReviewTargetXor` | `8.0.11` |
 
-Exactly two rows. No `InitialCreate` / `MatchiBaselineAlignment` / archived Task07 IDs.
+Exactly four applied rows. No `InitialCreate` / `MatchiBaselineAlignment` / archived Task07 IDs.
 
 ### Schema / data after Task 7 delta
 
@@ -120,12 +124,26 @@ Exactly two rows. No `InitialCreate` / `MatchiBaselineAlignment` / archived Task
 
 ### Task 8
 
-**NOT STARTED.**
+**COMPLETE** for the Task 8 hardening scope (Phases 1–5, 8.6, 8.7A, 8.7B). Product items listed under Known limitations remain deferred and are not Task 8 blockers.
 
-### Build / tests (Task 7 delta session)
+### Task 8 Phase 2 — Security & runtime hardening (2026-09-09)
 
-- `dotnet build MatchiSolution.sln` — succeeded, 0 warnings, 0 errors
-- `dotnet test Matchi.Application.Tests` — 36 passed, 0 failed
+Implemented in application/configuration only. **No EF migrations. No database schema or data changes. Baseline `Up()` was not executed.**
+
+- Committed `appsettings.json` / `appsettings.Development.json` no longer contain SQL credentials or JWT signing keys. Keys remain `ConnectionStrings:DefaultConnection` and `Jwt:Key` (plus Issuer/Audience). Local Development: .NET User Secrets (`UserSecretsId` on `Matchi.Api`). Deployment: environment variables (`ConnectionStrings__DefaultConnection`, `Jwt__Key`). Credentials that were previously committed **must be rotated outside this repo**.
+- OTP: cryptographically random 6-digit codes, TTL (default 5 minutes), max failed attempts (default 5), in-memory store. HTTP contract unchanged (`requestId` only). Static well-known codes are not a bypass.
+- Production unexpected exceptions return a generic 500 plus `traceId`. Details are logged server-side. Development may still expose exception type/message. `400`/`401`/`404` mappings preserved.
+- `DatabaseSeeder` runs only when `Seed:Enabled=true` **and** the environment is Development. Production never auto-seeds. Default in committed `appsettings.json` is `Seed:Enabled=false`.
+- Removed debug route `GET /api/users/request-view-test`.
+
+Developer seeding: Development + `"Seed": { "Enabled": true }` in `appsettings.Development.json` (already set). To disable local seed, set `Seed:Enabled` to `false`.
+
+JWT validation (issuer, audience, lifetime, signing key) is unchanged.
+
+### Build / tests (Task 8 Phase 2)
+
+- `dotnet build MatchiSolution.sln --no-restore` — succeeded, 0 errors (NU1900 nuget feed warnings only)
+- `dotnet test Matchi.Application.Tests --no-restore` — 45 passed, 0 failed
 
 ---
 
@@ -356,7 +374,7 @@ Business-owner only. Execution must belong to a Business Proposal. Assigned Prov
 
 ### Review
 
-Customer who owns `Deal.Request` only. Deal must be `Active`. Service/Hybrid requires a **Completed** ServiceExecution. Target is XOR: Proposal Business, or Proposal Provider / any assigned execution Provider. Rating 1–5 (`CK_Reviews_Rating`). At least one target (`CK_Reviews_Target`). Duplicate non-deleted review per Deal+Customer+target (`UX_Reviews_Deal_Customer_Business` / `UX_Reviews_Deal_Customer_Provider`). GET lists exclude `IsDeleted`.
+Customer who owns `Deal.Request` only. Deal must be `Active`. Service/Hybrid requires a **Completed** ServiceExecution. Target is XOR: Proposal Business, or Proposal Provider / any assigned execution Provider. Rating 1–5 (`CK_Reviews_Rating`). Exactly one of `BusinessId` / `ProviderId` (`CK_Reviews_Target` XOR). Duplicate non-deleted review per Deal+Customer+target (`UX_Reviews_Deal_Customer_Business` / `UX_Reviews_Deal_Customer_Provider`). GET lists exclude `IsDeleted`.
 
 ### Authorization / visibility
 
@@ -381,11 +399,203 @@ Customer (Request owner), Proposal Provider, Business owner, and assigned Provid
 
 ### DB constraints (Task 07)
 
-Live `MatchiDb` now has unique Deal execution (`UX_ServiceExecutions_DealId`), filtered unique primary assignment (`UX_ExecutionAssignments_Primary`), filtered unique review targets, and `IX_ExecutionAssignments_ExecutionId_Status`. Applied via `20260909070502_Task07IndexDelta`. Archived `Task07ExecutionReviewIndexes` was not used. Existing `CK_ServiceExecutions_Time`, `CK_Reviews_Rating`, `CK_Reviews_Target` unchanged.
+Live `MatchiDb` now has unique Deal execution (`UX_ServiceExecutions_DealId`), filtered unique primary assignment (`UX_ExecutionAssignments_Primary`), filtered unique review targets, and `IX_ExecutionAssignments_ExecutionId_Status`. Applied via `20260909070502_Task07IndexDelta`. Archived `Task07ExecutionReviewIndexes` was not used. `CK_Reviews_Target` is XOR as of `20260909092717_Task08ReviewTargetXor`. `CK_ServiceExecutions_Time` and `CK_Reviews_Rating` unchanged.
 
 ### Tests / verification
 
 `Matchi.Application.Tests` (xUnit): domain transitions, create/schedule/start/complete/cancel, assignment membership/primary/remove, review create/query including deleted exclusion.
+
+---
+
+## Task 8 Phase 3 / 8.2 — Data integrity & concurrency (2026-09-09)
+
+**Status:** COMPLETE for this phase. Task 8 remains IN PROGRESS. Phase 2 (security/runtime) remains COMPLETE and uncommitted with this work.
+
+### Preflight (read-only, live `MatchiDb`)
+
+- `__EFMigrationsHistory`: `20260909065436_MatchiDbExistingBaseline`, `20260909070502_Task07IndexDelta` (unchanged after this phase)
+- Review XOR violations `(both null OR both set)`: **1 row** — `Reviews.Id = 1`, `DealId = 1`, `CustomerId = 2`, `BusinessId = 2`, `ProviderId = 3`, `IsDeleted = 0`
+- Duplicate Assigned `(ServiceExecutionId, ProviderId)`: **0**
+- Duplicate non-deleted Deals per `ProposalId`: **0**
+- Live `CK_Reviews_Target`: `[BusinessId] IS NOT NULL OR [ProviderId] IS NOT NULL` (OR)
+- Live `UX_Deals_ProposalId`: unique, **unfiltered**
+- Executions: 1 Pending. Assignments: 1 Assigned
+
+### Implemented
+
+- Filtered unique `UX_ExecutionAssignments_AssignedProvider` on `(ServiceExecutionId, ProviderId)` where `Status = N'Assigned'`. Cancelled history and later reassignment remain allowed. Application `HasAssignedProviderAsync` + `ConflictException`.
+- `UX_Deals_ProposalId` replaced with unique filtered `[IsDeleted] = 0` (one non-deleted Deal per Proposal). Product intent: Deal is `AuditableEntity`; lists already exclude `IsDeleted`.
+- `ServiceExecution.Status` is an EF concurrency token (no new column, no `rowversion`). Concurrent Start/Complete/Cancel last-write-wins is replaced by `DbUpdateConcurrencyException` → `ConflictException` → HTTP 409.
+- Unique index violations on Deal / execution / assignment / review save map to `ConflictException` (HTTP 409). Validation remains 400. Production 500 sanitization unchanged.
+
+### Deferred in this phase
+
+- **XOR `CK_Reviews_Target` not changed.** Domain still requires exactly one of Business/Provider. Live row 1 has both values; adding XOR would fail on apply. No data rewrite in this task.
+- `rowversion` not added (Status token is sufficient for the execution lifecycle race).
+
+### Migration
+
+- Created: `20260909083411_Task08IntegrityConcurrency`
+- **Not applied.** `dotnet ef database update` was **not** run. Live schema and data unchanged.
+
+`Up()`:
+
+1. `DropIndex` `UX_Deals_ProposalId` on `Deals`
+2. `CreateIndex` unique filtered `UX_ExecutionAssignments_AssignedProvider`
+3. `CreateIndex` unique filtered `UX_Deals_ProposalId`
+
+No CreateTable/DropTable/AlterColumn/data operations. Status concurrency is snapshot-only.
+
+---
+
+## Task 8 Phase 4 / 8.3 — Request / Deal lifecycle (2026-09-09)
+
+**Status:** COMPLETE for this phase. Task 8 remains IN PROGRESS. Phases 2 and 3 remain COMPLETE (Phase 3 migration still unapplied).
+
+### Policy implemented
+
+Active Deal = non-deleted Deal with `Status = "Active"` (`Deal.Create` always starts Active; Deal Complete/Cancel is not implemented). Soft-deleted Deals do not block.
+
+- Owner cancel of an Open Request **with** an Active Deal → `ConflictException` / HTTP **409**. Request status stays `Open`. Deal unchanged.
+- Owner delete of a Request **with** an Active Deal → **409**. Request not soft-deleted. Deal unchanged.
+- Owner cancel **without** an Active Deal → existing `Cancelled` behavior.
+- Owner delete **without** an Active Deal → existing soft-delete.
+- Non-owner cancel/delete still **404** via `GetOwnedByIdAsync` **before** the Active Deal query (IDOR unchanged).
+- Accept Proposal still creates an Active Deal, leaves Request **Open**, does **not** auto-reject siblings, and still allows **multiple** Active Deals per Request.
+
+`IDealRepository.HasActiveDealForRequestAsync` is an existence query (`AnyAsync`). No new index, no schema change.
+
+### Race
+
+Cancel/delete vs concurrent Accept is **not** fully race-free: there is no shared transaction or Request concurrency token. Application guard is required; DB isolation / Request RowVersion is **deferred**.
+
+### BusinessProvider
+
+Owner `POST /api/businesses/me/providers` can still create `Active` membership (optional `status`, default Active). `POST .../invite-provider` still persists `Pending`. Context already documents owner add/update/remove on `/me/providers` and invite as Pending + provider accept. This is **intended membership management**, not an authorization bypass of owner-only APIs. **Left unchanged.** Invite-must-accept as a hard security rule is a product decision and remains deferred.
+
+### Database
+
+No migration created or modified. `20260909083411_Task08IntegrityConcurrency` remains unapplied. Live `MatchiDb` unchanged.
+
+---
+
+## Task 8 Phase 5 / 8.4 — Final application hardening & readiness audit (2026-09-09)
+
+**Status:** COMPLETE for this phase (PASS WITH FINDINGS). Task 8 remains **IN PROGRESS** because the integrity migration is unapplied and Review XOR cannot be enforced in the DB until legacy data is remediated.
+
+### Implemented
+
+- Catalog list paging: `GET /api/services` (`q` + page/pageSize), `GET /api/businesses` (page/pageSize), `GET /api/providers` (page/pageSize when `serviceId` is present). Filter then `OrderBy` then `Skip`/`Take` in SQL. Page size capped at 100.
+- Review list mapping skips rows missing the list’s target id (defensive for malformed data). Dual-target legacy rows do not throw.
+- `docs/api-endpoints-mvp.md` aligned for paging, 409, review XOR, invite persist, CORS note.
+
+### Audited, not changed
+
+- **CORS:** no frontend origin in repo; not required by current API-only architecture. Deferred to deployment. No `AllowAnyOrigin`.
+- **Matching:** read-time only (`GetRequestMatchesQuery` + `IMatchingReadRepository`). No match persistence / write-path. Intentionally deferred.
+- **Review XOR DB:** domain + FluentValidation XOR. Live `CK_Reviews_Target` remains OR. `Reviews.Id = 1` still has both targets. No migration, no data change.
+- **Authorization:** no new IDOR or missing `[Authorize]` on Task 8 paths. Public catalog/review GETs remain public. Owner 404-before-lifecycle remains.
+- **Runtime:** Phase 2 intact (empty committed secrets, JWT required, seed Development-only, sanitized 500 + traceId, Swagger Development-only, random OTP).
+- **Dead code:** no RequestViewTest, static OTP, or Console.WriteLine in production projects.
+- Provider `lat`/`lng`/`radiusKm`/`sort` still ignored (geo/sort not specified beyond query params).
+- Requests/Deals/Reviews/Executions lists were never paginated query contracts.
+
+### Database
+
+No migration created/modified/applied. Live history unchanged.
+
+---
+
+## Task 8 Phase 8.6 — Controlled apply of `Task08IntegrityConcurrency` (2026-09-09)
+
+**Status:** COMPLETE. Task 8 remains IN PROGRESS (Review XOR DB still pending). No application code changes in this phase. No commit. No push.
+
+**Target:** SQL Server `.`, database `MatchiDb`. Command: `dotnet ef database update 20260909083411_Task08IntegrityConcurrency`.
+
+### Preflight (read-only)
+
+- History before apply: baseline + `Task07IndexDelta` only (2 rows). Target ID absent.
+- Active Deal duplicates (`IsDeleted = 0`, same `ProposalId`): **0**
+- Assigned Provider duplicates (`Status = Assigned`, same `(ServiceExecutionId, ProviderId)`): **0**
+- `UX_Deals_ProposalId` existed, unique, **unfiltered**
+- `UX_ExecutionAssignments_AssignedProvider` did **not** exist
+- `Reviews.Id = 1` still `BusinessId = 2`, `ProviderId = 3` (not modified)
+
+### Applied SQL (EF)
+
+1. `DROP INDEX [UX_Deals_ProposalId] ON [dbo].[Deals]`
+2. `CREATE UNIQUE INDEX [UX_ExecutionAssignments_AssignedProvider] ON [dbo].[ExecutionAssignments] ([ServiceExecutionId], [ProviderId]) WHERE [Status] = N'Assigned'`
+3. `CREATE UNIQUE INDEX [UX_Deals_ProposalId] ON [dbo].[Deals] ([ProposalId]) WHERE [IsDeleted] = 0`
+4. Insert history row `20260909083411_Task08IntegrityConcurrency` / `8.0.11`
+
+Baseline `Up()` was **not** executed. No other pending migrations were applied.
+
+### Post-verify
+
+- History: three rows as listed above
+- `UX_Deals_ProposalId`: unique, filter `([IsDeleted]=(0))`
+- `UX_ExecutionAssignments_AssignedProvider`: unique, filter `([Status]=N'Assigned')`
+- Other Deals/ExecutionAssignments indexes unchanged except the two operations above
+- `CK_Reviews_Target` still OR; `Reviews.Id = 1` unchanged; Deal/Assignment/Review row counts still 1
+- No tables/columns added or dropped by this apply
+
+### Tests / build
+
+- `dotnet test Matchi.Application.Tests --no-restore`: 67 passed, 0 failed
+- `dotnet build MatchiSolution.sln --no-restore`: 0 errors; NU1900 only
+
+---
+
+## Task 8 Phase 8.7A — Review #1 target audit (2026-09-09)
+
+**Status:** COMPLETE (PASS). READ-ONLY. No schema or data change in that phase.
+
+Conclusive target for `Reviews.Id = 1`: **Business** (do not reinterpret).
+
+- Pre-remediation row: `DealId = 1`, `CustomerId = 2`, `BusinessId = 2`, `ProviderId = 3`, `IsDeleted = 0`
+- Marketplace party on accepted Proposal 2: `BusinessId = 2`, `ProviderId = NULL`
+- Provider 3 is execution-assigned on Deal 1, not the Proposal Provider
+- Only dual-target Review: Id 1
+- Intended final row: `BusinessId = 2`, `ProviderId = NULL`
+
+---
+
+## Task 8 Phase 8.7B — Review #1 remediation + XOR `CK_Reviews_Target` (2026-09-09)
+
+**Status:** COMPLETE. Task 8 hardening scope COMPLETE. No commit. No push.
+
+**Target:** SQL Server `.`, database `MatchiDb`.
+
+### Data (before constraint)
+
+Preflight: Review 1 was `BusinessId = 2`, `ProviderId = 3`, `IsDeleted = 0`. Dual-target count = **1**.
+
+UPDATE (exactly one row): `ProviderId = NULL`, `UpdateDate = GETDATE()` where `Id = 1 AND BusinessId = 2 AND ProviderId = 3`.
+
+After:
+
+- Review 1: `BusinessId = 2`, `ProviderId = NULL`, `IsDeleted = 0`
+- Dual-target: **0**
+- Neither-target: **0**
+- Business-only: **1**
+- Provider-only: **0**
+
+### Schema
+
+EF `ReviewConfiguration` `CK_Reviews_Target` replaced OR with XOR. Domain/FluentValidation already XOR. Provider reviews may still target an execution-assigned Provider (unchanged).
+
+Migration: `20260909092717_Task08ReviewTargetXor`
+
+`Up()` only: drop `CK_Reviews_Target`; add XOR `CK_Reviews_Target`. No table/column/index/FK/data/seed operations.
+
+Applied: `dotnet ef database update 20260909092717_Task08ReviewTargetXor`. Baseline `Up()` was **not** executed.
+
+Live definition: `([BusinessId] IS NOT NULL AND [ProviderId] IS NULL OR [BusinessId] IS NULL AND [ProviderId] IS NOT NULL)` (SQL Server AND-before-OR; equivalent to XOR).
+
+### Tests / build
+
+- `dotnet test Matchi.Application.Tests --no-restore`: 67 passed, 0 failed (no test updates)
+- `dotnet build MatchiSolution.sln --no-restore`: 0 errors; NU1900 only
 
 ---
 
@@ -395,7 +605,7 @@ Live `MatchiDb` now has unique Deal execution (`UX_ServiceExecutions_DealId`), f
 |---|---|
 | `MATCHI_PROJECT_CONTEXT_v1.1.md` missing | Created this file from Task 02/03 baseline. |
 | Invite/accept were stubs | Invite persists `Pending` membership; accept activates for the Provider user. Canonical APIs are `/api/businesses/me/providers`. |
-| `GET /api/businesses` returned an empty list | Now lists non-deleted businesses. Pagination envelope is still not applied. |
+| `GET /api/businesses` returned an empty list | Now lists non-deleted businesses. Pagination applied in Phase 8.4. |
 | Only `REQUEST_VIEW` was seeded | Seeded Provider/Business/Service/Product permissions and role `USER`. |
 | `Provider`/`Business` children had no mutators | Added domain methods; private setters kept. |
 | `AuditableEntity` had no restore | Added `Restore()` for reactivation behind unique filtered indexes. |
@@ -405,20 +615,25 @@ Live `MatchiDb` now has unique Deal execution (`UX_ServiceExecutions_DealId`), f
 ## Known limitations
 
 - Matching is a read-only query. Proposal, Deal, ServiceExecution, ExecutionAssignment, and Review write/read paths are implemented. ProductDelivery, Deal cancel/complete, chat, complaint, payment, commission, verification, TrustScore: **not implemented**.
-- `UX_Deals_ProposalId` is not filtered; a soft-deleted Deal still blocks another Deal for that Proposal.
 - Sibling Pending proposals are not auto-rejected. Multiple Deals per Request are allowed.
 - Historical Task 05 Accepts may have `Accepted` Proposal with no Deal row.
 - Proposal expiration processing and uniqueness of (Request, Provider/Business) are deferred.
 - Provider/Business `Rating` / `ReviewCount` denormalized counters are not updated when a Review is created.
-- Provider public search still ignores radius/sort/true pagination.
-- Business public list ignores page/pageSize.
+- Provider public search still ignores `lat`/`lng`/`radiusKm`/`sort`. Pagination for `serviceId` search is applied.
+- CORS is not configured; set allowed origins at deployment if a browser frontend is added.
 - `AreaType` allow-list is Application-level, not a DB check constraint.
 - Overlap rejection for availability is Application-level.
 - `ProviderCapability` DB index is non-unique; uniqueness of one active row per `(ProviderId, ServiceAttributeId)` is enforced in Application.
 - Logo/media upload and portfolio APIs are not in this task.
-- Task 7 unique indexes are **on live `MatchiDb`** via `20260909070502_Task07IndexDelta`. Historical `Task07ExecutionReviewIndexes` remains archived and was not applied. Broader hardening remains Task 08.
-- Runtime HTTP/Swagger UI was **not** executed (no running API/database in this session).
-- Existing JWTs issued before the new seed will lack Provider/Business permission claims until re-login.
+- Task 7 unique indexes are **on live `MatchiDb`** via `20260909070502_Task07IndexDelta`. Historical `Task07ExecutionReviewIndexes` remains archived and was not applied.
+- Task 8 Phase 2 (security/runtime) is complete. Task 8 Phase 3 / 8.2 is complete in code. `20260909083411_Task08IntegrityConcurrency` **was applied** to live `MatchiDb` in Phase 8.6.
+- Task 8 Phase 4 / 8.3 Request cancel/delete vs Active Deal is complete in application code. Request remains `Open` after accept. Multiple Active Deals remain allowed.
+- Task 8 Phase 5 / 8.4 catalog paging/`q` applied for Services/Businesses/Provider-by-serviceId. CORS and matching write-path deferred.
+- Phase 8.7B: `Reviews.Id = 1` is Business-only (`BusinessId = 2`, `ProviderId = NULL`). It was the only dual-target row. Live `CK_Reviews_Target` is XOR via `20260909092717_Task08ReviewTargetXor` (applied).
+- Intentionally deferred product/future: Request/Deal cancel-vs-accept race; BusinessProvider invite-must-accept; Provider geo/sort; CORS origins; Deal Complete/Cancel; ProductDelivery; rating aggregation; Matching persistence; sibling proposal auto-reject; pagination on non-catalog lists.
+- Runtime HTTP/Swagger UI was **not** executed in Phases 2–5 (startup seeding is Development-gated and was not invoked against live `MatchiDb`).
+- Existing JWTs issued before permission seed will lack Provider/Business permission claims until re-login.
+- Local API start requires User Secrets or environment variables for `Jwt:Key` and `ConnectionStrings:DefaultConnection`. Previously committed credentials must be rotated.
 
 ---
 
@@ -430,7 +645,14 @@ Live `MatchiDb` now has unique Deal execution (`UX_ServiceExecutions_DealId`), f
 | `dotnet build MatchiSolution.sln` | Succeeded, **0 warnings, 0 errors** |
 | Swagger | Swashbuckle is referenced by `Matchi.Api`; the API project compiled. Swagger UI was **not** opened at runtime. |
 | Runtime/API tests | **Not performed** |
-| Database / `dotnet ef database update` | Baseline `Up()` never executed. `20260909070502_Task07IndexDelta` **was applied**. History: baseline stamp + Task 7 delta. |
+| Database / `dotnet ef database update` | Baseline `Up()` never executed. `Task07IndexDelta`, `Task08IntegrityConcurrency`, and `Task08ReviewTargetXor` **were applied**. History: four rows. |
+| Task 08 Phase 2 | Security/runtime hardening compiled. Seeder not executed against live DB. |
+| Task 08 Phase 3 / 8.2 | Integrity/concurrency compiled. Migration created in that phase. |
+| Task 08 Phase 4 / 8.3 | Request cancel/delete Active Deal guard compiled. No migration. Live schema/data unchanged. |
+| Task 08 Phase 5 / 8.4 | Catalog paging/`q` + docs. No migration. Live schema/data unchanged. |
+| Task 08 Phase 8.6 | Integrity index migration applied to live `MatchiDb`. Review XOR not changed in that phase. |
+| Task 08 Phase 8.7A | READ-ONLY audit PASS. Review #1 = Business target. |
+| Task 08 Phase 8.7B | Review #1 `ProviderId` nulled; XOR `CK_Reviews_Target` applied. Tests 67 passed. Build 0 errors (NU1900). No commit. No push. |
 | Guid/long | Request/Provider/Business IDs remain `long`. |
 | Legacy Loan/Question/Option/RequestAnswer | Not reintroduced in Application/API for this task. |
 | Independent Provider | Create Provider does not require a Business. Removing membership does not delete Provider data. |
@@ -438,7 +660,6 @@ Live `MatchiDb` now has unique Deal execution (`UX_ServiceExecutions_DealId`), f
 | Task 04 Matching | Application query + API compiled. Runtime HTTP not executed. |
 | Task 05 Proposal | Application + API compiled. No migration. Runtime HTTP not executed. |
 | Task 06 Deal | Accept creates Deal; GET list/detail customer-owned. No migration. Runtime HTTP not executed. |
-| Task 07 Execution & Review | Application + API compiled. Unique indexes applied via `Task07IndexDelta`. `Matchi.Application.Tests` 36 passed. Runtime HTTP not executed. |
 
 ---
 

@@ -11,7 +11,9 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
         builder.ToTable("Reviews", t =>
         {
             t.HasCheckConstraint("CK_Reviews_Rating", "[Rating]>=(1) AND [Rating]<=(5)");
-            t.HasCheckConstraint("CK_Reviews_Target", "[BusinessId] IS NOT NULL OR [ProviderId] IS NOT NULL");
+            t.HasCheckConstraint(
+                "CK_Reviews_Target",
+                "([BusinessId] IS NOT NULL AND [ProviderId] IS NULL) OR ([BusinessId] IS NULL AND [ProviderId] IS NOT NULL)");
         });
 
         builder.HasKey(x => x.Id).HasName("PK_Reviews");

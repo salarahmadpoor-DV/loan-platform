@@ -40,12 +40,17 @@ public sealed class BusinessRepository : IBusinessRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Business>> ListAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Business>> ListAsync(
+        int skip,
+        int take,
+        CancellationToken cancellationToken = default)
     {
         return await _context.Businesses
             .AsNoTracking()
             .Where(x => !x.IsDeleted)
             .OrderBy(x => x.Id)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync(cancellationToken);
     }
 

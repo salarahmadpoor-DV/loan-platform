@@ -39,6 +39,8 @@ public class ProviderRepository : IProviderRepository
 
     public async Task<IEnumerable<Provider>> GetProvidersByServiceIdAsync(
         long serviceId,
+        int skip,
+        int take,
         CancellationToken cancellationToken = default)
     {
         return await _context.ProviderServices
@@ -50,6 +52,10 @@ public class ProviderRepository : IProviderRepository
                 p => p.Id,
                 (ps, p) => p)
             .Where(p => p.Status == "Active" && !p.IsDeleted)
+            .Distinct()
+            .OrderBy(p => p.Id)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync(cancellationToken);
     }
 

@@ -6,6 +6,9 @@
 # dotenv files
 .env
 
+# TypeScript incremental build metadata
+*.tsbuildinfo
+
 # User-specific files
 *.rsuser
 *.suo

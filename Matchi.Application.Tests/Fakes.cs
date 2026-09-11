@@ -1,4 +1,6 @@
 using Matchi.Application.Common.Interfaces;
+using Matchi.Application.Features.Matching;
+using Matchi.Application.Features.Providers;
 using Matchi.Domain.Entities;
 using Matchi.Domain.Interfaces;
 
@@ -27,6 +29,7 @@ internal sealed class FakeServiceExecutionRepository : IServiceExecutionReposito
     public bool DealVisible { get; set; } = true;
     public Exception? SaveException { get; set; }
     public List<ServiceExecution> Added { get; } = [];
+    public List<ServiceExecution> VisibleToProvider { get; } = [];
     public int SaveCount { get; private set; }
 
     public Task<Deal?> GetActiveDealGraphAsync(long dealId, CancellationToken cancellationToken = default) =>
@@ -57,6 +60,13 @@ internal sealed class FakeServiceExecutionRepository : IServiceExecutionReposito
         long userId,
         CancellationToken cancellationToken = default) =>
         Task.FromResult<IReadOnlyList<ServiceExecution>>([]);
+
+    public Task<IReadOnlyList<ServiceExecution>> ListVisibleToProviderAsync(
+        long providerId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<ServiceExecution>>(
+            VisibleToProvider.Where(execution =>
+                ProviderMarketplaceVisibility.CanSeeExecution(execution, providerId)).ToList());
 
     public Task<ServiceExecution?> GetVisibleByIdAsync(
         long executionId,
@@ -200,6 +210,7 @@ internal sealed class FakeDealRepository : IDealRepository
     public bool ThrowIfActiveDealQueried { get; set; }
     public int ActiveDealQueryCount { get; private set; }
     public List<Deal> Added { get; } = [];
+    public List<Deal> VisibleToProvider { get; } = [];
     public int SaveCount { get; private set; }
 
     public void Add(Deal deal)
@@ -224,6 +235,12 @@ internal sealed class FakeDealRepository : IDealRepository
         long userId,
         CancellationToken cancellationToken = default) =>
         Task.FromResult<Deal?>(null);
+
+    public Task<IReadOnlyList<Deal>> ListVisibleToProviderAsync(
+        long providerId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<Deal>>(
+            VisibleToProvider.Where(deal => ProviderMarketplaceVisibility.CanSeeDeal(deal, providerId)).ToList());
 
     public Task<bool> HasActiveDealForRequestAsync(
         long requestId,
@@ -298,6 +315,7 @@ internal sealed class FakeProposalRepository : IProposalRepository
 {
     public Proposal? Tracked { get; set; }
     public Func<long, Proposal?>? ResolveTracked { get; set; }
+    public List<Proposal> ByProvider { get; } = [];
 
     public Task AddAsync(Proposal proposal, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();
@@ -334,6 +352,12 @@ internal sealed class FakeProposalRepository : IProposalRepository
         CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();
 
+    public Task<IReadOnlyList<Proposal>> ListByProviderIdAsync(
+        long providerId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<Proposal>>(
+            ByProvider.Where(proposal => proposal.ProviderId == providerId && !proposal.IsDeleted).ToList());
+
     public Task<IReadOnlyList<long>> GetActiveServiceIdsAsync(
         IReadOnlyCollection<long> serviceIds,
         CancellationToken cancellationToken = default) =>
@@ -355,6 +379,153 @@ internal sealed class FakeProposalRepository : IProposalRepository
         bool asProvider,
         long partyId,
         IReadOnlyCollection<long> productIds,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+}
+
+internal sealed class FakeMatchingReadRepository : IMatchingReadRepository
+{
+    public long EligibleForProviderId { get; set; } = MarketplaceGraph.ProviderEntityId;
+    public List<Request> Eligible { get; } = [];
+
+    public Task<IReadOnlyList<MatchingCandidateRow>> FindProviderMatchesAsync(
+        MatchingCriteria criteria,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<IReadOnlyList<MatchingCandidateRow>> FindBusinessMatchesAsync(
+        MatchingCriteria criteria,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<IReadOnlyList<Request>> ListOpenEligibleRequestsForProviderAsync(
+        long providerId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<Request>>(
+            providerId == EligibleForProviderId ? Eligible : []);
+}
+
+internal sealed class FakeProviderRepository : IProviderRepository
+{
+    public Provider? Mine { get; set; }
+
+    public Task<Provider?> GetByIdAsync(long providerId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<Provider?> GetByUserIdAsync(long userId, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Mine is not null && Mine.UserId == userId ? Mine : null);
+
+    public Task AddAsync(Provider provider, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task UpdateAsync(CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<IEnumerable<Provider>> GetProvidersByServiceIdAsync(
+        long serviceId,
+        int skip,
+        int take,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<bool> ServiceExistsActiveAsync(long serviceId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<bool> ProductExistsActiveAsync(long productId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<ServiceAttribute?> GetServiceAttributeAsync(
+        long serviceAttributeId,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<bool> OffersServiceAsync(long providerId, long serviceId, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<ProviderService?> GetServiceLinkAsync(
+        long providerId,
+        long serviceId,
+        bool includeDeleted,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<IReadOnlyList<ProviderService>> ListServicesAsync(
+        long providerId,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task AddServiceAsync(ProviderService link, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<ProviderProduct?> GetProductLinkAsync(
+        long providerId,
+        long productId,
+        bool includeDeleted,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<IReadOnlyList<ProviderProduct>> ListProductsAsync(
+        long providerId,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task AddProductAsync(ProviderProduct link, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<ProviderCapability?> GetCapabilityAsync(
+        long providerId,
+        long serviceAttributeId,
+        bool includeDeleted,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<IReadOnlyList<ProviderCapability>> ListCapabilitiesAsync(
+        long providerId,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task AddCapabilityAsync(ProviderCapability capability, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<ProviderServiceArea?> GetServiceAreaAsync(
+        long providerId,
+        long areaId,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<IReadOnlyList<ProviderServiceArea>> ListServiceAreasAsync(
+        long providerId,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task AddServiceAreaAsync(ProviderServiceArea area, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<ProviderAvailability?> GetAvailabilityAsync(
+        long providerId,
+        long availabilityId,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<IReadOnlyList<ProviderAvailability>> ListAvailabilitiesAsync(
+        long providerId,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task AddAvailabilityAsync(ProviderAvailability availability, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<bool> HasAvailabilityOverlapAsync(
+        long providerId,
+        byte dayOfWeek,
+        TimeSpan timeFrom,
+        TimeSpan timeTo,
+        long? excludeId,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
+
+    public Task<IReadOnlyList<BusinessProvider>> ListMembershipsAsync(
+        long providerId,
         CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();
 }

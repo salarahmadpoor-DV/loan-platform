@@ -1,7 +1,7 @@
 # API Endpoints — MVP
 
-**Date:** 2026-09-08  
-**Status:** Synchronized with the codebase after Task 06 (Deal)
+**Date:** 2026-09-11  
+**Status:** Synchronized with the codebase after Task 10 (Provider marketplace reads)
 
 Legend:
 
@@ -450,6 +450,41 @@ Bearer (`[Authorize]`). No Proposal-specific permission. Identity is resolved fr
 ```
 
 Reject does not create a Deal. There is no `POST /api/deals`.
+
+---
+
+### Provider marketplace (workspace)
+
+```http
+GET /api/provider/requests
+GET /api/provider/proposals
+GET /api/provider/deals
+GET /api/provider/executions
+```
+
+Bearer. Policy `ProviderWorkspace` = authenticated + JWT role `PROVIDER` (not permission claims). `USER` without `PROVIDER` → **403**. Missing Provider profile → **404**. Empty lists are `200 []`.
+
+Does **not** replace customer matching (`GET /api/requests/{id}/matches`). Inbox uses the same eligibility rules as Provider matching (open requests only; Business candidates are not included).
+
+**GET `/api/provider/requests`** — eligible open requests only (not all customer requests).
+
+```json
+{
+  "requestId": 10,
+  "requestType": "Service",
+  "serviceSummary": "AC repair",
+  "categorySummary": "Home",
+  "location": { "province": null, "city": "تهران", "district": "پونک" },
+  "createdDate": "2026-09-11T12:00:00Z",
+  "status": "Open"
+}
+```
+
+**GET `/api/provider/proposals`** — `Proposal.ProviderId` of the current Provider only (Pending/Accepted/Rejected). `dealId` is null unless a non-deleted Deal exists.
+
+**GET `/api/provider/deals`** — visible when `Proposal.ProviderId` is the current Provider **or** an `Assigned` execution assignment exists for that Provider. `BusinessProvider` membership is **not** a grant.
+
+**GET `/api/provider/executions`** — proposal-party Provider **or** `Assigned` assignment (including primary executor). Independent Providers have no assignments; they still see executions on their own deals.
 
 ---
 

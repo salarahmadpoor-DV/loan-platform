@@ -1,5 +1,6 @@
 using Matchi.Application.Common.Interfaces;
 using Matchi.Application.Features.Matching;
+using Matchi.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Matchi.Infrastructure.Persistence.Repositories;
@@ -150,5 +151,53 @@ public sealed class MatchingReadRepository : IMatchingReadRepository
                 + (availabilityMatch ? MatchingScores.Availability : 0));
 
         return await query.ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Request>> ListOpenEligibleRequestsForProviderAsync(
+        long providerId,
+        CancellationToken cancellationToken = default)
+    {
+        var providerIsActive = await _context.Providers.AnyAsync(
+            provider => provider.Id == providerId && !provider.IsDeleted && provider.Status == "Active",
+            cancellationToken);
+
+        if (!providerIsActive)
+            return [];
+
+        var eligible = _context.Requests.AsNoTracking()
+            .Where(request => !request.IsDeleted && request.Status == "Open")
+            .Where(request =>
+                (!request.Services.Any(service => !service.IsDeleted)
+                    || _context.ProviderServices.Any(link =>
+                        link.ProviderId == providerId
+                        && !link.IsDeleted
+                        && link.IsActive
+                        && request.Services.Any(service =>
+                            !service.IsDeleted && service.ServiceId == link.ServiceId)))
+                && (request.Services.Any(service => !service.IsDeleted)
+                    || !request.Products.Any(product => !product.IsDeleted)
+                    || _context.ProviderProducts.Any(link =>
+                        link.ProviderId == providerId
+                        && !link.IsDeleted
+                        && link.IsAvailable
+                        && (request.Products.Any(product =>
+                                !product.IsDeleted && product.ProductId == link.ProductId)
+                            || _context.Products.Any(catalog =>
+                                catalog.Id == link.ProductId
+                                && !catalog.IsDeleted
+                                && request.Products.Any(product =>
+                                    !product.IsDeleted
+                                    && product.ProductCategoryId == catalog.CategoryId))))));
+
+        return await eligible
+            .Include(request => request.Services)
+                .ThenInclude(service => service.Service)
+                    .ThenInclude(service => service!.Category)
+            .Include(request => request.Products)
+                .ThenInclude(product => product.ProductCategory)
+            .Include(request => request.Locations)
+            .OrderByDescending(request => request.CreateDate)
+            .ThenByDescending(request => request.Id)
+            .ToListAsync(cancellationToken);
     }
 }

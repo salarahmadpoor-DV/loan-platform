@@ -1,6 +1,6 @@
-# MATCHI_PROJECT_CONTEXT v2.0
+# MATCHI_PROJECT_CONTEXT v2.15
 
-**Updated:** 2026-09-09  
+**Updated:** 2026-09-11  
 **Scope:** Architectural baseline and implementation log for the Matchi .NET 8 marketplace.
 
 This file is the documented Matchi baseline and decision log. It was **not present in the repository at the start of Task 03**. Task 03 therefore treated the Task 02 Request implementation, existing Domain/EF baseline, `docs/api-endpoints-mvp.md`, and the Task 03 specification as the source of truth, then created this file as the required living context.
@@ -49,6 +49,21 @@ Review
 | Task 06 — Deal | COMPLETED |
 | Task 07 — Execution & Review | COMPLETE |
 | Task 08 — Migration & Final Hardening | COMPLETE (Phases 1–5, 8.6, 8.7A, 8.7B; Review XOR on live DB) |
+| Task 9.1 — Frontend Foundation | COMPLETE |
+| Task 9.2 — Design System and Application Shell | COMPLETE |
+| Task 9.3 — Frontend Authentication Flow (OTP) | COMPLETE |
+| Task 9.4.1 — Customer Marketplace Foundation | COMPLETE |
+| Task 9.4.2 — Customer Create Request Form | COMPLETE |
+| Task 9.5 — Customer Matching UI | COMPLETE |
+| Task 9.6 — Customer Proposal Management UI | COMPLETE |
+| Task 9.7 — Customer Deal Experience | COMPLETE |
+| Task 9.8 — Customer Execution UI | COMPLETE |
+| Task 9.9 — Customer Review UI | COMPLETE |
+| Task 9.10 — Frontend Documentation and API Contract Audit | COMPLETE |
+| Task 10 — Provider marketplace read APIs | COMPLETE |
+| Task 11.1 — Provider Workspace Foundation | COMPLETE |
+| Task 11.2 — Provider Request Inbox | COMPLETE |
+| Task 11.3 — Provider Create Proposal | COMPLETE |
 
 ---
 
@@ -637,6 +652,313 @@ Live definition: `([BusinessId] IS NOT NULL AND [ProviderId] IS NULL OR [Busines
 
 ---
 
+## Frontend (Task 9.1–9.10)
+
+### Frontend Stack
+
+React, TypeScript, Vite, Material UI, TanStack Query, Zustand, Axios, React Router.
+
+### Frontend Architecture v2
+
+```text
+frontend/
+  matchi.web/
+    src/
+      app/                 # providers, router, theme
+      features/            # auth, customer marketplace, provider workspace, shell placeholders
+      shared/
+        api/
+        auth/
+        i18n/              # fa-IR default catalogs; en-US parallel keys
+        navigation/        # workspace nav model
+        ui/                # MUI design-system primitives
+        types/
+      layouts/
+        PublicLayout
+        CustomerLayout
+        ProviderLayout
+        BusinessLayout
+```
+
+`matchi.web` is an independently buildable and deployable frontend application. Its build does not depend on the .NET backend build and communicates with the backend only through HTTP APIs.
+
+The frontend architecture supports:
+
+```text
+Service
+Product
+Hybrid
+```
+
+without coupling the UI exclusively to Service (`RequestKind` is `Service | Product | Hybrid`).
+
+### Layouts decision
+
+Authenticated UI is split by **marketplace workspace**, not by a Seller role (there is no Seller):
+
+- `CustomerLayout` — `/customer` (dashboard + requests + deals + reviews)
+- `ProviderLayout` — `/provider` (dashboard, inbox, proposals, deals, executions, profile)
+- `BusinessLayout` — `/business` (catalog, members, executions placeholders)
+
+JWT `USER` may use more than one workspace (customer plus optional Provider profile and/or owned Business). `BusinessProvider` membership is not a fourth shell. Workspace routes require a session (`RequireAuth`); they do not invent extra JWT roles. Theme is mobile-first (temporary nav drawer below `md`).
+
+OTP login remains the existing HTTP contract (`POST /api/auth/send-otp`, `POST /api/auth/verify-otp`). The frontend does not deliver SMS and does not implement a refresh-token flow. Browser CORS is still unset on the API (deployment concern).
+
+### Authentication frontend decision (Task 9.3)
+
+- **OTP flow:** Login is two steps. Step 1 posts `{ mobile }` to `POST /api/auth/send-otp` and stores `requestId` in component state only. Step 2 posts `{ mobile, otp, requestId }` to `POST /api/auth/verify-otp`. The UI never assumes SMS delivery; the user types the code. `refreshToken` from verify is ignored and not stored.
+- **Token storage:** Zustand holds `accessToken` + decoded `user` (`id`, `mobile`, `roles`) in memory. Only the access token is persisted, in `localStorage` key `matchi.accessToken`. On load, the token is decoded (no extra JWT library); expired or invalid tokens are dropped. User profile is not written to storage.
+- **Axios:** Bearer is attached automatically except on send-otp/verify-otp (so a leftover token cannot fail the login calls). Other 401s clear the session and redirect to `/login`, unless the user is already on `/login`. There is no refresh-token interceptor.
+- **Workspaces from JWT roles (not permission claims):**
+  - `USER` → Customer (`/customer`)
+  - `PROVIDER` → Customer + Provider
+  - `BUSINESS_OWNER` → Customer + Business
+  - `ADMIN` → Customer + Provider + Business (no Admin UI)
+- **Live JWT conflict:** Current Matchi tokens typically issue `USER` and sometimes `ADMIN`, not `PROVIDER` or `BUSINESS_OWNER`. `PROVIDER_*` / `BUSINESS_*` **permission** claims exist on USER and must **not** unlock Provider/Business shells. Extra shells appear only when those role names are present on the token. Default post-login path is the first available workspace, preferring Customer.
+- Route protection: `/` and `/login` are public. `/customer/*`, `/provider/*`, and `/business/*` require a session; workspace routes additionally require the matching role set.
+
+### Customer marketplace frontend decision (Task 9.4.1)
+
+- Customer dashboard lives at `/customer/dashboard` (`/customer` redirects there). Workspace home for Customer is that dashboard route.
+- Request list/detail are under `features/customer/requests`. Create is Task 9.4.2 (`/customer/requests/create`). Matching UI is Task 9.5 (`/customer/requests/:id/matches`). Customer proposals are Task 9.6. Customer deals are Task 9.7 (`/customer/deals`, `/customer/deals/:id`). Customer execution read UI is Task 9.8 (on deal detail). Customer reviews are Task 9.9 (deal detail + `/customer/reviews`).
+- **List contract:** live API is `GET /api/requests/me` (array of `RequestDto`), not `GET /api/requests`. Detail is `GET /api/requests/{id}`. IDs remain `long`.
+- `requestType` is `Service | Product | Hybrid`. UI must not assume Service-only. Status is shown as returned (`Open`, `Cancelled`, …).
+- TanStack Query keys: `queryKeys.requests.mine()` and `queryKeys.requests.detail(id)`. Axios `getJson` + existing Bearer interceptor.
+- Design system only: `AppCard`, `PageHeader`, `EmptyState`, `StatusChip` (via `RequestStatusChip`), `LoadingState`, `ErrorAlert`.
+
+### Persian UI and i18n preparation (Task 9.4.2)
+
+- Default UI language is **fa-IR**. `index.html` and `applyDocumentLocale` set `lang=fa` and `dir=rtl`. MUI theme uses `direction: rtl` and `faIR` locale. Copy is not hardcoded into a Persian-only architecture: components call `t(key)`; catalogs live in `src/shared/i18n/locales/` (`fa-IR` + parallel `en-US` keys).
+- **No IP-based (or browser) language detection.** Switching locale later is a product setting + catalog/theme swap, not geo lookup.
+- Create-request copy and client validation messages are Persian. Backend FluentValidation strings may still appear in English via `ErrorAlert` until the API is localized.
+
+### Customer create request (Task 9.4.2)
+
+- Route: `/customer/requests/create` (declared **before** `/customer/requests/:id`), still behind `RequireAuth` + `RequireWorkspace(customer)`.
+- `POST /api/requests` only. Body uses live contract: `requestType` `Service | Product | Hybrid`, `title`, optional `description`, `services[]` and/or `products[]`. Customer id is never sent. Location/schedule omitted in this form (optional on the API).
+- Service picker uses existing `GET /api/services` (limited catalog). If that list is empty or fails, a numeric service id field is shown. Product lines use placeholder id/category/quantity fields (no invented product-catalog endpoint).
+- Hybrid shows both sections. Validation enforces the same Service/Product/Hybrid line rules as the API. Success navigates to `/customer/requests/{id}` and invalidates request queries.
+
+### Matching frontend decision (Task 9.5)
+
+- Route: `/customer/requests/:id/matches`, behind `RequireAuth` + `RequireWorkspace(customer)`. Entry from request detail (“view matches”). Cancelled requests hide that button; the API still returns **400** if matching is called for a cancelled Request.
+- **Endpoint:** only `GET /api/requests/{requestId}/matches` (owner, Bearer). Empty list is `200 []`. Non-owned → **404**.
+- **DTO (live):** `candidateType` (`Provider` | `Business`), `candidateId`, `displayName`, `score`, `rank`. The API does **not** return per-signal reason flags. The UI lists the documented Task 04 score signals (service +50, product +20, capability +15 Providers only, area +10, availability +5) as “why they appear”, and does not invent extra fields or endpoints.
+- Visualization only: no proposal create, chat, payment, or deal. Next-action buttons (view provider services / view business) are shown disabled until those screens exist. There is no public `GET /api/businesses/{id}` and no public provider-services list for the customer to open in this task.
+- TanStack Query key: `queryKeys.matching.byRequest(id)`. Loading, empty, error, and retry (`refetch`) are implemented. Copy is fa-IR via `t()`.
+
+### Customer proposal frontend decision (Task 9.6)
+
+- Routes (Customer workspace, `RequireAuth` + `RequireWorkspace(customer)`):
+  - `/customer/requests/:requestId/proposals` — list
+  - `/customer/proposals/:id` — detail + accept
+- **Endpoints used:** `GET /api/requests/{requestId}/proposals`, `GET /api/proposals/{proposalId}`, `POST /api/proposals/{proposalId}/accept`. Reject and create-proposal are **not** in this task. Deal GET screens are Task 9.7.
+- **List DTO (live):** `id`, `requestId`, `proposerType`, `proposerId`, `totalPrice`, `deliveryFee`, `status`, `expireAt`, `createDate`. There is **no** party display name and **no** `message` on the list. The UI shows `{Provider|Business} #{proposerId}` and a “no message” hint; `message`, schedule, and items are on detail.
+- Party XOR is `Provider` or `Business` (`proposerType`). Items are `Service` or `Product` (Hybrid requests can have both). Accept is shown only for `Pending`. Success returns `{ proposalId, status, dealId }`. After accept, the UI links to `/customer/deals/{dealId}` (Task 9.7).
+- Query keys: `queryKeys.proposals.byRequest(id)`, `queryKeys.proposals.detail(id)`. Accept invalidates proposals, requests, and deals. fa-IR via `t()`.
+
+### Customer deal frontend decision (Task 9.7)
+
+- Routes (Customer workspace, `RequireAuth` + `RequireWorkspace(customer)`):
+  - `/customer/deals` — list
+  - `/customer/deals/:id` — detail
+- Feature folder: `features/customer/deals/` (`api`, `hooks`, `components`, `pages`). Sidebar labels: درخواست‌ها / معاملات / بازخوردها (dashboard remains workspace home).
+- **Endpoints used (GET only):** `GET /api/deals` (`DealSummaryDto`), `GET /api/deals/{dealId}` (`DealDetailDto`), `GET /api/deals/{dealId}/executions` (`ServiceExecutionDto[]`). Compose request/party from existing `GET /api/requests/{id}` and `GET /api/proposals/{id}`. There is **no** `GET /api/businesses/{id}` and no party name on Deal; counterparty is `{Provider|Business} #{proposerId}` from the proposal. Empty executions are `200 []`. Non-visible deal → **404**.
+- **List DTO (live):** `id`, `requestId`, `proposalId`, `status`, `totalPrice`, `acceptedAt`. There is **no** `createDate` on the list; the UI uses `acceptedAt` as the created timestamp. Detail adds `customerId`, `createDate`, `updateDate`.
+- Deal mutations in Task 9.7 were out of scope. Task 9.9 adds customer `POST /api/deals/{id}/reviews`. Execution create remains uncalled.
+- Query keys: `queryKeys.deals.mine()`, `queryKeys.deals.detail(id)`, `queryKeys.executions.byDeal(id)`. Loading, empty, error+retry, and 401 session-clear (existing Axios interceptor) are implemented. fa-IR via `t()`.
+
+### Customer execution frontend decision (Task 9.8)
+
+- No new Customer route or sidebar item. Execution stays on `/customer/deals/:id` (`RequireAuth` + `RequireWorkspace(customer)`). Sidebar remains درخواست‌ها / معاملات / بازخوردها.
+- **Endpoints used (GET only):**
+  - `GET /api/deals/{dealId}/executions` → `ServiceExecutionDto`: `id`, `dealId`, `businessId`, `status`, `scheduledDate`, `scheduledTimeFrom`, `scheduledTimeTo`, `startedAt`, `completedAt`, `createDate`. **No nested assignments.** Empty list is `200 []`. Non-visible deal → **404**.
+  - `GET /api/executions/{executionId}/assignments` → `ExecutionAssignmentDto`: `id`, `serviceExecutionId`, `providerId`, `role`, `isPrimary`, `status`, `assignedAt`. Customer-visible (deal owner). Empty list is `200 []`. Entity has `StartAt`/`EndAt` but those are **not** on the DTO and are not shown.
+- **Not called:** `POST /api/deals/{dealId}/executions`, start/complete/cancel, assignment writes, ProductDelivery. Review submit is Task 9.9.
+- Backend create-execution is Service/Hybrid only. Product deals correctly get an empty execution list; the UI explains that without inventing ProductDelivery. Independent Provider parties cannot receive assignments (backend); the UI shows assignment empty state, not a fake provider name. There is no `GET /api/providers/{id}` display name on the assignment DTO (`Provider #{id}`).
+- Query keys: existing `queryKeys.executions.byDeal(id)` plus `queryKeys.executions.assignments(executionId)`. Loading, error+retry, and empty states use shared UI. Deal detail review submit is Task 9.9.
+- fa-IR via `t()`.
+
+### Customer review frontend decision (Task 9.9)
+
+- Customer workspace only (`RequireAuth` + `RequireWorkspace(customer)`). Sidebar remains درخواست‌ها / معاملات / بازخوردها.
+- Routes: `/customer/deals/:id` hosts list + eligibility + create form. `/customer/reviews` is a hub of the customer’s deals (`GET /api/deals`) linking into deal detail. There is **no** `GET /api/reviews/me` and **no** deal-scoped review list.
+- **POST** `POST /api/deals/{dealId}/reviews` (Bearer, deal customer). Body: `rating` 1–5, optional `comment` (max 2000), XOR **exactly one** of `businessId` / `providerId`. Duplicate active target → **400** (pre-check) or **409** (unique-index race). Axios now surfaces ProblemDetails `errors` and `detail` for 400/409.
+- **GET (public, not deal-filtered):** `GET /api/providers/{providerId}/reviews`, `GET /api/businesses/{businessId}/reviews`. `ReviewDto`: `id`, `targetId`, `targetType`, `rating`, `comment` — **no `dealId`**. UI lists the proposal-party public reviews and states that limitation.
+- **Eligibility (mirrors handler, display only):** Deal must be `Active`. Service/Hybrid require a **completed** `ServiceExecution`. Product does **not** require execution. Target must be the proposal Business **or** the proposal/assigned Provider (never both on one review). Duplicate is not inferred from the public list (no customer/deal on DTO); the API error is shown.
+- Feature folder: `features/customer/reviews/` (`api`, `hooks`, `components`, `pages`, `model`). fa-IR via `t()`. Form labels: ثبت بازخورد / امتیاز / توضیحات / ارسال.
+
+### Frontend documentation and Provider API audit (Task 9.10)
+
+- Docs live under `frontend/matchi.web/docs/`. Task 11.1 added Provider list/profile UI on Task 10 GETs. Customer flow remains complete.
+- **Customer flow is complete** for the current API: OTP → Request (Service/Product/Hybrid) → Matching → Proposal accept → Deal → Execution read → Review XOR submit.
+- **Provider workspace cannot be built honestly on live GETs.** `GET /api/deals` and `GET /api/deals/{id}` are customer-owned. `GET /api/requests/{id}`, `GET /api/requests/{id}/proposals`, and `GET /api/proposals/{id}` are request-owner only. There is no Provider request inbox (matching is customer-only). `POST /api/requests/{id}/proposals` and execution start/complete exist but require ids the Provider cannot list.
+- Recommended next split (now done on the backend as Task 10): party-scoped Proposal/Deal (and inbox) queries **before** Provider UI. Frontend Task 10+ can wire `GET /api/provider/*` plus existing `GET /api/providers/me*`. **Provider UI was not implemented in Task 10.**
+
+### Task Status
+
+Task 9.1 — Frontend Foundation: COMPLETE  
+Task 9.2 — Design System and Application Shell: COMPLETE  
+Task 9.3 — Frontend Authentication Flow (OTP): COMPLETE  
+Task 9.4.1 — Customer Marketplace Foundation: COMPLETE  
+Task 9.4.2 — Customer Create Request Form: COMPLETE  
+Task 9.5 — Customer Matching UI: COMPLETE  
+Task 9.6 — Customer Proposal Management UI: COMPLETE  
+Task 9.7 — Customer Deal Experience: COMPLETE  
+Task 9.8 — Customer Execution UI: COMPLETE  
+Task 9.9 — Customer Review UI: COMPLETE  
+Task 9.10 — Frontend Documentation and API Contract Audit: COMPLETE
+Task 11.1 — Provider Workspace Foundation: COMPLETE
+Task 11.2 — Provider Request Inbox: COMPLETE
+Task 11.3 — Provider Create Proposal: COMPLETE
+
+---
+
+## Task 10 — Provider marketplace read APIs
+
+**Status:** COMPLETE (backend only). Frontend was not modified. No EF migration.
+
+Provider workspace can now list eligible requests, own proposals, related deals, and involved executions. Create-proposal (`POST /api/requests/{id}/proposals`) and execution writes were already implemented.
+
+### Contracts
+
+| Method | Path | Auth |
+|---|---|---|
+| GET | `/api/provider/requests` | JWT role `PROVIDER` (`ProviderWorkspace`) |
+| GET | `/api/provider/proposals` | JWT role `PROVIDER` |
+| GET | `/api/provider/deals` | JWT role `PROVIDER` |
+| GET | `/api/provider/executions` | JWT role `PROVIDER` |
+
+Empty lists: `200 []`. Missing Provider profile: **404**. Unauthenticated: **401**. Authenticated without role `PROVIDER` (typical customer `USER` token): **403** at the API (policy), before handlers.
+
+**Inbox DTO** `ProviderRequestInboxItemDto`: `requestId`, `requestType`, `serviceSummary`, `categorySummary`, `location` (`province`/`city`/`district`, omitted if empty), `createdDate`, `status`.
+
+**Proposal DTO** `ProviderProposalDto`: `id`, `requestId`, `status`, `totalPrice`, `createDate`, `dealId` (nullable).
+
+**Deal DTO** `ProviderDealDto`: `id`, `requestId`, `proposalId`, `status`, `totalPrice`, `acceptedAt`.
+
+**Execution DTO** `ProviderExecutionDto`: `id`, `dealId`, `businessId`, `status`, `scheduledDate`, `scheduledTimeFrom`, `scheduledTimeTo`, `startedAt`, `completedAt`.
+
+Customer matching `GET /api/requests/{id}/matches` is unchanged (request owner only). Customer `GET /api/deals` remains customer-owned.
+
+### Authorization decisions
+
+- Workspace APIs use JWT **roles**, not `PROVIDER_*` permission claims. Policy name is `ProviderWorkspace` (not `PROVIDER`) because `PermissionPolicyProvider` treats unknown policy names as permission requirements.
+- `USER` = customer workspace. `PROVIDER` = provider workspace. `BUSINESS_OWNER` = business workspace.
+- Inbox eligibility reuses Provider matching rules (open, non-deleted requests; service/product overlap). Inactive providers get `[]`. Business match candidates are not listed in the Provider inbox.
+- Proposals: `Proposal.ProviderId == current Provider.Id` only (all statuses).
+- Deals: `Proposal.ProviderId == current Provider` **or** an execution assignment with `Status = Assigned` for that Provider. **`BusinessProvider` membership is not a grant.**
+- Executions: proposal-party Provider **or** `Assigned` assignment (covers primary executor). Independent Providers have no assignments; they still see executions on their own proposals.
+- Non-eligible / other-party data is omitted from lists (not enumerated). Missing own Provider row → 404.
+
+### Verification (Task 10)
+
+- `dotnet test Matchi.Application.Tests --no-restore` — 77 passed, 0 failed
+- `dotnet build MatchiSolution.sln --no-restore` — 0 errors (NU1900 package-vulnerability source warnings only)
+- No migration. Live schema/data unchanged. Frontend unchanged.
+
+---
+
+## Task 11.1 — Provider Workspace Foundation
+
+**Status:** COMPLETE (frontend only). Backend and database were not changed.
+
+Provider shell uses existing `ProviderLayout`, `RequireAuth`, and `RequireWorkspace(provider)` (JWT role `PROVIDER` / `ADMIN`, not permission claims).
+
+### Routes
+
+| Path | Screen |
+|---|---|
+| `/provider` | redirect → `/provider/dashboard` |
+| `/provider/dashboard` | activity counts from list GETs |
+| `/provider/requests` | matching inbox |
+| `/provider/proposals` | my proposals |
+| `/provider/deals` | provider-visible deals |
+| `/provider/executions` | involved executions |
+| `/provider/profile` | `GET /api/providers/me` |
+
+Nav (fa-IR): داشبورد، درخواست‌ها، پیشنهادهای من، معاملات، اجراها، پروفایل.
+
+### APIs used (live only)
+
+- `GET /api/provider/requests`
+- `GET /api/provider/proposals`
+- `GET /api/provider/deals`
+- `GET /api/provider/executions`
+- `GET /api/providers/me`
+
+Not called: customer `GET /api/deals`, owner `GET /api/requests/{id}`, create-proposal, execution writes, catalog mutating APIs. No invented contracts. Query keys: `queryKeys.provider.*` (separate from customer `deals.mine()`).
+
+List/dashboard/profile handle loading, empty, and error+retry. Detail screens and create-proposal are deferred.
+
+### Verification (Task 11.1)
+
+- `npm run typecheck` succeeded
+- `npm run build` succeeded (Vite chunk-size warning only)
+- No backend change. No migration. Browser runtime against a live API was not executed in this environment.
+
+---
+
+## Task 11.2 — Provider Request Inbox
+
+**Status:** COMPLETE (frontend only). Backend and database were not changed.
+
+Route `/provider/requests` (existing; `RequireAuth` + `RequireWorkspace(provider)` + `ProviderLayout`).
+
+**API:** only `GET /api/provider/requests`. Not used: `GET /api/requests/{id}`, fake detail APIs, customer request hooks.
+
+**DTO fields shown** (`ProviderRequestInboxItemDto`, camelCase JSON):
+
+- `requestId`
+- `requestType` (`Service` | `Product` | `Hybrid`)
+- `serviceSummary` (nullable; omitted when null)
+- `categorySummary` (nullable; service and/or product category names)
+- `location.province` / `location.city` / `location.district` (object omitted by API when empty)
+- `createdDate`
+- `status`
+
+**Not on the contract (not shown):** match score, request title, product/service line arrays, customer identity.
+
+**Inbox behavior:** eligible open requests only. Empty = `200 []`. 403/404 use existing `ErrorAlert` + retry. JWT workspace role remains `PROVIDER` (not `PROVIDER_*` claims).
+
+**Actions:** `ارسال پیشنهاد` navigates to `/provider/requests/{requestId}/proposal` using inbox `requestId`. That route is a **placeholder** (no `POST /api/requests/{id}/proposals`).
+
+### Verification (Task 11.2)
+
+- `npm run typecheck` succeeded
+- `npm run build` succeeded (Vite chunk-size warning only)
+- No backend change. No migration. No in-browser pass against a running API in this environment.
+
+---
+
+## Task 11.3 — Provider Create Proposal
+
+**Status:** COMPLETE (frontend only). Backend and database were not changed.
+
+Route: `/provider/requests/:requestId/proposal` (existing guards; replaced the 11.2 placeholder).
+
+**API:** `POST /api/requests/{requestId}/proposals`  
+Catalog pickers: `GET /api/providers/me/services`, `GET /api/providers/me/products`.  
+Not used: `GET /api/requests/{id}`, `providerId`, `businessId`, customer proposal hooks.
+
+**Body:** `proposerType: "Provider"` (fixed), `totalPrice`, `deliveryFee` (default 0), optional `message` / `proposedDate` / `proposedTimeFrom` / `proposedTimeTo` / `expireAt`, `items[]` with XOR `serviceId`/`productId`, `quantity`, `unitPrice`, item `totalPrice` = quantity × unit price, `displayOrder`.
+
+**Service / Product / Hybrid:** inbox `requestType` (route state or `GET /api/provider/requests` cache) locks item types. Missing inbox context allows both types (limitation: no owner request GET).
+
+**Catalog limitation:** selectors require `PROVIDER_VIEW` on `/me/services` and `/me/products`. If those fail or are empty, numeric id fallback. Backend still checks offered/active catalog.
+
+**Success:** `{ proposalId }` shown; links to `/provider/requests` and `/provider/proposals`. No proposal-detail page.
+
+**Validation:** client mirrors FluentValidation ranges/XOR/from&lt;to/future expireAt; backend remains authoritative. Duplicate submit blocked while pending. 400/401/403/404/network via existing ErrorAlert.
+
+### Verification (Task 11.3)
+
+- `npm run typecheck` in `frontend/matchi.web`: **passed**
+- `npm run build` in `frontend/matchi.web`: **passed** (existing Vite chunk-size warning unchanged)
+- No backend change. No migration. No live browser/API test in this environment.
+
+---
+
 ## Verification
 
 | Check | Result |
@@ -660,6 +982,19 @@ Live definition: `([BusinessId] IS NOT NULL AND [ProviderId] IS NULL OR [Busines
 | Task 04 Matching | Application query + API compiled. Runtime HTTP not executed. |
 | Task 05 Proposal | Application + API compiled. No migration. Runtime HTTP not executed. |
 | Task 06 Deal | Accept creates Deal; GET list/detail customer-owned. No migration. Runtime HTTP not executed. |
+| Task 9.3 frontend | `npm run typecheck` succeeded. `npm run build` succeeded (Vite chunk-size warning only). Backend/DB unchanged. |
+| Task 9.4.1 frontend | `npm run typecheck` succeeded. `npm run build` succeeded (Vite chunk-size warning only). Backend/DB unchanged. |
+| Task 9.4.2 frontend | `npm run typecheck` succeeded. `npm run build` succeeded (Vite chunk-size warning only). Backend/DB unchanged. |
+| Task 9.5 frontend | `npm run typecheck` succeeded. `npm run build` succeeded (Vite chunk-size warning only). Backend/DB unchanged. |
+| Task 9.6 frontend | `npm run typecheck` succeeded. `npm run build` succeeded (Vite chunk-size warning only). Backend/DB unchanged. |
+| Task 9.7 frontend | `npm run typecheck` succeeded. `npm run build` succeeded (Vite chunk-size warning only). Backend/DB unchanged. |
+| Task 9.8 frontend | `npm run typecheck` succeeded. `npm run build` succeeded (Vite chunk-size warning only). Backend/DB unchanged. |
+| Task 9.9 frontend | `npm run typecheck` succeeded. `npm run build` succeeded (Vite chunk-size warning only). Backend/DB unchanged. |
+| Task 9.10 frontend | Docs only. `npm run typecheck` succeeded. `npm run build` succeeded (Vite chunk-size warning only). Backend/DB unchanged. No Provider UI. |
+| Task 10 backend | `dotnet test Matchi.Application.Tests --no-restore`: 77 passed. `dotnet build MatchiSolution.sln --no-restore`: 0 errors (NU1900). No frontend change. No migration. |
+| Task 11.1 frontend | `npm run typecheck` succeeded. `npm run build` succeeded (Vite chunk-size warning only). Backend/DB unchanged. |
+| Task 11.2 frontend | `npm run typecheck` succeeded. `npm run build` succeeded (Vite chunk-size warning only). Backend/DB unchanged. |
+| Task 11.3 frontend | `npm run typecheck` succeeded. `npm run build` succeeded (Vite chunk-size warning only). Backend/DB unchanged. No live browser/API test. |
 
 ---
 

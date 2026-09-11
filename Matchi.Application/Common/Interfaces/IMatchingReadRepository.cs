@@ -1,3 +1,5 @@
+using Matchi.Domain.Entities;
+
 namespace Matchi.Application.Common.Interfaces;
 
 public enum MatchCandidateType
@@ -37,5 +39,9 @@ public interface IMatchingReadRepository
 
     Task<IReadOnlyList<MatchingCandidateRow>> FindBusinessMatchesAsync(
         MatchingCriteria criteria,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Request>> ListOpenEligibleRequestsForProviderAsync(
+        long providerId,
         CancellationToken cancellationToken = default);
 }

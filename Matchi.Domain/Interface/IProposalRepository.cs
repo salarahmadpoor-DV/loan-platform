@@ -28,6 +28,10 @@ public interface IProposalRepository
         long userId,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<Proposal>> ListByProviderIdAsync(
+        long providerId,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<long>> GetActiveServiceIdsAsync(
         IReadOnlyCollection<long> serviceIds,
         CancellationToken cancellationToken = default);

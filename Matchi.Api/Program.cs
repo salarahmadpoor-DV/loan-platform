@@ -89,7 +89,12 @@ builder.Services.AddSingleton<IAuthorizationPolicyProvider,
 
 builder.Services.AddScoped<IAuthorizationHandler,
     PermissionAuthorizationHandler>();
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(
+        "ProviderWorkspace",
+        policy => policy.RequireAuthenticatedUser().RequireRole("PROVIDER"));
+});
 
 var app = builder.Build();
 

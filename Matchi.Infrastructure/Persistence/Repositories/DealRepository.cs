@@ -61,6 +61,26 @@ public sealed class DealRepository : IDealRepository
                 cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Deal>> ListVisibleToProviderAsync(
+        long providerId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Deals
+            .AsNoTracking()
+            .Include(deal => deal.Proposal)
+            .Where(deal =>
+                !deal.IsDeleted
+                && !deal.Request.IsDeleted
+                && (deal.Proposal.ProviderId == providerId
+                    || deal.ServiceExecutions.Any(execution =>
+                        execution.Assignments.Any(assignment =>
+                            assignment.ProviderId == providerId
+                            && assignment.Status == "Assigned"))))
+            .OrderByDescending(deal => deal.AcceptedAt)
+            .ThenByDescending(deal => deal.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     public Task<bool> HasActiveDealForRequestAsync(
         long requestId,
         CancellationToken cancellationToken = default)

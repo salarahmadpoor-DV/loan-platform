@@ -5,9 +5,18 @@ namespace Matchi.Application.Tests;
 internal static class MarketplaceGraph
 {
     public const long ProviderUserId = 10;
+    public const long ProviderEntityId = 5;
+    public const long OtherProviderUserId = 11;
+    public const long OtherProviderEntityId = 44;
     public const long BusinessOwnerUserId = 20;
     public const long CustomerUserId = 30;
     public const long OtherUserId = 99;
+
+    public static Provider OwnProvider() =>
+        new Provider(ProviderUserId, "Prov", "09120000000").WithId(ProviderEntityId);
+
+    public static Provider OtherProvider() =>
+        new Provider(OtherProviderUserId, "Other", "09121111111").WithId(OtherProviderEntityId);
 
     public static Deal ProviderDeal(string requestType = "Service", string dealStatus = "Active")
     {

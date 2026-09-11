@@ -17,6 +17,10 @@ public interface IDealRepository
         long userId,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<Deal>> ListVisibleToProviderAsync(
+        long providerId,
+        CancellationToken cancellationToken = default);
+
     Task<bool> HasActiveDealForRequestAsync(
         long requestId,
         CancellationToken cancellationToken = default);

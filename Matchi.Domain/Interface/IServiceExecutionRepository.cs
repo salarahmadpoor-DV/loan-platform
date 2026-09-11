@@ -38,6 +38,10 @@ public interface IServiceExecutionRepository
         long executionId,
         long userId,
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ServiceExecution>> ListVisibleToProviderAsync(
+        long providerId,
+        CancellationToken cancellationToken = default);
 }
 
 public interface IExecutionAssignmentRepository

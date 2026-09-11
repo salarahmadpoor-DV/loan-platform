@@ -109,6 +109,27 @@ public sealed class ServiceExecutionRepository : IServiceExecutionRepository
                 cancellationToken);
     }
 
+    public async Task<IReadOnlyList<ServiceExecution>> ListVisibleToProviderAsync(
+        long providerId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.ServiceExecutions
+            .AsNoTracking()
+            .Include(execution => execution.Deal)
+                .ThenInclude(deal => deal.Proposal)
+            .Include(execution => execution.Assignments)
+            .Where(execution =>
+                !execution.Deal.IsDeleted
+                && !execution.Deal.Request.IsDeleted
+                && (execution.Deal.Proposal.ProviderId == providerId
+                    || execution.Assignments.Any(assignment =>
+                        assignment.ProviderId == providerId
+                        && assignment.Status == "Assigned")))
+            .OrderByDescending(execution => execution.CreateDate)
+            .ThenByDescending(execution => execution.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     public Task<ServiceExecution?> GetTrackedForPartyAsync(
         long executionId,
         long userId,

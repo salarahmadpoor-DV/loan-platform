@@ -82,6 +82,22 @@ public sealed class ProposalRepository : IProposalRepository
                 cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Proposal>> ListByProviderIdAsync(
+        long providerId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Proposals
+            .AsNoTracking()
+            .Include(proposal => proposal.Deal)
+            .Where(proposal =>
+                proposal.ProviderId == providerId
+                && !proposal.IsDeleted
+                && !proposal.Request.IsDeleted)
+            .OrderByDescending(proposal => proposal.CreateDate)
+            .ThenByDescending(proposal => proposal.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<long>> GetActiveServiceIdsAsync(
         IReadOnlyCollection<long> serviceIds,
         CancellationToken cancellationToken = default)

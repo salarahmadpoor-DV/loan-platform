@@ -24,7 +24,7 @@ export const workspaceNav: Record<AppWorkspace, readonly NavItem[]> = {
   ],
   provider: [
     { to: "/provider/dashboard", labelKey: "nav.dashboard" },
-    { to: "/provider/requests", labelKey: "nav.requests" },
+    { to: "/provider/requests", labelKey: "nav.marketplace" },
     { to: "/provider/proposals", labelKey: "nav.proposals" },
     { to: "/provider/deals", labelKey: "nav.deals" },
     { to: "/provider/executions", labelKey: "nav.executions" },

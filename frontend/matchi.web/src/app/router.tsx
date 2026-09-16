@@ -16,6 +16,7 @@ import { ProviderExecutionListPage } from "../features/provider/executions/pages
 import { ProviderProfilePage } from "../features/provider/profile/pages/ProviderProfilePage";
 import { ProviderProposalListPage } from "../features/provider/proposals/pages/ProviderProposalListPage";
 import { ProviderRequestInboxPage } from "../features/provider/requests/pages/ProviderRequestInboxPage";
+import { ProviderRequestDetailPage } from "../features/provider/requests/pages/ProviderRequestDetailPage";
 import { CreateProviderProposalPage } from "../features/provider/proposals/create/pages/CreateProviderProposalPage";
 import { BusinessDashboardPage } from "../features/shell/pages/BusinessDashboardPage";
 import { PlaceholderPage } from "../features/shell/pages/PlaceholderPage";
@@ -61,7 +62,9 @@ export function AppRouter() {
           <Route path="/provider" element={<ProviderLayout />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<ProviderDashboardPage />} />
+            <Route path="marketplace" element={<Navigate to="/provider/requests" replace />} />
             <Route path="requests" element={<ProviderRequestInboxPage />} />
+            <Route path="requests/:requestId" element={<ProviderRequestDetailPage />} />
             <Route path="requests/:requestId/proposal" element={<CreateProviderProposalPage />} />
             <Route path="proposals" element={<ProviderProposalListPage />} />
             <Route path="deals" element={<ProviderDealListPage />} />

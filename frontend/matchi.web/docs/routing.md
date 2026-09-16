@@ -37,16 +37,18 @@ JWT role `PROVIDER` or `ADMIN`. Permission claims are not used. Users without th
 |---|---|
 | `/provider` | redirect → `dashboard` |
 | `/provider/dashboard` | `ProviderDashboardPage` |
-| `/provider/requests` | inbox list (`GET /api/provider/requests`) |
+| `/provider/marketplace` | redirect → `/provider/requests` |
+| `/provider/requests` | Provider marketplace list (`GET /api/provider/requests`). Read-only cards. |
+| `/provider/requests/:requestId` | Provider request detail from inbox DTO (no owner `GET /api/requests/{id}`). |
 | `/provider/requests/:requestId/proposal` | create proposal (`POST /api/requests/{id}/proposals`) |
 | `/provider/proposals` | my proposals (`GET /api/provider/proposals`) |
 | `/provider/deals` | my deals (`GET /api/provider/deals`) |
 | `/provider/executions` | my executions (`GET /api/provider/executions`) |
 | `/provider/profile` | profile (`GET /api/providers/me`) |
 
-Nav: داشبورد / درخواست‌ها / پیشنهادهای من / معاملات / اجراها / پروفایل.
+Nav: داشبورد / بازار / پیشنهادهای من / معاملات / اجراها / پروفایل.
 
-Inbox cards navigate to `/provider/requests/:requestId/proposal` with optional inbox state. Do not call owner `GET /api/requests/{id}`.
+Marketplace cards open `/provider/requests/:requestId` (inbox DTO only). Do not call owner `GET /api/requests/{id}`. The create-proposal route remains but is not the marketplace primary action.
 
 ## Business (`RequireWorkspace(business)` + `BusinessLayout`)
 

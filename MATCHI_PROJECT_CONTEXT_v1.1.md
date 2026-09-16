@@ -939,7 +939,7 @@ Route `/provider/requests` (existing; `RequireAuth` + `RequireWorkspace(provider
 
 **Inbox behavior:** eligible open requests only. Empty = `200 []`. 403/404 use existing `ErrorAlert` + retry. JWT workspace role remains `PROVIDER` (not `PROVIDER_*` claims).
 
-**Actions:** `ارسال پیشنهاد` navigates to `/provider/requests/{requestId}/proposal` using inbox `requestId`. That route is a **placeholder** (no `POST /api/requests/{id}/proposals`).
+**Actions:** Marketplace cards open `/provider/requests/{requestId}` (read-only detail from the inbox list). Create-proposal remains at `/provider/requests/{requestId}/proposal` but is not the marketplace primary action.
 
 ### Verification (Task 11.2)
 
@@ -1109,6 +1109,7 @@ Dashboard uses live `GET /api/provider/requests|proposals|deals|executions` and 
 | Customer create-request flow polish | In-place success, compact mobile stepper, required/optional labels. Backend/DB/API unchanged. |
 | Customer My Requests / request detail polish | List + detail UX from live `RequestDto` only. Matches navigation for Open. Backend/DB/API unchanged. |
 | Customer matches workspace | Read-only `GET /api/requests/{id}/matches` cards from live `MatchResultDto`. Backend/DB/API unchanged. |
+| Provider marketplace workspace | Read-only `GET /api/provider/requests` list + detail from inbox DTO. Backend/DB/API unchanged. |
 | Customer journey presentation (proposal/deal/execution/review) | `npm run typecheck` / `npm run build` succeeded. Backend/DB/API unchanged. No Task 11.4. No live browser/API test. |
 | Provider workspace presentation | `npm run typecheck` / `npm run build` succeeded. Backend/DB/API unchanged. No Task 11.4. No live browser/API test. |
 

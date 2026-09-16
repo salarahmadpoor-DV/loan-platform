@@ -86,6 +86,8 @@ My Requests (`/customer/requests`) lists owner requests from `GET /api/requests/
 
 Matches (`/customer/requests/:id/matches`) is read-only. Context comes from `GET /api/requests/{id}`. Results come from `GET /api/requests/{id}/matches` (`candidateType`, `candidateId`, `displayName`, `score`, `rank`). Count is the array length. Cancelled requests do not call matches.
 
+Provider marketplace (`/provider/requests`, alias `/provider/marketplace`) lists `GET /api/provider/requests` (`ProviderRequestInboxItemDto`). Detail (`/provider/requests/:requestId`) reads that list from the query cache; there is no provider `GET /api/requests/{id}`. Cards show only inbox fields. Customer identity and street address are not on the contract.
+
 Every data-driven block uses `LoadingState` / `EmptyState` / `ErrorAlert` (API category errors are hidden when mock fallback is used).
 
 ## Related docs

@@ -1,5 +1,6 @@
-import { Button, Stack, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Box, Button, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { useMemo, useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import { t } from "../../../../shared/i18n";
 import { REQUEST_KINDS, type RequestKind } from "../../../../shared/types/marketplace";
 import { EmptyState } from "../../../../shared/ui/EmptyState";
@@ -8,6 +9,7 @@ import { LoadingState } from "../../../../shared/ui/LoadingState";
 import { PageHeader } from "../../../../shared/ui/PageHeader";
 import { ResponsiveCardGrid } from "../../../../shared/ui/ResponsiveCardGrid";
 import { requestKindLabel } from "../../../customer/requests/api/requestTypes";
+import { ProviderRequestCardSkeletonGrid } from "../components/ProviderRequestCardSkeletonGrid";
 import { RequestCard } from "../components/RequestCard";
 import { useProviderRequestInbox } from "../hooks/useProviderRequestInbox";
 
@@ -26,10 +28,20 @@ export function ProviderRequestInboxPage() {
   }, [data, kindFilter]);
 
   return (
-    <>
+    <Box sx={{ maxWidth: 960, mx: "auto" }}>
       <PageHeader
         title={t("provider.requests.title")}
         description={t("provider.requests.description")}
+        action={
+          <Button
+            component={RouterLink}
+            to="/provider/dashboard"
+            variant="outlined"
+            sx={{ minHeight: 48 }}
+          >
+            {t("provider.requests.backToDashboard")}
+          </Button>
+        }
       />
       <ToggleButtonGroup
         exclusive
@@ -57,7 +69,12 @@ export function ProviderRequestInboxPage() {
           </ToggleButton>
         ))}
       </ToggleButtonGroup>
-      {isPending ? <LoadingState label={t("provider.requests.loading")} /> : null}
+      {isPending ? (
+        <Stack spacing={2} aria-busy="true" aria-live="polite">
+          <LoadingState label={t("provider.requests.loading")} />
+          <ProviderRequestCardSkeletonGrid />
+        </Stack>
+      ) : null}
       {isError ? (
         <Stack spacing={2}>
           <ErrorAlert error={error} />
@@ -77,18 +94,28 @@ export function ProviderRequestInboxPage() {
         <EmptyState
           title={t("provider.requests.emptyTitle")}
           body={t("provider.requests.emptyBody")}
+          action={
+            <Button component={RouterLink} to="/provider/dashboard" variant="contained">
+              {t("provider.requests.backToDashboard")}
+            </Button>
+          }
         />
       ) : null}
       {!isPending && !isError && data && data.length > 0 && items.length === 0 ? (
         <EmptyState title={t("provider.requests.filterEmpty")} />
       ) : null}
       {items.length > 0 ? (
-        <ResponsiveCardGrid>
-          {items.map((item) => (
-            <RequestCard key={item.requestId} item={item} />
-          ))}
-        </ResponsiveCardGrid>
+        <Stack spacing={2}>
+          <Typography variant="body2" color="text.secondary">
+            {t("provider.requests.resultCount", { count: items.length })}
+          </Typography>
+          <ResponsiveCardGrid>
+            {items.map((item) => (
+              <RequestCard key={item.requestId} item={item} />
+            ))}
+          </ResponsiveCardGrid>
+        </Stack>
       ) : null}
-    </>
+    </Box>
   );
 }

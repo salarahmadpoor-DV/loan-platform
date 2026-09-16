@@ -2,40 +2,28 @@ import { Button, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { formatDateTime } from "../../../customer/proposals/model/proposalDisplay";
 import { requestKindLabel } from "../../../customer/requests/api/requestTypes";
+import { RequestStatusChip } from "../../../customer/requests/components/RequestStatusChip";
 import { t } from "../../../../shared/i18n";
 import { AppCard } from "../../../../shared/ui/AppCard";
 import { StatusChip } from "../../../../shared/ui/StatusChip";
-import type { ProviderInboxLocation, ProviderRequestInboxItem } from "../api/providerRequestTypes";
+import type { ProviderRequestInboxItem } from "../api/providerRequestTypes";
+import { inboxHeading, inboxLocationLines } from "../model/inboxDisplay";
 
 type RequestCardProps = {
   item: ProviderRequestInboxItem;
 };
 
-function locationLines(location: ProviderInboxLocation): string[] {
-  const lines: string[] = [];
-  if (location.province?.trim()) {
-    lines.push(t("provider.requests.province", { value: location.province.trim() }));
-  }
-  if (location.city?.trim()) {
-    lines.push(t("provider.requests.city", { value: location.city.trim() }));
-  }
-  if (location.district?.trim()) {
-    lines.push(t("provider.requests.district", { value: location.district.trim() }));
-  }
-  return lines;
-}
-
 export function RequestCard({ item }: RequestCardProps) {
-  const location = item.location ? locationLines(item.location) : [];
-  const statusTone =
-    item.status.toLowerCase() === "open"
-      ? "info"
-      : item.status.toLowerCase() === "cancelled"
-        ? "neutral"
-        : "pending";
+  const location = item.location ? inboxLocationLines(item.location) : [];
+  const heading = inboxHeading(item);
 
   return (
-    <AppCard>
+    <AppCard
+      sx={{
+        height: "100%",
+        "&:hover": { borderColor: "primary.light" },
+      }}
+    >
       <Stack spacing={1.5} sx={{ height: "100%" }}>
         <Stack
           direction="row"
@@ -46,14 +34,10 @@ export function RequestCard({ item }: RequestCardProps) {
           useFlexGap
         >
           <StatusChip label={requestKindLabel(item.requestType)} tone="info" />
-          <StatusChip label={item.status} tone={statusTone} />
+          <RequestStatusChip status={item.status} />
         </Stack>
-        <Typography variant="h6">
-          {item.serviceSummary?.trim()
-            ? item.serviceSummary
-            : t("provider.requests.requestId", { id: item.requestId })}
-        </Typography>
-        {item.serviceSummary ? (
+        <Typography variant="h6">{heading}</Typography>
+        {item.serviceSummary?.trim() ? (
           <Typography variant="caption" color="text.secondary">
             {t("provider.requests.requestId", { id: item.requestId })}
           </Typography>
@@ -84,12 +68,11 @@ export function RequestCard({ item }: RequestCardProps) {
         </Typography>
         <Button
           component={RouterLink}
-          to={`/provider/requests/${item.requestId}/proposal`}
-          state={{ inboxItem: item }}
+          to={`/provider/requests/${item.requestId}`}
           variant="contained"
           sx={{ mt: "auto", minHeight: 48, width: { xs: "100%", sm: "auto" }, alignSelf: { sm: "flex-start" } }}
         >
-          {t("provider.requests.sendProposal")}
+          {t("provider.requests.viewRequest")}
         </Button>
       </Stack>
     </AppCard>

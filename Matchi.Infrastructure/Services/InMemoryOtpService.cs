@@ -34,7 +34,7 @@ public sealed class InMemoryOtpService : IOtpService
             code,
             _timeProvider.GetUtcNow().UtcDateTime.Add(ttl),
             FailedAttempts: 0);
-
+        Console.WriteLine($"[DEV OTP] Mobile: {mobile.Trim()} | RequestId: {requestId} | OTP: {code}");
         _store[requestId] = entry;
         return Task.FromResult(new OtpIssueResult(requestId, code));
     }

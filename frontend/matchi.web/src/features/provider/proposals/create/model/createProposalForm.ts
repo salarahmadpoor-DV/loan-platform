@@ -103,9 +103,12 @@ export function itemLineTotal(item: CreateProposalItemValues): number {
   return quantity * unitPrice;
 }
 
+export function itemsSubtotal(values: CreateProposalFormValues): number {
+  return values.items.reduce((sum, item) => sum + itemLineTotal(item), 0);
+}
+
 export function suggestedProposalTotal(values: CreateProposalFormValues): number {
-  const itemsTotal = values.items.reduce((sum, item) => sum + itemLineTotal(item), 0);
-  return itemsTotal + (parseNonNegative(values.deliveryFee) ?? 0);
+  return itemsSubtotal(values) + (parseNonNegative(values.deliveryFee) ?? 0);
 }
 
 function toTimeSpan(value: string): string | undefined {

@@ -13,7 +13,7 @@ type AuthContextValue = {
   accessToken: string | null;
   user: AuthUser | null;
   isAuthenticated: boolean;
-  setSession: (accessToken: string, user: AuthUser) => void;
+  setSession: (accessToken: string, profile?: Partial<AuthUser>) => void;
   logout: () => void;
 };
 

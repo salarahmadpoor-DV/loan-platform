@@ -1,17 +1,29 @@
-import { Box, Button, Stack } from "@mui/material";
+import { Button, Stack, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { useMemo, useState } from "react";
 import { t } from "../../../../shared/i18n";
-import { REQUEST_KINDS } from "../../../../shared/types/marketplace";
+import { REQUEST_KINDS, type RequestKind } from "../../../../shared/types/marketplace";
 import { EmptyState } from "../../../../shared/ui/EmptyState";
 import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
 import { LoadingState } from "../../../../shared/ui/LoadingState";
 import { PageHeader } from "../../../../shared/ui/PageHeader";
-import { StatusChip } from "../../../../shared/ui/StatusChip";
+import { ResponsiveCardGrid } from "../../../../shared/ui/ResponsiveCardGrid";
 import { requestKindLabel } from "../../../customer/requests/api/requestTypes";
 import { RequestCard } from "../components/RequestCard";
 import { useProviderRequestInbox } from "../hooks/useProviderRequestInbox";
 
 export function ProviderRequestInboxPage() {
   const { data, isPending, isError, error, refetch, isFetching } = useProviderRequestInbox();
+  const [kindFilter, setKindFilter] = useState<RequestKind | "all">("all");
+
+  const items = useMemo(() => {
+    if (!data) {
+      return [];
+    }
+    if (kindFilter === "all") {
+      return data;
+    }
+    return data.filter((item) => item.requestType === kindFilter);
+  }, [data, kindFilter]);
 
   return (
     <>
@@ -19,11 +31,32 @@ export function ProviderRequestInboxPage() {
         title={t("provider.requests.title")}
         description={t("provider.requests.description")}
       />
-      <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: "wrap" }} useFlexGap>
+      <ToggleButtonGroup
+        exclusive
+        fullWidth
+        color="primary"
+        value={kindFilter}
+        onChange={(_event, next: RequestKind | "all" | null) => {
+          if (next) {
+            setKindFilter(next);
+          }
+        }}
+        aria-label={t("provider.requests.filterKind")}
+        sx={{ mb: 2, flexWrap: "wrap" }}
+      >
+        <ToggleButton value="all" sx={{ py: 1.25, flex: { xs: "1 1 100%", sm: "1 1 0" } }}>
+          {t("provider.requests.filterAll")}
+        </ToggleButton>
         {REQUEST_KINDS.map((kind) => (
-          <StatusChip key={kind} label={requestKindLabel(kind)} />
+          <ToggleButton
+            key={kind}
+            value={kind}
+            sx={{ py: 1.25, flex: { xs: "1 1 100%", sm: "1 1 0" } }}
+          >
+            {requestKindLabel(kind)}
+          </ToggleButton>
         ))}
-      </Stack>
+      </ToggleButtonGroup>
       {isPending ? <LoadingState label={t("provider.requests.loading")} /> : null}
       {isError ? (
         <Stack spacing={2}>
@@ -34,7 +67,7 @@ export function ProviderRequestInboxPage() {
               void refetch();
             }}
             disabled={isFetching}
-            sx={{ alignSelf: "flex-start" }}
+            sx={{ minHeight: 44, alignSelf: "flex-start" }}
           >
             {t("provider.requests.retry")}
           </Button>
@@ -46,18 +79,15 @@ export function ProviderRequestInboxPage() {
           body={t("provider.requests.emptyBody")}
         />
       ) : null}
-      {data && data.length > 0 ? (
-        <Box
-          sx={{
-            display: "grid",
-            gap: 2,
-            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-          }}
-        >
-          {data.map((item) => (
+      {!isPending && !isError && data && data.length > 0 && items.length === 0 ? (
+        <EmptyState title={t("provider.requests.filterEmpty")} />
+      ) : null}
+      {items.length > 0 ? (
+        <ResponsiveCardGrid>
+          {items.map((item) => (
             <RequestCard key={item.requestId} item={item} />
           ))}
-        </Box>
+        </ResponsiveCardGrid>
       ) : null}
     </>
   );

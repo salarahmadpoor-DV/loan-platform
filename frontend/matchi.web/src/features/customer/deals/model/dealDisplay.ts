@@ -1,10 +1,32 @@
 import { t } from "../../../../shared/i18n";
+import type { StatusTone } from "../../../../shared/ui/StatusChip";
 
 export function dealStatusLabel(status: string): string {
-  if (status.toLowerCase() === "active") {
+  const key = status.toLowerCase();
+  if (key === "active") {
     return t("deal.status.Active");
   }
+  if (key === "completed") {
+    return t("deal.status.Completed");
+  }
+  if (key === "cancelled") {
+    return t("deal.status.Cancelled");
+  }
   return status;
+}
+
+export function dealStatusTone(status: string): StatusTone {
+  const key = status.toLowerCase();
+  if (key === "active") {
+    return "success";
+  }
+  if (key === "completed") {
+    return "info";
+  }
+  if (key === "cancelled") {
+    return "danger";
+  }
+  return "neutral";
 }
 
 export function executionStatusLabel(status: string): string {

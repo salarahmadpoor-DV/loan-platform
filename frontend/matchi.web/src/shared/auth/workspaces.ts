@@ -1,21 +1,27 @@
-import {
-  workspaceHome,
-  type AppWorkspace,
-} from "../navigation/navModel";
+import { workspaceHome, type AppWorkspace } from "../navigation/navModel";
+import { normalizeRoleCodes } from "./jwt";
 
 /**
- * Live Matchi JWTs typically include USER (and sometimes ADMIN).
- * PROVIDER and BUSINESS_OWNER are accepted when present.
- * Permission claims (PROVIDER_*) are not used — every USER may have those.
+ * Workspace access from JWT **role codes** only (not `permission` claims).
+ *
+ * USER → Customer
+ * PROVIDER → Provider (Customer only if USER or ADMIN is also present)
+ * BUSINESS_OWNER → Business
+ * ADMIN → Customer + Provider + Business
+ *
+ * `PROVIDER_VIEW` / other permission strings are ignored.
  */
 export function resolveWorkspaces(roles: readonly string[] | undefined): AppWorkspace[] {
-  const set = new Set((roles ?? []).map((role) => role.toUpperCase()));
+  const set = new Set(normalizeRoleCodes(roles));
 
   if (set.has("ADMIN")) {
     return ["customer", "provider", "business"];
   }
 
-  const workspaces: AppWorkspace[] = ["customer"];
+  const workspaces: AppWorkspace[] = [];
+  if (set.has("USER")) {
+    workspaces.push("customer");
+  }
   if (set.has("PROVIDER")) {
     workspaces.push("provider");
   }
@@ -26,8 +32,11 @@ export function resolveWorkspaces(roles: readonly string[] | undefined): AppWork
 }
 
 export function defaultWorkspacePath(roles: readonly string[] | undefined): string {
-  const first = resolveWorkspaces(roles)[0] ?? "customer";
-  return workspaceHome[first];
+  const available = resolveWorkspaces(roles);
+  if (available.length === 0) {
+    return "/";
+  }
+  return workspaceHome[available[0]];
 }
 
 export function canAccessWorkspace(

@@ -45,6 +45,39 @@ export function formatDateTime(iso: string | null | undefined): string {
   return date.toLocaleString(getLocale());
 }
 
+export function proposalStatusTone(status: string): "pending" | "success" | "danger" | "neutral" {
+  const normalized = status.toLowerCase();
+  if (normalized === "pending") {
+    return "pending";
+  }
+  if (normalized === "accepted") {
+    return "success";
+  }
+  if (normalized === "rejected") {
+    return "danger";
+  }
+  return "neutral";
+}
+
+export function formatProposalSchedule(input: {
+  proposedDate: string | null;
+  proposedTimeFrom: string | null;
+  proposedTimeTo: string | null;
+}): string | null {
+  if (!input.proposedDate && !input.proposedTimeFrom && !input.proposedTimeTo) {
+    return null;
+  }
+  const time =
+    input.proposedTimeFrom || input.proposedTimeTo
+      ? `${input.proposedTimeFrom ?? "—"} – ${input.proposedTimeTo ?? "—"}`
+      : null;
+  return [input.proposedDate, time].filter(Boolean).join(" · ");
+}
+
+export function proposalItemsSubtotal(items: { totalPrice: number }[]): number {
+  return items.reduce((sum, item) => sum + item.totalPrice, 0);
+}
+
 export function parsePositiveId(raw: string | undefined): number | undefined {
   if (!raw) {
     return undefined;

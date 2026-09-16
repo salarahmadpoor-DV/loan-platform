@@ -4,8 +4,9 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { ApiError } from "../../../shared/api/errors";
 import { useAuth } from "../../../shared/auth/AuthProvider";
 import { decodeAccessToken } from "../../../shared/auth/jwt";
-import { defaultWorkspacePath } from "../../../shared/auth/workspaces";
+import { defaultWorkspacePath, resolveWorkspaces } from "../../../shared/auth/workspaces";
 import { t } from "../../../shared/i18n";
+import { AppCard } from "../../../shared/ui/AppCard";
 import { ErrorAlert } from "../../../shared/ui/ErrorAlert";
 import { PageHeader } from "../../../shared/ui/PageHeader";
 import { sendOtp, verifyOtp } from "../api/authApi";
@@ -35,7 +36,7 @@ export function LoginPage() {
   const [error, setError] = useState<unknown>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  if (isAuthenticated) {
+  if (isAuthenticated && resolveWorkspaces(user?.roles).length > 0) {
     return <Navigate to={defaultWorkspacePath(user?.roles)} replace />;
   }
 
@@ -97,14 +98,26 @@ export function LoginPage() {
         requestId,
       });
       const claims = decodeAccessToken(result.accessToken);
-      const roles =
-        result.user.roles.length > 0 ? result.user.roles : (claims?.roles ?? []);
+      if (!claims) {
+        setError(
+          new ApiError({
+            userMessage: t("common.unknownError"),
+          }),
+        );
+        return;
+      }
       setSession(result.accessToken, {
         id: result.user.id,
-        mobile: result.user.mobile || claims?.mobile || mobile,
-        roles,
+        mobile: result.user.mobile || claims.mobile || mobile,
+        roles: Array.isArray(result.user.roles) ? result.user.roles : [],
       });
-      navigate(defaultWorkspacePath(roles), { replace: true });
+      navigate(
+        defaultWorkspacePath([
+          ...(claims.roles ?? []),
+          ...(Array.isArray(result.user.roles) ? result.user.roles : []),
+        ]),
+        { replace: true },
+      );
     } catch (err) {
       setError(loginDisplayError(err, "otp"));
     } finally {
@@ -113,7 +126,7 @@ export function LoginPage() {
   }
 
   return (
-    <>
+    <AppCard>
       <PageHeader
         title={t("auth.loginTitle")}
         description={t("auth.loginDescription")}
@@ -181,6 +194,6 @@ export function LoginPage() {
           </Button>
         </Stack>
       )}
-    </>
+    </AppCard>
   );
 }

@@ -1,4 +1,4 @@
-import { Button, Stack, Typography } from "@mui/material";
+import { Alert, Button, Stack, Typography } from "@mui/material";
 import { t } from "../../../../shared/i18n";
 import { EmptyState } from "../../../../shared/ui/EmptyState";
 import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
@@ -13,10 +13,14 @@ type DealExecutionSectionProps = {
 
 export function DealExecutionSection({ dealId, requestType }: DealExecutionSectionProps) {
   const { data, isPending, isError, error, refetch, isFetching } = useDealExecutions(dealId);
+  const isProduct = requestType === "Product";
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle1">{t("deal.detail.execution")}</Typography>
+      <Typography variant="h6">{t("deal.detail.execution")}</Typography>
+      {isProduct ? (
+        <Alert severity="info">{t("deal.execution.naProduct")}</Alert>
+      ) : null}
       {isPending ? <LoadingState label={t("deal.execution.loading")} /> : null}
       {isError ? (
         <Stack spacing={1}>

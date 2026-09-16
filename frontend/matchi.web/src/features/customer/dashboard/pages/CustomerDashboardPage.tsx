@@ -38,7 +38,7 @@ export function CustomerDashboardPage() {
           component={RouterLink}
           to="/customer/requests/create"
           variant="contained"
-          sx={{ mt: 2 }}
+          sx={{ mt: 2, width: { xs: "100%", sm: "auto" } }}
         >
           {t("request.list.create")}
         </Button>
@@ -68,7 +68,7 @@ export function CustomerDashboardPage() {
           sx={{
             display: "grid",
             gap: 2,
-            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", lg: "1fr 1fr 1fr" },
           }}
         >
           <SummaryCard label={t("dashboard.allRequests")} value={requests.length} />

@@ -22,39 +22,51 @@ export function ExecutionCard({ execution }: ExecutionCardProps) {
     execution.scheduledTimeFrom,
     execution.scheduledTimeTo,
   ]);
+  const assignments = assignmentsQuery.data ?? [];
+  const primary = assignments.filter((item) => item.isPrimary);
+  const others = assignments.filter((item) => !item.isPrimary);
 
   return (
     <AppCard>
       <Stack spacing={1.5}>
-        <Stack spacing={0.75}>
-          <Typography variant="subtitle2">{t("deal.execution.id", { id: execution.id })}</Typography>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          spacing={1}
+        >
+          <Typography variant="h6">{t("deal.execution.id", { id: execution.id })}</Typography>
           <ExecutionStatusChip status={execution.status} />
-          {execution.businessId != null ? (
-            <Typography variant="body2">
-              {t("deal.execution.business", { id: execution.businessId })}
-            </Typography>
-          ) : null}
-          {schedule ? (
-            <Typography variant="body2">
-              {t("deal.execution.scheduled", { value: schedule })}
-            </Typography>
-          ) : null}
-          {execution.startedAt ? (
-            <Typography variant="body2">
-              {t("deal.execution.started", { date: formatDateTime(execution.startedAt) })}
-            </Typography>
-          ) : null}
-          {execution.completedAt ? (
-            <Typography variant="body2">
-              {t("deal.execution.completed", { date: formatDateTime(execution.completedAt) })}
-            </Typography>
-          ) : null}
-          <Typography variant="caption" color="text.secondary">
-            {t("deal.execution.created", { date: formatDateTime(execution.createDate) })}
-          </Typography>
         </Stack>
+        {execution.businessId != null ? (
+          <Typography variant="body2">
+            {t("deal.execution.business", { id: execution.businessId })}
+          </Typography>
+        ) : null}
+        <Typography variant="body2">
+          {t("deal.execution.scheduled", {
+            value: schedule ?? t("common.notSpecified"),
+          })}
+        </Typography>
+        <Typography variant="body2">
+          {t("deal.execution.started", {
+            date: execution.startedAt
+              ? formatDateTime(execution.startedAt)
+              : t("common.notSpecified"),
+          })}
+        </Typography>
+        <Typography variant="body2">
+          {t("deal.execution.completed", {
+            date: execution.completedAt
+              ? formatDateTime(execution.completedAt)
+              : t("common.notSpecified"),
+          })}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {t("deal.execution.created", { date: formatDateTime(execution.createDate) })}
+        </Typography>
 
-        <Typography variant="subtitle2">{t("deal.assignment.title")}</Typography>
+        <Typography variant="subtitle1">{t("deal.assignment.title")}</Typography>
         {assignmentsQuery.isPending ? (
           <LoadingState label={t("deal.assignment.loading")} />
         ) : null}
@@ -76,12 +88,20 @@ export function ExecutionCard({ execution }: ExecutionCardProps) {
         ) : null}
         {!assignmentsQuery.isPending &&
         !assignmentsQuery.isError &&
-        (assignmentsQuery.data?.length ?? 0) === 0 ? (
+        assignments.length === 0 ? (
           <EmptyState title={t("deal.assignment.empty")} body={t("deal.assignment.emptyBody")} />
         ) : null}
-        {assignmentsQuery.data && assignmentsQuery.data.length > 0 ? (
-          <Stack spacing={1.5}>
-            {assignmentsQuery.data.map((assignment) => (
+        {primary.length > 0 ? (
+          <Stack spacing={1}>
+            <Typography variant="subtitle2">{t("deal.assignment.primaryHeading")}</Typography>
+            {primary.map((assignment) => (
+              <ExecutionAssignmentInfo key={assignment.id} assignment={assignment} />
+            ))}
+          </Stack>
+        ) : null}
+        {others.length > 0 ? (
+          <Stack spacing={1}>
+            {others.map((assignment) => (
               <ExecutionAssignmentInfo key={assignment.id} assignment={assignment} />
             ))}
           </Stack>

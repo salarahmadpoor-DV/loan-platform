@@ -27,20 +27,35 @@ function locationLines(location: ProviderInboxLocation): string[] {
 
 export function RequestCard({ item }: RequestCardProps) {
   const location = item.location ? locationLines(item.location) : [];
+  const statusTone =
+    item.status.toLowerCase() === "open"
+      ? "info"
+      : item.status.toLowerCase() === "cancelled"
+        ? "neutral"
+        : "pending";
 
   return (
     <AppCard>
-      <Stack spacing={1.5}>
-        <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} useFlexGap>
-          <StatusChip label={requestKindLabel(item.requestType)} />
-          <StatusChip label={item.status} />
+      <Stack spacing={1.5} sx={{ height: "100%" }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          justifyContent="space-between"
+          alignItems="flex-start"
+          sx={{ flexWrap: "wrap" }}
+          useFlexGap
+        >
+          <StatusChip label={requestKindLabel(item.requestType)} tone="info" />
+          <StatusChip label={item.status} tone={statusTone} />
         </Stack>
-        <Typography variant="subtitle1">
-          {t("provider.requests.requestId", { id: item.requestId })}
+        <Typography variant="h6">
+          {item.serviceSummary?.trim()
+            ? item.serviceSummary
+            : t("provider.requests.requestId", { id: item.requestId })}
         </Typography>
         {item.serviceSummary ? (
-          <Typography variant="body2">
-            {t("provider.requests.serviceSummary", { summary: item.serviceSummary })}
+          <Typography variant="caption" color="text.secondary">
+            {t("provider.requests.requestId", { id: item.requestId })}
           </Typography>
         ) : null}
         {item.categorySummary ? (
@@ -50,11 +65,11 @@ export function RequestCard({ item }: RequestCardProps) {
         ) : null}
         {location.length > 0 ? (
           <Stack spacing={0.25}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="caption" color="text.secondary">
               {t("provider.requests.location")}
             </Typography>
             {location.map((line) => (
-              <Typography key={line} variant="body2" color="text.secondary">
+              <Typography key={line} variant="body2">
                 {line}
               </Typography>
             ))}
@@ -72,8 +87,7 @@ export function RequestCard({ item }: RequestCardProps) {
           to={`/provider/requests/${item.requestId}/proposal`}
           state={{ inboxItem: item }}
           variant="contained"
-          size="small"
-          sx={{ alignSelf: "flex-start" }}
+          sx={{ mt: "auto", minHeight: 48, width: { xs: "100%", sm: "auto" }, alignSelf: { sm: "flex-start" } }}
         >
           {t("provider.requests.sendProposal")}
         </Button>

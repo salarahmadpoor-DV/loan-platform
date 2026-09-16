@@ -1,14 +1,23 @@
-import { Button, Stack } from "@mui/material";
+import { Button, Stack, Typography } from "@mui/material";
 import { t } from "../../../../shared/i18n";
+import { groupByStatus } from "../../../../shared/marketplace/groupByStatus";
 import { EmptyState } from "../../../../shared/ui/EmptyState";
 import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
 import { LoadingState } from "../../../../shared/ui/LoadingState";
 import { PageHeader } from "../../../../shared/ui/PageHeader";
+import { ResponsiveCardGrid } from "../../../../shared/ui/ResponsiveCardGrid";
 import { ProviderExecutionCard } from "../components/ProviderExecutionCard";
 import { useMyProviderExecutions } from "../hooks/useMyProviderExecutions";
+import { providerExecutionStatusLabel } from "../model/providerExecutionDisplay";
 
 export function ProviderExecutionListPage() {
   const { data, isPending, isError, error, refetch, isFetching } = useMyProviderExecutions();
+  const groups = groupByStatus(data ?? [], (item) => item.status, [
+    "Pending",
+    "InProgress",
+    "Completed",
+    "Cancelled",
+  ]);
 
   return (
     <>
@@ -26,7 +35,7 @@ export function ProviderExecutionListPage() {
               void refetch();
             }}
             disabled={isFetching}
-            sx={{ alignSelf: "flex-start" }}
+            sx={{ minHeight: 44, alignSelf: "flex-start" }}
           >
             {t("provider.executions.retry")}
           </Button>
@@ -38,13 +47,16 @@ export function ProviderExecutionListPage() {
           body={t("provider.executions.emptyBody")}
         />
       ) : null}
-      {data && data.length > 0 ? (
-        <Stack spacing={2}>
-          {data.map((execution) => (
-            <ProviderExecutionCard key={execution.id} execution={execution} />
-          ))}
+      {groups.map((group) => (
+        <Stack key={group.status} spacing={1.5} sx={{ mb: 3 }}>
+          <Typography variant="h6">{providerExecutionStatusLabel(group.status)}</Typography>
+          <ResponsiveCardGrid>
+            {group.items.map((execution) => (
+              <ProviderExecutionCard key={execution.id} execution={execution} />
+            ))}
+          </ResponsiveCardGrid>
         </Stack>
-      ) : null}
+      ))}
     </>
   );
 }

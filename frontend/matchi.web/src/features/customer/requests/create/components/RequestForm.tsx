@@ -1,11 +1,16 @@
-import { Button, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Stack, TextField, Typography } from "@mui/material";
 import { useState, type FormEvent } from "react";
-import { t } from "../../../../../shared/i18n";
+import { t, type MessageKey } from "../../../../../shared/i18n";
 import type { RequestKind } from "../../../../../shared/types/marketplace";
 import { AppCard } from "../../../../../shared/ui/AppCard";
+import { FormSplitLayout } from "../../../../../shared/ui/FormSplitLayout";
+import { MarketplaceStepper } from "../../../../../shared/ui/MarketplaceStepper";
 import type { CreateRequestBody } from "../api/createRequestTypes";
+import { useCatalogServices } from "../hooks/useCatalogServices";
 import {
   defaultCreateRequestValues,
+  firstRequestErrorStep,
+  requestStepFieldErrors,
   toCreateRequestBody,
   validateCreateRequestForm,
   type CreateRequestFieldErrors,
@@ -14,158 +19,398 @@ import {
 import { RequestKindSelector } from "./RequestKindSelector";
 import { ServiceSelect } from "./ServiceSelect";
 
+const STEP_KEYS: MessageKey[] = [
+  "request.create.step.need",
+  "request.create.step.type",
+  "request.create.step.describe",
+  "request.create.step.location",
+  "request.create.step.details",
+  "request.create.step.review",
+];
+
+const KIND_LABEL: Record<RequestKind, MessageKey> = {
+  Service: "request.kind.Service",
+  Product: "request.kind.Product",
+  Hybrid: "request.kind.Hybrid",
+};
+
 type RequestFormProps = {
   submitting: boolean;
   onSubmit: (body: CreateRequestBody) => void;
 };
 
+function dash(value: string): string {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : t("common.notSpecified");
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <Stack spacing={0.25}>
+      <Typography variant="caption" color="text.secondary">
+        {label}
+      </Typography>
+      <Typography variant="body2">{value}</Typography>
+    </Stack>
+  );
+}
+
 export function RequestForm({ submitting, onSubmit }: RequestFormProps) {
   const [values, setValues] = useState<CreateRequestFormValues>(defaultCreateRequestValues);
   const [errors, setErrors] = useState<CreateRequestFieldErrors>({});
+  const [step, setStep] = useState(0);
+  const [unlocked, setUnlocked] = useState(0);
+  const catalog = useCatalogServices();
 
   const showService = values.requestType === "Service" || values.requestType === "Hybrid";
   const showProduct = values.requestType === "Product" || values.requestType === "Hybrid";
+  const lastStep = STEP_KEYS.length - 1;
+  const serviceName =
+    catalog.data?.items.find((item) => String(item.id) === values.serviceId)?.name ??
+    values.serviceId;
 
   function patch(update: Partial<CreateRequestFormValues>) {
     setValues((current) => ({ ...current, ...update }));
   }
 
+  function goToStep(index: number) {
+    if (index <= unlocked) {
+      setStep(index);
+    }
+  }
+
+  function goBack() {
+    setStep((current) => Math.max(0, current - 1));
+  }
+
+  function goNext() {
+    const nextErrors = requestStepFieldErrors(step, values);
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+    const next = Math.min(step + 1, lastStep);
+    setStep(next);
+    setUnlocked((current) => Math.max(current, next));
+  }
+
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    if (submitting) {
+      return;
+    }
+    if (step < lastStep) {
+      goNext();
+      return;
+    }
     const nextErrors = validateCreateRequestForm(values);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
+      const errorStep = firstRequestErrorStep(values);
+      setStep(errorStep);
+      setUnlocked((current) => Math.max(current, errorStep));
       return;
     }
     onSubmit(toCreateRequestBody(values));
   }
 
-  return (
-    <Stack component="form" spacing={2} onSubmit={handleSubmit} noValidate>
-      <TextField
-        label={t("request.create.title")}
-        value={values.title}
-        onChange={(event) => patch({ title: event.target.value })}
-        required
-        fullWidth
-        error={Boolean(errors.title)}
-        helperText={errors.title}
-        disabled={submitting}
-      />
-      <TextField
-        label={t("request.create.description")}
-        value={values.description}
-        onChange={(event) => patch({ description: event.target.value })}
-        fullWidth
-        multiline
-        minRows={3}
-        disabled={submitting}
-      />
-
-      <Typography variant="subtitle2">{t("request.create.kind")}</Typography>
-      <RequestKindSelector
-        value={values.requestType}
-        disabled={submitting}
-        onChange={(requestType: RequestKind) => patch({ requestType })}
-      />
-      {errors.requestType ? (
-        <Typography color="error" variant="caption">
-          {errors.requestType}
-        </Typography>
-      ) : null}
-
-      {showService ? (
-        <AppCard>
-          <Stack spacing={2}>
-            <Typography variant="subtitle1">{t("request.create.serviceSection")}</Typography>
-            <Typography variant="body2" color="text.secondary">
-              {t("request.create.serviceHint")}
-            </Typography>
-            <ServiceSelect
-              value={values.serviceId}
-              onChange={(serviceId) => patch({ serviceId })}
-              error={errors.serviceId}
-              disabled={submitting}
-            />
-            <TextField
-              label={t("request.create.serviceQuantity")}
-              value={values.serviceQuantity}
-              onChange={(event) => patch({ serviceQuantity: event.target.value })}
-              error={Boolean(errors.serviceQuantity)}
-              helperText={errors.serviceQuantity}
-              disabled={submitting}
-              fullWidth
-              inputProps={{ inputMode: "decimal" }}
-            />
-            <TextField
-              label={t("request.create.serviceLineDescription")}
-              value={values.serviceDescription}
-              onChange={(event) => patch({ serviceDescription: event.target.value })}
-              disabled={submitting}
-              fullWidth
-            />
-          </Stack>
-        </AppCard>
-      ) : null}
-
-      {showProduct ? (
-        <AppCard>
-          <Stack spacing={2}>
-            <Typography variant="subtitle1">{t("request.create.productSection")}</Typography>
-            <Typography variant="body2" color="text.secondary">
-              {t("request.create.productHint")}
-            </Typography>
-            <TextField
-              label={t("request.create.productId")}
-              value={values.productId}
-              onChange={(event) => patch({ productId: event.target.value })}
-              error={Boolean(errors.productId)}
-              helperText={errors.productId}
-              disabled={submitting}
-              fullWidth
-              inputProps={{ inputMode: "numeric" }}
-            />
-            <TextField
+  const summary = (
+    <AppCard>
+      <Stack spacing={1.5}>
+        <Typography variant="h6">{t("request.create.summaryTitle")}</Typography>
+        <SummaryRow label={t("request.create.title")} value={dash(values.title)} />
+        <SummaryRow label={t("request.create.kind")} value={t(KIND_LABEL[values.requestType])} />
+        {showService ? (
+          <SummaryRow label={t("request.create.serviceSelect")} value={dash(serviceName)} />
+        ) : null}
+        {showProduct ? (
+          <>
+            <SummaryRow label={t("request.create.productId")} value={dash(values.productId)} />
+            <SummaryRow
               label={t("request.create.productCategoryId")}
-              value={values.productCategoryId}
-              onChange={(event) => patch({ productCategoryId: event.target.value })}
-              error={Boolean(errors.productCategoryId)}
-              helperText={errors.productCategoryId}
-              disabled={submitting}
-              fullWidth
-              inputProps={{ inputMode: "numeric" }}
+              value={dash(values.productCategoryId)}
             />
-            <TextField
-              label={t("request.create.productQuantity")}
-              value={values.productQuantity}
-              onChange={(event) => patch({ productQuantity: event.target.value })}
-              error={Boolean(errors.productQuantity)}
-              helperText={errors.productQuantity}
-              disabled={submitting}
-              fullWidth
-              inputProps={{ inputMode: "decimal" }}
-            />
-            <TextField
-              label={t("request.create.productUnit")}
-              value={values.productUnit}
-              onChange={(event) => patch({ productUnit: event.target.value })}
-              disabled={submitting}
-              fullWidth
-            />
-            <TextField
-              label={t("request.create.productLineDescription")}
-              value={values.productDescription}
-              onChange={(event) => patch({ productDescription: event.target.value })}
-              disabled={submitting}
-              fullWidth
-            />
-          </Stack>
-        </AppCard>
-      ) : null}
+          </>
+        ) : null}
+        <Typography variant="caption" color="text.secondary">
+          {t("request.create.stepProgress", { current: step + 1, total: STEP_KEYS.length })}
+        </Typography>
+      </Stack>
+    </AppCard>
+  );
 
-      <Button type="submit" variant="contained" size="large" disabled={submitting} fullWidth>
-        {submitting ? t("request.create.submitting") : t("request.create.submit")}
-      </Button>
+  return (
+    <Stack component="form" spacing={2} onSubmit={handleSubmit} noValidate sx={{ minWidth: 0 }}>
+      <MarketplaceStepper
+        steps={STEP_KEYS.map((key) => t(key))}
+        activeStep={step}
+        maxUnlocked={unlocked}
+        onStep={goToStep}
+      />
+      <FormSplitLayout
+        main={
+          <AppCard>
+            <Stack spacing={2}>
+              {step === 0 ? (
+                <>
+                  <Typography variant="h6">{t("request.create.step.need")}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("request.create.needHint")}
+                  </Typography>
+                  <TextField
+                    label={t("request.create.title")}
+                    value={values.title}
+                    onChange={(event) => patch({ title: event.target.value })}
+                    required
+                    fullWidth
+                    error={Boolean(errors.title)}
+                    helperText={errors.title}
+                    disabled={submitting}
+                    autoFocus
+                  />
+                </>
+              ) : null}
+
+              {step === 1 ? (
+                <>
+                  <Typography variant="h6">{t("request.create.step.type")}</Typography>
+                  <RequestKindSelector
+                    value={values.requestType}
+                    disabled={submitting}
+                    error={errors.requestType}
+                    onChange={(requestType: RequestKind) => patch({ requestType })}
+                  />
+                </>
+              ) : null}
+
+              {step === 2 ? (
+                <>
+                  <Typography variant="h6">{t("request.create.step.describe")}</Typography>
+                  <TextField
+                    label={t("request.create.description")}
+                    value={values.description}
+                    onChange={(event) => patch({ description: event.target.value })}
+                    fullWidth
+                    multiline
+                    minRows={4}
+                    disabled={submitting}
+                  />
+                  {showService ? (
+                    <Stack spacing={1}>
+                      <Typography variant="subtitle2">{t("request.create.serviceSection")}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {t("request.create.serviceHint")}
+                      </Typography>
+                      <ServiceSelect
+                        value={values.serviceId}
+                        onChange={(serviceId) => patch({ serviceId })}
+                        error={errors.serviceId}
+                        disabled={submitting}
+                      />
+                    </Stack>
+                  ) : null}
+                  {showProduct ? (
+                    <Stack spacing={1}>
+                      <Typography variant="subtitle2">{t("request.create.productSection")}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {t("request.create.productHint")}
+                      </Typography>
+                      <TextField
+                        label={t("request.create.productId")}
+                        value={values.productId}
+                        onChange={(event) => patch({ productId: event.target.value })}
+                        error={Boolean(errors.productId)}
+                        helperText={errors.productId}
+                        disabled={submitting}
+                        fullWidth
+                        inputProps={{ inputMode: "numeric" }}
+                      />
+                    </Stack>
+                  ) : null}
+                </>
+              ) : null}
+
+              {step === 3 ? (
+                <>
+                  <Typography variant="h6">{t("request.create.step.location")}</Typography>
+                  <Alert severity="info">{t("request.create.locationNote")}</Alert>
+                  {values.requestType === "Service" ? (
+                    <Typography variant="body2" color="text.secondary">
+                      {t("request.create.locationServiceNote")}
+                    </Typography>
+                  ) : null}
+                  {showProduct ? (
+                    <TextField
+                      label={t("request.create.productCategoryId")}
+                      value={values.productCategoryId}
+                      onChange={(event) => patch({ productCategoryId: event.target.value })}
+                      error={Boolean(errors.productCategoryId) || Boolean(errors.productId)}
+                      helperText={errors.productCategoryId ?? errors.productId}
+                      disabled={submitting}
+                      fullWidth
+                      inputProps={{ inputMode: "numeric" }}
+                    />
+                  ) : null}
+                </>
+              ) : null}
+
+              {step === 4 ? (
+                <>
+                  <Typography variant="h6">{t("request.create.step.details")}</Typography>
+                  {showService ? (
+                    <>
+                      <TextField
+                        label={t("request.create.serviceQuantity")}
+                        value={values.serviceQuantity}
+                        onChange={(event) => patch({ serviceQuantity: event.target.value })}
+                        error={Boolean(errors.serviceQuantity)}
+                        helperText={errors.serviceQuantity}
+                        disabled={submitting}
+                        fullWidth
+                        inputProps={{ inputMode: "decimal" }}
+                      />
+                      <TextField
+                        label={t("request.create.serviceLineDescription")}
+                        value={values.serviceDescription}
+                        onChange={(event) => patch({ serviceDescription: event.target.value })}
+                        disabled={submitting}
+                        fullWidth
+                      />
+                    </>
+                  ) : null}
+                  {showProduct ? (
+                    <>
+                      <TextField
+                        label={t("request.create.productQuantity")}
+                        value={values.productQuantity}
+                        onChange={(event) => patch({ productQuantity: event.target.value })}
+                        error={Boolean(errors.productQuantity)}
+                        helperText={errors.productQuantity}
+                        disabled={submitting}
+                        fullWidth
+                        inputProps={{ inputMode: "decimal" }}
+                      />
+                      <TextField
+                        label={t("request.create.productUnit")}
+                        value={values.productUnit}
+                        onChange={(event) => patch({ productUnit: event.target.value })}
+                        disabled={submitting}
+                        fullWidth
+                      />
+                      <TextField
+                        label={t("request.create.productLineDescription")}
+                        value={values.productDescription}
+                        onChange={(event) => patch({ productDescription: event.target.value })}
+                        disabled={submitting}
+                        fullWidth
+                      />
+                    </>
+                  ) : null}
+                </>
+              ) : null}
+
+              {step === 5 ? (
+                <>
+                  <Typography variant="h6">{t("request.create.reviewTitle")}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("request.create.reviewHint")}
+                  </Typography>
+                  <SummaryRow label={t("request.create.title")} value={dash(values.title)} />
+                  <SummaryRow
+                    label={t("request.create.description")}
+                    value={dash(values.description)}
+                  />
+                  <SummaryRow
+                    label={t("request.create.kind")}
+                    value={t(KIND_LABEL[values.requestType])}
+                  />
+                  {showService ? (
+                    <>
+                      <SummaryRow
+                        label={t("request.create.serviceSelect")}
+                        value={dash(serviceName)}
+                      />
+                      <SummaryRow
+                        label={t("request.create.serviceQuantity")}
+                        value={dash(values.serviceQuantity)}
+                      />
+                      <SummaryRow
+                        label={t("request.create.serviceLineDescription")}
+                        value={dash(values.serviceDescription)}
+                      />
+                    </>
+                  ) : null}
+                  {showProduct ? (
+                    <>
+                      <SummaryRow
+                        label={t("request.create.productId")}
+                        value={dash(values.productId)}
+                      />
+                      <SummaryRow
+                        label={t("request.create.productCategoryId")}
+                        value={dash(values.productCategoryId)}
+                      />
+                      <SummaryRow
+                        label={t("request.create.productQuantity")}
+                        value={dash(values.productQuantity)}
+                      />
+                      <SummaryRow
+                        label={t("request.create.productUnit")}
+                        value={dash(values.productUnit)}
+                      />
+                    </>
+                  ) : null}
+                </>
+              ) : null}
+
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column-reverse", sm: "row" },
+                  gap: 1,
+                  justifyContent: "space-between",
+                  position: { xs: "sticky", md: "static" },
+                  bottom: 0,
+                  bgcolor: "background.paper",
+                  pt: 1,
+                  zIndex: 1,
+                }}
+              >
+                <Button
+                  type="button"
+                  variant="outlined"
+                  onClick={goBack}
+                  disabled={step === 0 || submitting}
+                  sx={{ minHeight: 48, width: { xs: "100%", sm: "auto" } }}
+                >
+                  {t("request.create.back")}
+                </Button>
+                {step < lastStep ? (
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    sx={{ minHeight: 48, width: { xs: "100%", sm: "auto" } }}
+                    disabled={submitting}
+                  >
+                    {t("request.create.next")}
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    size="large"
+                    disabled={submitting}
+                    sx={{ minHeight: 48, width: { xs: "100%", sm: "auto" } }}
+                  >
+                    {submitting ? t("request.create.submitting") : t("request.create.submit")}
+                  </Button>
+                )}
+              </Box>
+            </Stack>
+          </AppCard>
+        }
+        summary={summary}
+      />
     </Stack>
   );
 }

@@ -1,6 +1,6 @@
-# MATCHI_PROJECT_CONTEXT v2.15
+# MATCHI_PROJECT_CONTEXT v2.23
 
-**Updated:** 2026-09-11  
+**Updated:** 2026-09-13  
 **Scope:** Architectural baseline and implementation log for the Matchi .NET 8 marketplace.
 
 This file is the documented Matchi baseline and decision log. It was **not present in the repository at the start of Task 03**. Task 03 therefore treated the Task 02 Request implementation, existing Domain/EF baseline, `docs/api-endpoints-mvp.md`, and the Task 03 specification as the source of truth, then created this file as the required living context.
@@ -181,6 +181,22 @@ APIs (JWT `[Authorize]`, owner via `Customer.UserId`):
 - `DELETE /api/requests/{requestId}` (soft-delete)
 
 Customer is never accepted from the client. DTOs live in Application (Contracts project is empty).
+
+### POST `/api/requests` FluentValidation 500 (fixed 2026-09-13)
+
+`RequestWriteRules` used `RuleForEach(x => services(x) ?? Array.Empty<…>())` (same for products). FluentValidation 12 cannot infer a property name from a captured `Func` invoke plus `?? Empty()`, so validator construction threw `InvalidOperationException` (HTTP 500) instead of returning validation failures.
+
+**Fix:** bind `RuleForEach` to `CreateRequestCommand.Services` / `Products` (member access), skip when the collection is null. Line validators and type/count rules are unchanged. Invalid collections now fail as normal FluentValidation errors (HTTP 400 via the existing pipeline). Verified with `CreateRequestCommandValidatorTests` (valid Service/Product/Hybrid; invalid service/product items; collection failure without exception). `dotnet test Matchi.Application.Tests --no-restore`: 83 passed. Live `POST /api/requests` was not re-hit after this change (running `Matchi.Api` locked default bin output).
+
+### POST `/api/requests` async FluentValidation 500 (fixed 2026-09-13)
+
+`CreateRequestCommandValidator` (via `RequestServiceLineValidator` / `RequestProductLineValidator`) uses `MustAsync` for catalog existence and attribute ownership (`ServiceExistsAsync`, `GetServiceAttributeAsync`, product/category/attribute lookups). Those rules are correct and remain.
+
+`Program.cs` also called `AddFluentValidationAutoValidation()`. ASP.NET’s model-validation pipeline is synchronous, so it threw `AsyncValidatorInvokedSynchronouslyException` (HTTP 500) before MediatR ran.
+
+**Fix:** remove ASP.NET automatic FluentValidation. Validators stay registered for DI. `ValidationBehavior` already calls `ValidateAsync`. Invalid requests map through `ExceptionHttpMapper` to HTTP 400 ProblemDetails (`Validation failed`).
+
+**Verified:** `dotnet test Matchi.Application.Tests --no-restore` — 87 passed. `dotnet build MatchiSolution.sln --no-restore` — succeeded after stopping the locked `Matchi.Api` process. Runtime `POST /api/requests` on restarted `http://localhost:5262`: invalid line → **400** (includes async catalog message); valid Service (`serviceId` 3) → **201**. No `AsyncValidatorInvokedSynchronouslyException`.
 
 ---
 
@@ -635,7 +651,7 @@ Live definition: `([BusinessId] IS NOT NULL AND [ProviderId] IS NULL OR [Busines
 - Proposal expiration processing and uniqueness of (Request, Provider/Business) are deferred.
 - Provider/Business `Rating` / `ReviewCount` denormalized counters are not updated when a Review is created.
 - Provider public search still ignores `lat`/`lng`/`radiusKm`/`sort`. Pagination for `serviceId` search is applied.
-- CORS is not configured; set allowed origins at deployment if a browser frontend is added.
+- CORS: Development-only policy `LocalFrontend` allows origin `http://localhost:5173` (no credentials; JWT is `Authorization` Bearer). Production origins are still unset at deployment. No `AllowAnyOrigin`.
 - `AreaType` allow-list is Application-level, not a DB check constraint.
 - Overlap rejection for availability is Application-level.
 - `ProviderCapability` DB index is non-unique; uniqueness of one active row per `(ProviderId, ServiceAttributeId)` is enforced in Application.
@@ -702,7 +718,7 @@ Authenticated UI is split by **marketplace workspace**, not by a Seller role (th
 
 JWT `USER` may use more than one workspace (customer plus optional Provider profile and/or owned Business). `BusinessProvider` membership is not a fourth shell. Workspace routes require a session (`RequireAuth`); they do not invent extra JWT roles. Theme is mobile-first (temporary nav drawer below `md`).
 
-OTP login remains the existing HTTP contract (`POST /api/auth/send-otp`, `POST /api/auth/verify-otp`). The frontend does not deliver SMS and does not implement a refresh-token flow. Browser CORS is still unset on the API (deployment concern).
+OTP login remains the existing HTTP contract (`POST /api/auth/send-otp`, `POST /api/auth/verify-otp`). The frontend does not deliver SMS and does not implement a refresh-token flow. Local browser calls from `http://localhost:5173` to `http://localhost:5262` use the Development CORS policy; production origins remain a deployment concern.
 
 ### Authentication frontend decision (Task 9.3)
 
@@ -711,11 +727,13 @@ OTP login remains the existing HTTP contract (`POST /api/auth/send-otp`, `POST /
 - **Axios:** Bearer is attached automatically except on send-otp/verify-otp (so a leftover token cannot fail the login calls). Other 401s clear the session and redirect to `/login`, unless the user is already on `/login`. There is no refresh-token interceptor.
 - **Workspaces from JWT roles (not permission claims):**
   - `USER` → Customer (`/customer`)
-  - `PROVIDER` → Customer + Provider
-  - `BUSINESS_OWNER` → Customer + Business
+  - `USER` + `PROVIDER` → Customer + Provider
+  - `USER` + `BUSINESS_OWNER` → Customer + Business
+  - `PROVIDER` without `USER` → Provider only (Customer is not implied)
   - `ADMIN` → Customer + Provider + Business (no Admin UI)
-- **Live JWT conflict:** Current Matchi tokens typically issue `USER` and sometimes `ADMIN`, not `PROVIDER` or `BUSINESS_OWNER`. `PROVIDER_*` / `BUSINESS_*` **permission** claims exist on USER and must **not** unlock Provider/Business shells. Extra shells appear only when those role names are present on the token. Default post-login path is the first available workspace, preferring Customer.
-- Route protection: `/` and `/login` are public. `/customer/*`, `/provider/*`, and `/business/*` require a session; workspace routes additionally require the matching role set.
+- **JWT role claim:** `JwtTokenService` writes `ClaimTypes.Role` (`http://schemas.microsoft.com/ws/2008/06/identity/claims/role`). The compact JWT name may also be `role` / `roles`. The frontend reads all of those in `extractRolesFromPayload`. Permission claims (`permission`) are ignored. Role codes are normalized to uppercase (`USER`, `PROVIDER`, `BUSINESS_OWNER`, `ADMIN`).
+- **Session source of truth:** login unions OTP `user.roles` with decoded JWT roles, then persists only the access token. Reload re-decodes the JWT. Customer is added only when `USER` or `ADMIN` is present — not as a blind fallback for empty/unparsed roles.
+- Route protection: `/` and `/login` are public. `/customer/*`, `/provider/*`, and `/business/*` require a session; workspace routes require the matching role set. Unauthorized workspace URLs redirect to the first *allowed* workspace (or `/` if none), they do not render Customer inside a Provider/Business URL.
 
 ### Customer marketplace frontend decision (Task 9.4.1)
 
@@ -735,7 +753,8 @@ OTP login remains the existing HTTP contract (`POST /api/auth/send-otp`, `POST /
 ### Customer create request (Task 9.4.2)
 
 - Route: `/customer/requests/create` (declared **before** `/customer/requests/:id`), still behind `RequireAuth` + `RequireWorkspace(customer)`.
-- `POST /api/requests` only. Body uses live contract: `requestType` `Service | Product | Hybrid`, `title`, optional `description`, `services[]` and/or `products[]`. Customer id is never sent. Location/schedule omitted in this form (optional on the API).
+- UI is a six-step presentation wizard (need → type → describe → location copy → extra details → review). There is **no** backend workflow/state machine. Submit is still one `POST /api/requests`.
+- `POST /api/requests` only. Body uses live contract: `requestType` `Service | Product | Hybrid`, `title`, optional `description`, `services[]` and/or `products[]`. Customer id is never sent. Location/schedule are **not** posted (the location step is trust/copy plus optional product category id, which already exists on the product line).
 - Service picker uses existing `GET /api/services` (limited catalog). If that list is empty or fails, a numeric service id field is shown. Product lines use placeholder id/category/quantity fields (no invented product-catalog endpoint).
 - Hybrid shows both sections. Validation enforces the same Service/Product/Hybrid line rules as the API. Success navigates to `/customer/requests/{id}` and invalidates request queries.
 
@@ -959,6 +978,83 @@ Not used: `GET /api/requests/{id}`, `providerId`, `businessId`, customer proposa
 
 ---
 
+## Frontend visual foundation and responsive layout (2026-09-13)
+
+**Status:** COMPLETE (frontend only). No backend, DB, API, or Task 11.4 work.
+
+- Font: **Vazirmatn** via Google Fonts (`index.html`); theme `fontFamily` no longer depends on system Tahoma first.
+- Typography tokens on `app/theme.ts` (h1 display, h4 page title, h6 section, subtitle1 card, body1/2, caption, button; form label/helper via MUI components).
+- `PageContainer` caps workspace content (`lg` 1120 / `xl` 1280). Shell padding and drawers are breakpoint-based. Public login stays `sm`; home uses `lg`.
+- Matchi palette remains green/teal (not a third-party brand copy). JWT/API routes unchanged.
+
+---
+
+## Frontend JWT workspace mapping (2026-09-13)
+
+**Status:** COMPLETE (frontend). Backend JWT still emits `ClaimTypes.Role` from `UserRoles.Code`; no policy/DB change.
+
+Customer is no longer added when role claims are missing. Switcher and `RequireWorkspace` use `resolveWorkspaces` only.
+
+### Verification
+
+- `npm run typecheck` in `frontend/matchi.web`: **passed**
+- `npm run build` in `frontend/matchi.web`: **passed** (Vite chunk-size warning only)
+- Live OTP login for USER / USER+PROVIDER / USER+BUSINESS_OWNER / ADMIN: **not performed** in this environment
+
+---
+
+## Marketplace create-request and create-proposal UX (2026-09-13)
+
+**Status:** COMPLETE (frontend only). No backend, DB, API contract, or Task 11.4 work.
+
+Customer create request (`/customer/requests/create`) is a six-step **presentation** flow: need, type (Service / Product / Hybrid), describe, location (copy only; category id remains the existing product-line field), additional details, review. Desktop uses form + sticky summary (`FormSplitLayout`). Mobile stacks vertically with a sticky Continue / Submit control. Validation rules in `createRequestForm.ts` are unchanged; step errors are a subset of the same client checks. Submit remains one `POST /api/requests`.
+
+Provider create proposal (`/provider/requests/:requestId/proposal`) keeps Task 11.3 contracts (`POST /api/requests/{id}/proposals`, `GET /api/providers/me/services|products`). The form highlights selected catalog lines, quantity × unit price, item totals, then Subtotal / Delivery fee / Total. Schedule, expiration, and message stay optional fields already on the body. Item type still follows inbox `requestType` (Service-only, Product-only, or Hybrid both).
+
+Shared primitives: `FormSplitLayout`, `MarketplaceStepper`. Copy via `t()`.
+
+### Verification (marketplace form UX)
+
+- `npm run typecheck` in `frontend/matchi.web`: **passed**
+- `npm run build` in `frontend/matchi.web`: **passed** (Vite chunk-size warning only)
+- No backend change. No migration. Browser pass against a running API: **not performed** in this environment
+
+---
+
+## Customer journey presentation (proposal / deal / execution / review) (2026-09-13)
+
+**Status:** COMPLETE (frontend only). No backend, DB, API contract, or Task 11.4 work.
+
+Customer proposal, deal, execution, and review screens now share a **Request → Matching → Proposal → Deal → Execution → Review** timeline (`JourneyTimeline`). A step is marked complete only when live data supports it (for example matching only after `GET /api/requests/{id}/matches` returns items; review is never inferred complete from public `ReviewDto` lists, which have no `dealId`).
+
+Proposal list uses existing `GET /api/proposals/{id}` (not a new endpoint) so customers can compare party type+id, items, subtotal, delivery fee, total, schedule, message, and Pending/Accepted/Rejected status. Identity remains `{Provider|Business} #{id}`. Accept is the primary CTA and still only `POST /api/proposals/{id}/accept`; success shows the created `dealId` and links to `/customer/deals/{dealId}`.
+
+Deal detail uses a wide form + sticky price summary. Execution shows status, schedule, startedAt, completedAt, assignments, and primary assignment from DTOs only (`Provider #{id}`). Product deals explain that service execution does not apply and do **not** invent ProductDelivery. Review eligibility is still `getReviewEligibility` (mirrors the handler); rating/comment/target presentation is unchanged in contract.
+
+### Verification (customer journey presentation)
+
+- `npm run typecheck` in `frontend/matchi.web`: **passed**
+- `npm run build` in `frontend/matchi.web`: **passed** (Vite chunk-size warning only)
+- No backend change. No migration. No live browser/API test in this environment
+
+---
+
+## Provider workspace presentation (2026-09-13)
+
+**Status:** COMPLETE (frontend only). No backend, DB, API contract, or Task 11.4 work.
+
+Provider shell still uses the Customer Matchi theme. Routes unchanged: `/provider/dashboard`, `/provider/requests`, `/provider/proposals`, `/provider/deals`, `/provider/executions`, `/provider/profile` (plus existing create-proposal). Desktop keeps the sidebar; phone/tablet get compact horizontal workspace nav plus 2-column cards from `sm`.
+
+Dashboard uses live `GET /api/provider/requests|proposals|deals|executions` and `GET /api/providers/me`. It shows navigation cards, a preview of inbox items, proposal statuses that actually appear in the list, deal/execution previews, and which profile fields are present (name, mobile, description, lat/lng). No invented conversion rates or completeness percentages. Inbox cards use only inbox DTO fields (no customer identity). Proposal cards emphasize status, price, request id, dates, and a nav CTA. Deals are grouped by **status values present in the response** (preferred order Active / Completed / Cancelled; empty groups are not shown). Executions group Pending / InProgress / Completed / Cancelled; InProgress is labeled Started. No execution start/complete UI.
+
+### Verification (provider workspace presentation)
+
+- `npm run typecheck` in `frontend/matchi.web`: **passed**
+- `npm run build` in `frontend/matchi.web`: **passed** (Vite chunk-size warning only)
+- No backend change. No migration. No live browser/API test
+
+---
+
 ## Verification
 
 | Check | Result |
@@ -995,6 +1091,11 @@ Not used: `GET /api/requests/{id}`, `providerId`, `businessId`, customer proposa
 | Task 11.1 frontend | `npm run typecheck` succeeded. `npm run build` succeeded (Vite chunk-size warning only). Backend/DB unchanged. |
 | Task 11.2 frontend | `npm run typecheck` succeeded. `npm run build` succeeded (Vite chunk-size warning only). Backend/DB unchanged. |
 | Task 11.3 frontend | `npm run typecheck` succeeded. `npm run build` succeeded (Vite chunk-size warning only). Backend/DB unchanged. No live browser/API test. |
+| Visual foundation (frontend) | Vazirmatn + responsive shells. Backend/DB unchanged. |
+| JWT workspace mapping (frontend) | `npm run typecheck` / `npm run build` succeeded. Backend JWT claim type unchanged. Live OTP matrix not run. |
+| Marketplace create-request / create-proposal UX | `npm run typecheck` / `npm run build` succeeded. Backend/DB/API unchanged. No Task 11.4. No live browser/API test. |
+| Customer journey presentation (proposal/deal/execution/review) | `npm run typecheck` / `npm run build` succeeded. Backend/DB/API unchanged. No Task 11.4. No live browser/API test. |
+| Provider workspace presentation | `npm run typecheck` / `npm run build` succeeded. Backend/DB/API unchanged. No Task 11.4. No live browser/API test. |
 
 ---
 

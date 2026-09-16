@@ -19,5 +19,9 @@ function messageFromError(error: unknown): string {
 export function ErrorAlert({ error }: ErrorAlertProps) {
   const message = messageFromError(error);
 
-  return <Alert severity="error">{message}</Alert>;
+  return (
+    <Alert severity="error" sx={{ width: "100%" }}>
+      {message}
+    </Alert>
+  );
 }

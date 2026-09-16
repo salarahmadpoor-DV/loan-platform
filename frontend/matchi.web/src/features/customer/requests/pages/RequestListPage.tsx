@@ -16,15 +16,12 @@ export function RequestListPage() {
       <PageHeader
         title={t("request.list.title")}
         description={t("request.list.description")}
+        action={
+          <Button component={RouterLink} to="/customer/requests/create" variant="contained">
+            {t("request.list.create")}
+          </Button>
+        }
       />
-      <Button
-        component={RouterLink}
-        to="/customer/requests/create"
-        variant="contained"
-        sx={{ mb: 2 }}
-      >
-        {t("request.list.create")}
-      </Button>
       {isPending ? <LoadingState label={t("request.list.loading")} /> : null}
       {isError ? <ErrorAlert error={error} /> : null}
       {!isPending && !isError && data?.length === 0 ? (

@@ -17,8 +17,8 @@ export function DealCard({ deal }: DealCardProps) {
         <Button
           component={RouterLink}
           to={`/customer/deals/${deal.id}`}
-          variant="outlined"
-          sx={{ alignSelf: "flex-start" }}
+          variant="contained"
+          sx={{ minHeight: 44, alignSelf: { xs: "stretch", sm: "flex-start" } }}
         >
           {t("deal.view")}
         </Button>

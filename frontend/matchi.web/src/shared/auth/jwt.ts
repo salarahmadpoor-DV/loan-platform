@@ -5,11 +5,13 @@ export type AccessTokenClaims = {
   exp: number | null;
 };
 
-const ROLE_CLAIM =
+/** .NET `ClaimTypes.Role` as written into Matchi JWTs by `JwtTokenService`. */
+export const ROLE_CLAIM_URI =
   "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
-const NAME_ID =
+
+const NAME_ID_URI =
   "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
-const MOBILE =
+const MOBILE_URI =
   "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone";
 
 function parseJwtPayload(token: string): Record<string, unknown> | null {
@@ -34,13 +36,63 @@ function parseJwtPayload(token: string): Record<string, unknown> | null {
 }
 
 function asStringArray(value: unknown): string[] {
-  if (typeof value === "string" && value.length > 0) {
-    return [value];
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return [];
+    }
+    if (trimmed.startsWith("[")) {
+      try {
+        return asStringArray(JSON.parse(trimmed) as unknown);
+      } catch {
+        return [trimmed];
+      }
+    }
+    return [trimmed];
   }
   if (Array.isArray(value)) {
-    return value.filter((item): item is string => typeof item === "string" && item.length > 0);
+    return value.flatMap((item) => asStringArray(item));
   }
   return [];
+}
+
+function isRoleClaimKey(key: string): boolean {
+  const lower = key.toLowerCase();
+  if (lower === "permission" || lower === "permissions" || lower.endsWith("/claims/permission")) {
+    return false;
+  }
+  return (
+    lower === "role" ||
+    lower === "roles" ||
+    key === ROLE_CLAIM_URI ||
+    lower.endsWith("/identity/claims/role") ||
+    lower.endsWith("/claims/role")
+  );
+}
+
+/** Collect role codes from a JWT payload. Does not use permission claims. */
+export function extractRolesFromPayload(payload: Record<string, unknown>): string[] {
+  const collected: string[] = [];
+  for (const [key, value] of Object.entries(payload)) {
+    if (isRoleClaimKey(key)) {
+      collected.push(...asStringArray(value));
+    }
+  }
+  return normalizeRoleCodes(collected);
+}
+
+export function normalizeRoleCodes(roles: readonly string[] | undefined): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const raw of roles ?? []) {
+    const code = raw.trim().toUpperCase();
+    if (!code || seen.has(code)) {
+      continue;
+    }
+    seen.add(code);
+    result.push(code);
+  }
+  return result;
 }
 
 export function decodeAccessToken(token: string): AccessTokenClaims | null {
@@ -49,24 +101,19 @@ export function decodeAccessToken(token: string): AccessTokenClaims | null {
     return null;
   }
 
-  const sub = payload.sub ?? payload[NAME_ID];
+  const sub = payload.sub ?? payload[NAME_ID_URI] ?? payload.nameid;
   const userId =
     typeof sub === "string" ? Number.parseInt(sub, 10) : typeof sub === "number" ? sub : Number.NaN;
   if (!Number.isFinite(userId)) {
     return null;
   }
 
-  const mobileRaw = payload[MOBILE] ?? payload.mobile;
+  const mobileRaw = payload[MOBILE_URI] ?? payload.mobile ?? payload.phone_number;
   const mobile = typeof mobileRaw === "string" ? mobileRaw : "";
-  const roles = [
-    ...asStringArray(payload.role),
-    ...asStringArray(payload[ROLE_CLAIM]),
-    ...asStringArray(payload.roles),
-  ];
-  const uniqueRoles = [...new Set(roles)];
+  const roles = extractRolesFromPayload(payload);
   const exp = typeof payload.exp === "number" ? payload.exp : null;
 
-  return { userId, mobile, roles: uniqueRoles, exp };
+  return { userId, mobile, roles, exp };
 }
 
 export function isTokenExpired(

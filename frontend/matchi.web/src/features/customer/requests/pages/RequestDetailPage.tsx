@@ -2,9 +2,11 @@ import { Box, Button, Stack, Typography } from "@mui/material";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import { ApiError } from "../../../../shared/api/errors";
 import { t, getLocale } from "../../../../shared/i18n";
+import { buildCustomerJourney } from "../../../../shared/marketplace/customerJourney";
 import { AppCard } from "../../../../shared/ui/AppCard";
 import { EmptyState } from "../../../../shared/ui/EmptyState";
 import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
+import { JourneyTimeline } from "../../../../shared/ui/JourneyTimeline";
 import { LoadingState } from "../../../../shared/ui/LoadingState";
 import { PageHeader } from "../../../../shared/ui/PageHeader";
 import { StatusChip } from "../../../../shared/ui/StatusChip";
@@ -73,6 +75,13 @@ function RequestDetailBody({ request }: { request: RequestDto }) {
 
   return (
     <Stack spacing={2}>
+      <JourneyTimeline
+        steps={buildCustomerJourney({
+          current: "request",
+          requestId: request.id,
+          requestExists: true,
+        })}
+      />
       <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} useFlexGap>
         <StatusChip label={requestKindLabel(request.requestType)} />
         <RequestStatusChip status={request.status} />

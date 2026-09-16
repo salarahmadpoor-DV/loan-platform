@@ -46,7 +46,7 @@ Create nested folders only when needed (`requests/create/`). Do not add empty `p
 | `shared/auth/` | Zustand store, JWT decode, `RequireAuth`, `RequireWorkspace` |
 | `shared/i18n/` | `keys.ts` + `locales/fa-IR.ts` + `locales/en-US.ts` + `t()` |
 | `shared/navigation/navModel.ts` | Sidebar items per workspace |
-| `shared/ui/` | Design-system wrappers |
+| `shared/ui/` | Design-system wrappers (`PageContainer`, `FormSplitLayout`, `MarketplaceStepper`, `JourneyTimeline`, `PriceSummary`, `ResponsiveCardGrid`) |
 | `shared/types/marketplace.ts` | `RequestKind`, `ProposerType` |
 
 ## Naming

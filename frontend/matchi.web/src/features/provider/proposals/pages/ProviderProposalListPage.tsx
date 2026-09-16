@@ -1,14 +1,22 @@
-import { Button, Stack } from "@mui/material";
+import { Button, Stack, Typography } from "@mui/material";
 import { t } from "../../../../shared/i18n";
+import { groupByStatus } from "../../../../shared/marketplace/groupByStatus";
 import { EmptyState } from "../../../../shared/ui/EmptyState";
 import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
 import { LoadingState } from "../../../../shared/ui/LoadingState";
 import { PageHeader } from "../../../../shared/ui/PageHeader";
+import { ResponsiveCardGrid } from "../../../../shared/ui/ResponsiveCardGrid";
+import { proposalStatusLabel } from "../../../customer/proposals/model/proposalDisplay";
 import { ProviderProposalCard } from "../components/ProviderProposalCard";
 import { useMyProviderProposals } from "../hooks/useMyProviderProposals";
 
 export function ProviderProposalListPage() {
   const { data, isPending, isError, error, refetch, isFetching } = useMyProviderProposals();
+  const groups = groupByStatus(data ?? [], (item) => item.status, [
+    "Pending",
+    "Accepted",
+    "Rejected",
+  ]);
 
   return (
     <>
@@ -26,7 +34,7 @@ export function ProviderProposalListPage() {
               void refetch();
             }}
             disabled={isFetching}
-            sx={{ alignSelf: "flex-start" }}
+            sx={{ minHeight: 44, alignSelf: "flex-start" }}
           >
             {t("provider.proposals.retry")}
           </Button>
@@ -38,13 +46,16 @@ export function ProviderProposalListPage() {
           body={t("provider.proposals.emptyBody")}
         />
       ) : null}
-      {data && data.length > 0 ? (
-        <Stack spacing={2}>
-          {data.map((proposal) => (
-            <ProviderProposalCard key={proposal.id} proposal={proposal} />
-          ))}
+      {groups.map((group) => (
+        <Stack key={group.status} spacing={1.5} sx={{ mb: 3 }}>
+          <Typography variant="h6">{proposalStatusLabel(group.status)}</Typography>
+          <ResponsiveCardGrid>
+            {group.items.map((proposal) => (
+              <ProviderProposalCard key={proposal.id} proposal={proposal} />
+            ))}
+          </ResponsiveCardGrid>
         </Stack>
-      ) : null}
+      ))}
     </>
   );
 }

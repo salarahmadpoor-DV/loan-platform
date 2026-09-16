@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import type { AppWorkspace } from "../navigation/navModel";
 import { useAuth } from "./AuthProvider";
-import { canAccessWorkspace, defaultWorkspacePath } from "./workspaces";
+import { canAccessWorkspace, defaultWorkspacePath, resolveWorkspaces } from "./workspaces";
 
 type RequireWorkspaceProps = {
   workspace: AppWorkspace;
@@ -9,8 +9,13 @@ type RequireWorkspaceProps = {
 
 export function RequireWorkspace({ workspace }: RequireWorkspaceProps) {
   const { user } = useAuth();
-  if (!canAccessWorkspace(workspace, user?.roles)) {
-    return <Navigate to={defaultWorkspacePath(user?.roles)} replace />;
+  if (canAccessWorkspace(workspace, user?.roles)) {
+    return <Outlet />;
   }
-  return <Outlet />;
+  const fallback = defaultWorkspacePath(user?.roles);
+  const available = resolveWorkspaces(user?.roles);
+  if (available.length === 0 || fallback === "/") {
+    return <Navigate to="/" replace />;
+  }
+  return <Navigate to={fallback} replace />;
 }

@@ -1,5 +1,6 @@
 import { Alert, Stack, Typography } from "@mui/material";
 import { t } from "../../../../shared/i18n";
+import { StatusChip } from "../../../../shared/ui/StatusChip";
 import type { ReviewEligibility } from "../model/reviewEligibility";
 
 type ReviewEligibilityInfoProps = {
@@ -9,7 +10,23 @@ type ReviewEligibilityInfoProps = {
 export function ReviewEligibilityInfo({ eligibility }: ReviewEligibilityInfoProps) {
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2">{t("review.eligibility.title")}</Typography>
+      <Stack
+        direction="row"
+        spacing={1}
+        alignItems="center"
+        sx={{ flexWrap: "wrap" }}
+        useFlexGap
+      >
+        <Typography variant="subtitle2">{t("review.eligibility.title")}</Typography>
+        <StatusChip
+          label={
+            eligibility.canSubmit
+              ? t("review.eligibility.statusReady")
+              : t("review.eligibility.statusBlocked")
+          }
+          tone={eligibility.canSubmit ? "success" : "pending"}
+        />
+      </Stack>
       {eligibility.canSubmit ? (
         <Alert severity="success">{t("review.eligibility.ready")}</Alert>
       ) : (

@@ -1,10 +1,10 @@
 import { StatusChip } from "../../../../shared/ui/StatusChip";
-import { proposalStatusLabel } from "../model/proposalDisplay";
+import { proposalStatusLabel, proposalStatusTone } from "../model/proposalDisplay";
 
 type ProposalStatusChipProps = {
   status: string;
 };
 
 export function ProposalStatusChip({ status }: ProposalStatusChipProps) {
-  return <StatusChip label={proposalStatusLabel(status)} />;
+  return <StatusChip label={proposalStatusLabel(status)} tone={proposalStatusTone(status)} />;
 }

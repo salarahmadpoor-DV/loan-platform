@@ -151,3 +151,63 @@ export function toCreateRequestBody(values: CreateRequestFormValues): CreateRequ
 
   return body;
 }
+
+function pickFieldErrors(
+  all: CreateRequestFieldErrors,
+  keys: Array<keyof CreateRequestFormValues>,
+): CreateRequestFieldErrors {
+  const subset: CreateRequestFieldErrors = {};
+  for (const key of keys) {
+    if (all[key]) {
+      subset[key] = all[key];
+    }
+  }
+  return subset;
+}
+
+/** Step-scoped client errors for the presentation wizard (same rules as submit). */
+export function requestStepFieldErrors(
+  step: number,
+  values: CreateRequestFormValues,
+): CreateRequestFieldErrors {
+  const all = validateCreateRequestForm(values);
+  switch (step) {
+    case 0:
+      return pickFieldErrors(all, ["title"]);
+    case 1:
+      return pickFieldErrors(all, ["requestType"]);
+    case 2: {
+      const subset = pickFieldErrors(all, ["serviceId"]);
+      if (all.productId && values.productId.trim()) {
+        subset.productId = all.productId;
+      }
+      return subset;
+    }
+    case 3: {
+      const subset = pickFieldErrors(all, ["productCategoryId"]);
+      const needsProduct = values.requestType === "Product" || values.requestType === "Hybrid";
+      if (
+        needsProduct &&
+        !values.productId.trim() &&
+        !values.productCategoryId.trim() &&
+        all.productId
+      ) {
+        subset.productId = all.productId;
+      }
+      return subset;
+    }
+    case 4:
+      return pickFieldErrors(all, ["serviceQuantity", "productQuantity"]);
+    default:
+      return all;
+  }
+}
+
+export function firstRequestErrorStep(values: CreateRequestFormValues): number {
+  for (let step = 0; step <= 4; step += 1) {
+    if (Object.keys(requestStepFieldErrors(step, values)).length > 0) {
+      return step;
+    }
+  }
+  return 5;
+}

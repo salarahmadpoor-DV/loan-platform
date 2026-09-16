@@ -12,12 +12,16 @@ export function LoadingState({ label }: LoadingStateProps) {
       sx={{
         display: "flex",
         alignItems: "center",
+        justifyContent: { xs: "center", sm: "flex-start" },
         gap: 2,
-        py: 4,
+        py: { xs: 3, sm: 4 },
+        px: 0.5,
       }}
     >
       <CircularProgress size={28} />
-      <Typography color="text.secondary">{text}</Typography>
+      <Typography variant="body2" color="text.secondary">
+        {text}
+      </Typography>
     </Box>
   );
 }

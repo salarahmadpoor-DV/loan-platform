@@ -12,11 +12,11 @@ export function DealSummary({ deal }: DealSummaryProps) {
   const createdAt = "createDate" in deal ? deal.createDate : deal.acceptedAt;
 
   return (
-    <Stack spacing={0.5}>
+    <Stack spacing={1}>
       <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} useFlexGap>
         <DealStatusChip status={deal.status} />
       </Stack>
-      <Typography variant="body2">{t("deal.requestRef", { id: deal.requestId })}</Typography>
+      <Typography variant="h6">{t("deal.requestRef", { id: deal.requestId })}</Typography>
       <Typography variant="body2">{t("deal.proposalRef", { id: deal.proposalId })}</Typography>
       <Typography variant="body2">
         {t("deal.price")}: {formatMoney(deal.totalPrice)}

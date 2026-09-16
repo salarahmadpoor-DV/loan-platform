@@ -7,14 +7,6 @@ public sealed class CreateRequestCommandValidator : AbstractValidator<CreateRequ
 {
     public CreateRequestCommandValidator(IRequestRepository requests)
     {
-        RequestWriteRules.Apply(
-            this,
-            x => x.RequestType,
-            x => x.Title,
-            x => x.Services,
-            x => x.Products,
-            x => x.Location,
-            x => x.Schedule,
-            requests);
+        RequestWriteRules.Apply(this, requests);
     }
 }

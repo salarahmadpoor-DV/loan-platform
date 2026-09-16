@@ -1,10 +1,10 @@
 import { StatusChip } from "../../../../shared/ui/StatusChip";
-import { dealStatusLabel } from "../model/dealDisplay";
+import { dealStatusLabel, dealStatusTone } from "../model/dealDisplay";
 
 type DealStatusChipProps = {
   status: string;
 };
 
 export function DealStatusChip({ status }: DealStatusChipProps) {
-  return <StatusChip label={dealStatusLabel(status)} />;
+  return <StatusChip label={dealStatusLabel(status)} tone={dealStatusTone(status)} />;
 }

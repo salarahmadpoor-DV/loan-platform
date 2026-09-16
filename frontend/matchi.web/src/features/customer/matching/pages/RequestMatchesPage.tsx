@@ -2,8 +2,10 @@ import { Button, Stack } from "@mui/material";
 import { Link as RouterLink, useParams } from "react-router-dom";
 import { ApiError } from "../../../../shared/api/errors";
 import { t } from "../../../../shared/i18n";
+import { buildCustomerJourney } from "../../../../shared/marketplace/customerJourney";
 import { EmptyState } from "../../../../shared/ui/EmptyState";
 import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
+import { JourneyTimeline } from "../../../../shared/ui/JourneyTimeline";
 import { LoadingState } from "../../../../shared/ui/LoadingState";
 import { PageHeader } from "../../../../shared/ui/PageHeader";
 import { MatchCard } from "../components/MatchCard";
@@ -36,6 +38,17 @@ export function RequestMatchesPage() {
         title={t("matching.pageTitle")}
         description={t("matching.pageDescription")}
       />
+      {requestId != null ? (
+        <JourneyTimeline
+          steps={buildCustomerJourney({
+            current: "matching",
+            requestId,
+            requestExists: true,
+            matchesLoaded: Boolean(data) && !isError,
+            hasMatches: (data?.length ?? 0) > 0,
+          })}
+        />
+      ) : null}
       {requestId != null ? (
         <Button
           component={RouterLink}

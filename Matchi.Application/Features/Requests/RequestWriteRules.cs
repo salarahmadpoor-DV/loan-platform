@@ -1,4 +1,5 @@
 using FluentValidation;
+using Matchi.Application.Features.Requests.Commands.CreateRequest;
 using Matchi.Domain.Interfaces;
 
 namespace Matchi.Application.Features.Requests;
@@ -7,31 +8,25 @@ internal static class RequestWriteRules
 {
     public static readonly string[] AllowedTypes = ["Service", "Product", "Hybrid"];
 
-    public static void Apply<T>(
-        AbstractValidator<T> validator,
-        Func<T, string> requestType,
-        Func<T, string> title,
-        Func<T, IReadOnlyList<RequestServiceLineDto>?> services,
-        Func<T, IReadOnlyList<RequestProductLineDto>?> products,
-        Func<T, RequestLocationDto?> location,
-        Func<T, RequestScheduleDto?> schedule,
+    public static void Apply(
+        AbstractValidator<CreateRequestCommand> validator,
         IRequestRepository requests)
     {
-        validator.RuleFor(x => requestType(x))
+        validator.RuleFor(x => x.RequestType)
             .NotEmpty().WithMessage("Request type is required.")
             .Must(type => AllowedTypes.Contains(type, StringComparer.Ordinal))
             .WithMessage("Request type must be Service, Product, or Hybrid.");
 
-        validator.RuleFor(x => title(x))
+        validator.RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Title is required.")
             .MaximumLength(500).WithMessage("Title must be at most 500 characters.");
 
         validator.RuleFor(x => x)
             .Must(x =>
             {
-                var type = requestType(x);
-                var serviceCount = services(x)?.Count ?? 0;
-                var productCount = products(x)?.Count ?? 0;
+                var type = x.RequestType;
+                var serviceCount = x.Services?.Count ?? 0;
+                var productCount = x.Products?.Count ?? 0;
 
                 return type switch
                 {
@@ -43,23 +38,31 @@ internal static class RequestWriteRules
             })
             .WithMessage("Service requests require services only, product requests require products only, and hybrid requests require both.");
 
-        validator.RuleForEach(x => services(x) ?? Array.Empty<RequestServiceLineDto>())
-            .SetValidator(new RequestServiceLineValidator(requests));
-
-        validator.RuleForEach(x => products(x) ?? Array.Empty<RequestProductLineDto>())
-            .SetValidator(new RequestProductLineValidator(requests));
-
-        validator.When(x => location(x) is not null, () =>
+        // RuleForEach must bind a member-access expression. Captured Func invoke + ?? Empty()
+        // cannot infer a property name (FluentValidation 12 throws InvalidOperationException → HTTP 500).
+        validator.When(x => x.Services is not null, () =>
         {
-            validator.RuleFor(x => location(x)!.Province).MaximumLength(100);
-            validator.RuleFor(x => location(x)!.City).MaximumLength(100);
-            validator.RuleFor(x => location(x)!.District).MaximumLength(100);
-            validator.RuleFor(x => location(x)!.Address).MaximumLength(1000);
+            validator.RuleForEach(x => x.Services)
+                .SetValidator(new RequestServiceLineValidator(requests));
         });
 
-        validator.When(x => schedule(x) is not null, () =>
+        validator.When(x => x.Products is not null, () =>
         {
-            validator.RuleFor(x => schedule(x)!)
+            validator.RuleForEach(x => x.Products)
+                .SetValidator(new RequestProductLineValidator(requests));
+        });
+
+        validator.When(x => x.Location is not null, () =>
+        {
+            validator.RuleFor(x => x.Location!.Province).MaximumLength(100);
+            validator.RuleFor(x => x.Location!.City).MaximumLength(100);
+            validator.RuleFor(x => x.Location!.District).MaximumLength(100);
+            validator.RuleFor(x => x.Location!.Address).MaximumLength(1000);
+        });
+
+        validator.When(x => x.Schedule is not null, () =>
+        {
+            validator.RuleFor(x => x.Schedule!)
                 .Must(s => s.TimeFrom is null || s.TimeTo is null || s.TimeFrom < s.TimeTo)
                 .WithMessage("Schedule timeFrom must be earlier than timeTo.");
         });
@@ -94,15 +97,18 @@ internal sealed class RequestServiceLineValidator : AbstractValidator<RequestSer
             })
             .WithMessage("Service attributes must be unique per service line.");
 
-        RuleForEach(x => x.Attributes ?? Array.Empty<RequestServiceAttributeDto>())
-            .ChildRules(attribute =>
-            {
-                attribute.RuleFor(a => a.ServiceAttributeId)
-                    .GreaterThan(0).WithMessage("Service attribute id is required.");
+        When(x => x.Attributes is not null, () =>
+        {
+            RuleForEach(x => x.Attributes)
+                .ChildRules(attribute =>
+                {
+                    attribute.RuleFor(a => a.ServiceAttributeId)
+                        .GreaterThan(0).WithMessage("Service attribute id is required.");
 
-                attribute.RuleFor(a => a.Value)
-                    .MaximumLength(2000);
-            });
+                    attribute.RuleFor(a => a.Value)
+                        .MaximumLength(2000);
+                });
+        });
 
         RuleFor(x => x)
             .MustAsync(async (line, cancellationToken) =>
@@ -151,15 +157,18 @@ internal sealed class RequestProductLineValidator : AbstractValidator<RequestPro
             })
             .WithMessage("Product attributes must be unique per product line.");
 
-        RuleForEach(x => x.Attributes ?? Array.Empty<RequestProductAttributeDto>())
-            .ChildRules(attribute =>
-            {
-                attribute.RuleFor(a => a.ProductAttributeId)
-                    .GreaterThan(0).WithMessage("Product attribute id is required.");
+        When(x => x.Attributes is not null, () =>
+        {
+            RuleForEach(x => x.Attributes)
+                .ChildRules(attribute =>
+                {
+                    attribute.RuleFor(a => a.ProductAttributeId)
+                        .GreaterThan(0).WithMessage("Product attribute id is required.");
 
-                attribute.RuleFor(a => a.Value)
-                    .MaximumLength(2000);
-            });
+                    attribute.RuleFor(a => a.Value)
+                        .MaximumLength(2000);
+                });
+        });
 
         RuleFor(x => x)
             .MustAsync(async (line, cancellationToken) =>

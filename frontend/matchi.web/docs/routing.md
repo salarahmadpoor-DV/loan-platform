@@ -31,7 +31,7 @@ Customer sidebar (plus dashboard home): درخواست‌ها / معاملات /
 
 ## Provider (`RequireAuth` + `RequireWorkspace(provider)` + `ProviderLayout`)
 
-JWT role `PROVIDER` (or `ADMIN`). Permission claims are not used.
+JWT role `PROVIDER` or `ADMIN`. Permission claims are not used. Users without those roles are redirected to their first allowed workspace (not kept on `/provider` as Customer).
 
 | Path | Page |
 |---|---|

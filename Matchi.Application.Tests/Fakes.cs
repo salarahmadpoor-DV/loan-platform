@@ -263,25 +263,31 @@ internal sealed class FakeRequestRepository : IRequestRepository
         throw new NotSupportedException();
 
     public Task<bool> ServiceExistsAsync(long serviceId, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        Task.FromResult(ExistingServiceIds.Contains(serviceId));
+
+    public HashSet<long> ExistingServiceIds { get; } = [];
 
     public Task<ServiceAttribute?> GetServiceAttributeAsync(
         long serviceId,
         long serviceAttributeId,
         CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        Task.FromResult<ServiceAttribute?>(null);
+
+    public Dictionary<long, Product> ProductsById { get; } = [];
 
     public Task<Product?> GetProductAsync(long productId, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        Task.FromResult(ProductsById.TryGetValue(productId, out var product) ? product : null);
+
+    public HashSet<long> ExistingCategoryIds { get; } = [];
 
     public Task<bool> ProductCategoryExistsAsync(long productCategoryId, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        Task.FromResult(ExistingCategoryIds.Contains(productCategoryId));
 
     public Task<ProductAttribute?> GetProductAttributeAsync(
         long productCategoryId,
         long productAttributeId,
         CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        Task.FromResult<ProductAttribute?>(null);
 
     public Task AddAsync(Request request, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();

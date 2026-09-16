@@ -1,15 +1,4 @@
-import {
-  Button,
-  FormControl,
-  FormControlLabel,
-  FormLabel,
-  Radio,
-  RadioGroup,
-  Rating,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Alert, Button, FormControl, FormControlLabel, FormLabel, Radio, RadioGroup, Rating, Stack, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 import { t } from "../../../../shared/i18n";
 import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
@@ -38,9 +27,10 @@ export function CreateReviewForm({ dealId, targets, disabled }: CreateReviewForm
 
   if (create.isSuccess) {
     return (
-      <Typography variant="body2" color="success.main">
+      <Alert severity="success">
+        <Typography variant="subtitle2">{t("review.form.successTitle")}</Typography>
         {t("review.form.success")}
-      </Typography>
+      </Alert>
     );
   }
 

@@ -1,5 +1,4 @@
 using FluentValidation;
-using FluentValidation.AspNetCore;
 using Matchi.Application.Common;
 using Matchi.Application.Common.Interfaces;
 using Matchi.Application.Common.Models;
@@ -38,7 +37,8 @@ builder.Services.AddApplication();
 builder.Services.AddValidatorsFromAssemblyContaining<Matchi.Application.Features.Auth.Commands.SendOtp.SendOtpCommandValidator>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-builder.Services.AddFluentValidationAutoValidation();
+// Async FluentValidation rules (catalog lookups) run via MediatR ValidationBehavior.ValidateAsync.
+// ASP.NET automatic validation is synchronous and throws AsyncValidatorInvokedSynchronouslyException.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -95,6 +95,21 @@ builder.Services.AddAuthorization(options =>
         "ProviderWorkspace",
         policy => policy.RequireAuthenticatedUser().RequireRole("PROVIDER"));
 });
+
+const string localFrontendCorsPolicy = "LocalFrontend";
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy(localFrontendCorsPolicy, policy =>
+        {
+            policy
+                .WithOrigins("http://localhost:5173")
+                .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .AllowAnyHeader();
+        });
+    });
+}
 
 var app = builder.Build();
 
@@ -159,6 +174,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseCors(localFrontendCorsPolicy);
 }
 
 app.UseHttpsRedirection();

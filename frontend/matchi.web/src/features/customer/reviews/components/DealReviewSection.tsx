@@ -51,7 +51,7 @@ export function DealReviewSection({ deal }: DealReviewSectionProps) {
   return (
     <AppCard>
       <Stack spacing={2}>
-        <Typography variant="subtitle1">{t("review.section.title")}</Typography>
+        <Typography variant="h6">{t("review.section.title")}</Typography>
         <Typography variant="body2" color="text.secondary">
           {t("review.section.listNote")}
         </Typography>

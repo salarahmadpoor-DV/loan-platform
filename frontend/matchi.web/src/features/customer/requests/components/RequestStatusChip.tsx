@@ -5,5 +5,7 @@ type RequestStatusChipProps = {
 };
 
 export function RequestStatusChip({ status }: RequestStatusChipProps) {
-  return <StatusChip label={status} />;
+  const key = status.toLowerCase();
+  const tone = key === "open" ? "info" : key === "cancelled" ? "neutral" : "pending";
+  return <StatusChip label={status} tone={tone} />;
 }

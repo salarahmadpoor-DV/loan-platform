@@ -72,12 +72,14 @@ export function PublicHomePage() {
   }
 
   return (
-    <Box>
+    <Box sx={{ overflowX: "hidden" }}>
       <Box
         component="section"
         aria-labelledby="home-hero-heading"
         sx={{
-          bgcolor: "background.paper",
+          bgcolor: "background.default",
+          backgroundImage: (theme) =>
+            `linear-gradient(165deg, ${theme.palette.primary.main}1F 0%, ${theme.palette.background.default} 46%)`,
           borderBottom: 1,
           borderColor: "divider",
           py: { xs: 4, md: 8 },
@@ -88,11 +90,14 @@ export function PublicHomePage() {
             sx={{
               display: "grid",
               gap: { xs: 4, md: 6 },
-              gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1.1fr) minmax(0, 0.9fr)" },
+              gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1.15fr) minmax(0, 0.85fr)" },
               alignItems: "center",
             }}
           >
             <Stack spacing={2.5}>
+              <Typography variant="overline" color="primary.main">
+                {t("public.hero.eyebrow")}
+              </Typography>
               <Typography id="home-hero-heading" variant="h1" component="h1">
                 {t("public.hero.headline")}
               </Typography>
@@ -112,23 +117,28 @@ export function PublicHomePage() {
                 }}
                 onSubmit={submitSearch}
                 suggestions={suggestions}
+                loading={catalog.isPending}
+                catalogError={catalog.isError}
                 error={searchError}
                 submitSlot={
                   <Button
                     type="submit"
                     variant="contained"
                     size="large"
-                    sx={{ width: { xs: "100%", sm: "auto" } }}
+                    sx={{ width: { xs: "100%", sm: "auto" }, minWidth: { sm: 148 } }}
                   >
                     {t("public.hero.findService")}
                   </Button>
                 }
               />
+              <Typography variant="body2" color="text.secondary">
+                {t("public.hero.trustLine")}
+              </Typography>
               <Button
-                variant="outlined"
+                variant="text"
                 size="large"
                 onClick={goJoin}
-                sx={{ alignSelf: { xs: "stretch", sm: "flex-start" } }}
+                sx={{ alignSelf: { xs: "stretch", sm: "flex-start" }, px: 0 }}
               >
                 {t("public.hero.becomeProfessional")}
               </Button>
@@ -138,7 +148,7 @@ export function PublicHomePage() {
         </Container>
       </Box>
 
-      <Container maxWidth="lg" sx={{ py: { xs: 5, md: 8 } }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 5, md: 8 }, px: { xs: 2, sm: 3 } }}>
         <Stack spacing={{ xs: 6, md: 8 }}>
           <Box component="section" aria-labelledby="categories">
             <SectionHeader
@@ -167,7 +177,7 @@ export function PublicHomePage() {
             <Box
               sx={{
                 display: "grid",
-                gap: 2,
+                gap: { xs: 2, md: 2.5 },
                 gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" },
               }}
             >
@@ -177,13 +187,18 @@ export function PublicHomePage() {
                   step={index + 1}
                   title={t(step.title)}
                   body={t(step.body)}
+                  showConnector={index < HOW_STEPS.length - 1}
                 />
               ))}
             </Box>
           </Box>
 
           <Box component="section" aria-labelledby="featured-professionals">
-            <SectionHeader id="featured-professionals" title={t("public.pros.title")} subtitle={t("public.pros.subtitle")} />
+            <SectionHeader
+              id="featured-professionals"
+              title={t("public.pros.title")}
+              subtitle={t("public.pros.subtitle")}
+            />
             {professionals.isPending ? <LoadingState /> : null}
             {professionals.isError ? <ErrorAlert error={professionals.error} /> : null}
             {!professionals.isPending && (professionals.data?.length ?? 0) === 0 ? (
@@ -201,7 +216,7 @@ export function PublicHomePage() {
                   <ProfessionalCard
                     key={professional.id}
                     professional={professional}
-                    onViewProfile={goJoin}
+                    onStartRequest={() => goFind()}
                   />
                 ))}
               </Box>

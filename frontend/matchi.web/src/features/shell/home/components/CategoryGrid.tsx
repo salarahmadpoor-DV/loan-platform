@@ -13,18 +13,12 @@ export function CategoryGrid({ categories, onSelect }: CategoryGridProps) {
       sx={{
         display: "grid",
         gap: 2,
-        gridAutoFlow: { xs: "column", sm: "row" },
-        gridAutoColumns: { xs: "minmax(220px, 80%)", sm: "unset" },
         gridTemplateColumns: {
-          xs: "none",
+          xs: "1fr",
           sm: "repeat(2, minmax(0, 1fr))",
           md: "repeat(3, minmax(0, 1fr))",
           lg: "repeat(5, minmax(0, 1fr))",
         },
-        overflowX: { xs: "auto", sm: "visible" },
-        pb: { xs: 1, sm: 0 },
-        mx: { xs: -2, sm: 0 },
-        px: { xs: 2, sm: 0 },
       }}
     >
       {categories.map((category) => (

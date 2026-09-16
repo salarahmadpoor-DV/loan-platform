@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import { AppCard } from "../../../../shared/ui/AppCard";
 
 type TrustItem = {
@@ -16,17 +16,36 @@ export function TrustSection({ items }: TrustSectionProps) {
       sx={{
         display: "grid",
         gap: 2,
-        gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(3, minmax(0, 1fr))" },
+        gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", lg: "repeat(3, minmax(0, 1fr))" },
       }}
     >
-      {items.map((item) => (
+      {items.map((item, index) => (
         <AppCard key={item.title}>
-          <Typography variant="h3" component="h3" sx={{ mb: 1 }}>
-            {item.title}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {item.body}
-          </Typography>
+          <Stack spacing={1}>
+            <Box
+              aria-hidden
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: 1,
+                bgcolor: "primary.main",
+                color: "primary.contrastText",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                typography: "caption",
+                fontWeight: 700,
+              }}
+            >
+              {index + 1}
+            </Box>
+            <Typography variant="subtitle1" component="h3">
+              {item.title}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {item.body}
+            </Typography>
+          </Stack>
         </AppCard>
       ))}
     </Box>

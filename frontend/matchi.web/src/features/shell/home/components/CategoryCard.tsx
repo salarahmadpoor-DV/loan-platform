@@ -1,6 +1,7 @@
 import { Box, CardActionArea, Stack, Typography } from "@mui/material";
-import { AppCard } from "../../../../shared/ui/AppCard";
+import { matchiShadows } from "../../../../app/designTokens";
 import type { HomeCategoryView } from "../../../../shared/mocks/homeMocks";
+import { AppCard } from "../../../../shared/ui/AppCard";
 
 type CategoryCardProps = {
   category: HomeCategoryView;
@@ -11,7 +12,18 @@ export function CategoryCard({ category, onSelect }: CategoryCardProps) {
   const initial = category.title.trim().charAt(0) || "•";
 
   return (
-    <AppCard>
+    <AppCard
+      sx={{
+        transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+        "&:hover": {
+          borderColor: "primary.main",
+          boxShadow: matchiShadows.hover,
+        },
+        "&:focus-within": {
+          borderColor: "primary.main",
+        },
+      }}
+    >
       <CardActionArea
         onClick={() => onSelect(category)}
         sx={{
@@ -20,17 +32,22 @@ export function CategoryCard({ category, onSelect }: CategoryCardProps) {
           mx: -1,
           px: 1,
           py: 0.5,
+          "&:focus-visible": {
+            outline: "2px solid",
+            outlineColor: "primary.main",
+            outlineOffset: 2,
+          },
         }}
       >
-        <Stack spacing={1.5} alignItems="flex-start">
+        <Stack spacing={1.25} alignItems="flex-start">
           <Box
             aria-hidden
             sx={{
-              width: 48,
-              height: 48,
+              width: 44,
+              height: 44,
               borderRadius: 1,
-              bgcolor: "primary.main",
-              color: "primary.contrastText",
+              bgcolor: "secondary.light",
+              color: "secondary.dark",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",

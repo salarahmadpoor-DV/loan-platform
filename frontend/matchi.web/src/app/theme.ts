@@ -166,6 +166,11 @@ export const appTheme = createTheme(
             minHeight: 44,
             paddingInline: 16,
             borderRadius: matchiRadius.sm,
+            "&:focus-visible": {
+              outline: "2px solid",
+              outlineColor: matchiColors.primary,
+              outlineOffset: 2,
+            },
           },
           sizeLarge: {
             minHeight: 48,
@@ -181,6 +186,11 @@ export const appTheme = createTheme(
           root: {
             minWidth: 44,
             minHeight: 44,
+            "&:focus-visible": {
+              outline: "2px solid",
+              outlineColor: matchiColors.primary,
+              outlineOffset: 2,
+            },
           },
         },
       },

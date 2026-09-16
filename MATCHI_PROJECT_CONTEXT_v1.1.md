@@ -1,4 +1,4 @@
-# MATCHI_PROJECT_CONTEXT v2.24
+# MATCHI_PROJECT_CONTEXT v2.25
 
 **Updated:** 2026-09-16  
 **Scope:** Architectural baseline and implementation log for the Matchi .NET 8 marketplace.
@@ -995,6 +995,10 @@ Palette tokens in `frontend/matchi.web/src/app/designTokens.ts`: primary `#2563E
 Categories: live `GET /api/services/categories` when non-empty; otherwise mock list. Search suggestions: `GET /api/services`. Featured professionals: mock (`GET /api/providers` is empty without `serviceId`). JWT/OTP unchanged. Optional `login?next=` and `create?q=`.
 
 **Verified:** `npm run typecheck` and `npm run build` in `frontend/matchi.web` passed (existing Vite chunk-size warning). In-browser walkthrough was not run in this session.
+
+### Homepage UX polish (2026-09-16)
+
+Public home search uses Autocomplete over `GET /api/services` (loading / no-options / catalog-error copy). Header: logo + Find Services + How it works + Login + Get Started; sticky elevation. Categories stack on small screens. Featured mock cards CTA is **Start a request** (same find-service path). No fake public profile. No invented stats.
 
 ---
 

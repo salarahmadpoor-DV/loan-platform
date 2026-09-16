@@ -7,17 +7,26 @@ import { VerificationBadge } from "./VerificationBadge";
 
 type ProfessionalCardProps = {
   professional: MockProfessional;
-  onViewProfile: () => void;
+  onStartRequest: () => void;
 };
 
-export function ProfessionalCard({ professional, onViewProfile }: ProfessionalCardProps) {
+export function ProfessionalCard({ professional, onStartRequest }: ProfessionalCardProps) {
   const initial = professional.name.trim().charAt(0) || "?";
 
   return (
     <AppCard>
       <Stack spacing={1.5}>
         <Stack direction="row" spacing={1.5} alignItems="center">
-          <Avatar sx={{ bgcolor: "primary.main", color: "primary.contrastText" }} alt="">
+          <Avatar
+            sx={{
+              width: 56,
+              height: 56,
+              bgcolor: "primary.main",
+              color: "primary.contrastText",
+              typography: "h6",
+            }}
+            alt=""
+          >
             {initial}
           </Avatar>
           <Stack spacing={0.25} sx={{ minWidth: 0 }}>
@@ -46,8 +55,8 @@ export function ProfessionalCard({ professional, onViewProfile }: ProfessionalCa
             {t("public.pros.fromPrice", { price: professional.startingPrice })}
           </Typography>
         ) : null}
-        <Button variant="outlined" onClick={onViewProfile} sx={{ alignSelf: { xs: "stretch", sm: "flex-start" } }}>
-          {t("public.pros.viewProfile")}
+        <Button variant="contained" onClick={onStartRequest} sx={{ alignSelf: { xs: "stretch", sm: "flex-start" } }}>
+          {t("public.pros.startRequest")}
         </Button>
       </Stack>
     </AppCard>

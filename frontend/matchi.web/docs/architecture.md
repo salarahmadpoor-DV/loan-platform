@@ -78,7 +78,7 @@ Layouts: `AppShellLayout` (Customer/Provider/Business) uses a permanent drawer f
 
 Route `/` (`PublicHomePage`). Sections: header, hero + search, categories, how it works, featured professionals (mock), why Matchi, CTA, footer.
 
-Search / Find a Service goes to `/customer/requests/create?q=` when the session has Customer (`USER`/`ADMIN`), otherwise `/login?next=…` (`next` must be an internal path). Catalog suggestions use `GET /api/services`. Categories prefer `GET /api/services/categories`; empty or failed responses fall back to `shared/mocks/homeMocks.ts`. Featured professionals are mock only (`GET /api/providers` is empty without `serviceId`). View Profile uses the professional join path (login or `/provider/dashboard`) — there is no public provider profile route.
+Search / Find a Service goes to `/customer/requests/create?q=` when the session has Customer (`USER`/`ADMIN`), otherwise `/login?next=…` (`next` must be an internal path). Catalog suggestions use `GET /api/services` via MUI Autocomplete (loading/empty/error helpers). Categories prefer `GET /api/services/categories`; empty or failed responses fall back to `shared/mocks/homeMocks.ts`. Featured professionals are mock only (`GET /api/providers` is empty without `serviceId`). Sample cards use **Start a request** (existing find-service path) — there is no public provider profile route.
 
 Every data-driven block uses `LoadingState` / `EmptyState` / `ErrorAlert` (API category errors are hidden when mock fallback is used).
 

@@ -14,3 +14,5 @@ Living frontend docs for architecture v2. Product/backend decisions remain in th
 ## Change log (2026-09-16)
 
 Homepage marketplace IA + centralized blue/teal tokens. Details in [architecture.md](./architecture.md). Mock strategy: `src/shared/mocks/homeMocks.ts`. Remaining TODOs: public featured providers (API needs `serviceId`), public provider profile route, location selector (no public geo search on home).
+
+**Homepage UX polish (later same day):** Autocomplete search with loading/empty/error helpers; header hierarchy (Find Services / How it works / Login / Get Started); stacked category grid (no horizontal overflow); sample professional CTA is Start a request, not a fake profile.

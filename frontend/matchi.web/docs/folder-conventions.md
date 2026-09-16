@@ -46,8 +46,10 @@ Create nested folders only when needed (`requests/create/`). Do not add empty `p
 | `shared/auth/` | Zustand store, JWT decode, `RequireAuth`, `RequireWorkspace` |
 | `shared/i18n/` | `keys.ts` + `locales/fa-IR.ts` + `locales/en-US.ts` + `t()` |
 | `shared/navigation/navModel.ts` | Sidebar items per workspace |
-| `shared/ui/` | Design-system wrappers (`PageContainer`, `FormSplitLayout`, `MarketplaceStepper`, `JourneyTimeline`, `PriceSummary`, `ResponsiveCardGrid`) |
+| `shared/ui/` | Design-system wrappers (`PageContainer`, `FormSplitLayout`, `MarketplaceStepper`, `JourneyTimeline`, `PriceSummary`, `ResponsiveCardGrid`, `SectionHeader`) |
+| `shared/mocks/` | Temporary homepage mock lists (`homeMocks.ts`). TODO comments mark API replacements. |
 | `shared/types/marketplace.ts` | `RequestKind`, `ProposerType` |
+| `shared/marketplace/` | Journey helpers + `publicPaths.ts` (find-service / join / safe `next`) |
 
 ## Naming
 

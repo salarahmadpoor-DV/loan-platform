@@ -1,6 +1,6 @@
-# MATCHI_PROJECT_CONTEXT v2.23
+# MATCHI_PROJECT_CONTEXT v2.24
 
-**Updated:** 2026-09-13  
+**Updated:** 2026-09-16  
 **Scope:** Architectural baseline and implementation log for the Matchi .NET 8 marketplace.
 
 This file is the documented Matchi baseline and decision log. It was **not present in the repository at the start of Task 03**. Task 03 therefore treated the Task 02 Request implementation, existing Domain/EF baseline, `docs/api-endpoints-mvp.md`, and the Task 03 specification as the source of truth, then created this file as the required living context.
@@ -985,7 +985,16 @@ Not used: `GET /api/requests/{id}`, `providerId`, `businessId`, customer proposa
 - Font: **Vazirmatn** via Google Fonts (`index.html`); theme `fontFamily` no longer depends on system Tahoma first.
 - Typography tokens on `app/theme.ts` (h1 display, h4 page title, h6 section, subtitle1 card, body1/2, caption, button; form label/helper via MUI components).
 - `PageContainer` caps workspace content (`lg` 1120 / `xl` 1280). Shell padding and drawers are breakpoint-based. Public login stays `sm`; home uses `lg`.
-- Matchi palette remains green/teal (not a third-party brand copy). JWT/API routes unchanged.
+
+### Marketplace homepage and brand tokens (2026-09-16)
+
+Public `/` is a service-marketplace landing (header, hero search, categories, how it works, featured professionals, trust, CTA, footer). Inspired by common marketplace IA; **not** a copy of Achareh branding.
+
+Palette tokens in `frontend/matchi.web/src/app/designTokens.ts`: primary `#2563EB`, secondary `#14B8A6`, background `#F8FAFC`, surface `#FFFFFF`, text `#0F172A`, muted `#64748B`, border `#E2E8F0`. MUI theme consumes these. Customer/Provider shells pick up the same palette without route changes.
+
+Categories: live `GET /api/services/categories` when non-empty; otherwise mock list. Search suggestions: `GET /api/services`. Featured professionals: mock (`GET /api/providers` is empty without `serviceId`). JWT/OTP unchanged. Optional `login?next=` and `create?q=`.
+
+**Verified:** `npm run typecheck` and `npm run build` in `frontend/matchi.web` passed (existing Vite chunk-size warning). In-browser walkthrough was not run in this session.
 
 ---
 

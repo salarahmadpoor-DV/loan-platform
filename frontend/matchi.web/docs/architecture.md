@@ -66,13 +66,21 @@ OTP: `POST /api/auth/send-otp`, `POST /api/auth/verify-otp`. `refreshToken` is i
 
 ## Design system
 
-Reuse `shared/ui`: `AppCard`, `PageHeader`, `PageContainer`, `FormSplitLayout`, `MarketplaceStepper`, `JourneyTimeline`, `PriceSummary`, `EmptyState`, `LoadingState`, `ErrorAlert`, `StatusChip`. Do not invent parallel primitives. Create-request and create-proposal use a two-column form + summary on `md+` (capped width, not full monitor). Steps on create-request are frontend presentation only; submit is still a single `POST /api/requests`. Customer proposal/deal screens use `JourneyTimeline` for Request → Matching → Proposal → Deal → Execution → Review; a step is complete only when the live API supports that conclusion.
+Brand colors live in `app/designTokens.ts` (`matchiColors.primary` `#2563EB`, `secondary` `#14B8A6`, plus background/surface/text/mutedText/border/success/warning/error). `app/theme.ts` maps them to MUI `palette`. Components must use `primary.main`, `secondary.main`, `background.default`, `background.paper`, `text.primary`, `text.secondary`, `divider` — not raw hex. Changing primary/secondary in `designTokens.ts` retints the whole app.
 
-Typography lives on the MUI theme (`app/theme.ts`): Vazirmatn (loaded in `index.html`), RTL `fa-IR`. Roles: `h1` display, `h4` page title (`PageHeader`), `h6` section, `subtitle1` card title, `body1`/`body2` body/secondary, `caption`, `button`. Form labels/helpers use `MuiInputLabel` / `MuiFormHelperText`.
+Reuse `shared/ui`: `AppCard`, `PageHeader`, `PageContainer`, `FormSplitLayout`, `MarketplaceStepper`, `JourneyTimeline`, `PriceSummary`, `EmptyState`, `LoadingState`, `ErrorAlert`, `StatusChip`, `SectionHeader`. Homepage-only pieces live under `features/shell/home/`. Create-request and create-proposal use a two-column form + summary on `md+`. Steps on create-request are frontend presentation only; submit is still a single `POST /api/requests`. Customer proposal/deal screens use `JourneyTimeline` for Request → Matching → Proposal → Deal → Execution → Review.
 
-Layouts: `AppShellLayout` (Customer/Provider/Business) uses a permanent drawer from `md` up and a temporary drawer below; main content is capped (`lg` 1120px / `xl` 1280px). `PublicLayout` uses `sm` for login and `lg` for the public home.
+Typography lives on the MUI theme (`app/theme.ts`): Vazirmatn (loaded in `index.html`), RTL `fa-IR`. Roles: `h1` display, `h2` section, `h3` subsection, `h4` page title (`PageHeader`), `body1`/`body2` body/secondary, `caption`, `button`.
 
-Every list/detail must handle loading, empty, API error + retry, and 401 (interceptor).
+Layouts: `AppShellLayout` (Customer/Provider/Business) uses a permanent drawer from `md` up and a temporary drawer below; main content is capped (`lg` 1120px / `xl` 1280px). `PublicLayout` has sticky `PublicHeader` + `PublicFooter`. Login stays `sm`; public home is full-width sections with `lg` containers.
+
+## Public homepage
+
+Route `/` (`PublicHomePage`). Sections: header, hero + search, categories, how it works, featured professionals (mock), why Matchi, CTA, footer.
+
+Search / Find a Service goes to `/customer/requests/create?q=` when the session has Customer (`USER`/`ADMIN`), otherwise `/login?next=…` (`next` must be an internal path). Catalog suggestions use `GET /api/services`. Categories prefer `GET /api/services/categories`; empty or failed responses fall back to `shared/mocks/homeMocks.ts`. Featured professionals are mock only (`GET /api/providers` is empty without `serviceId`). View Profile uses the professional join path (login or `/provider/dashboard`) — there is no public provider profile route.
+
+Every data-driven block uses `LoadingState` / `EmptyState` / `ErrorAlert` (API category errors are hidden when mock fallback is used).
 
 ## Related docs
 

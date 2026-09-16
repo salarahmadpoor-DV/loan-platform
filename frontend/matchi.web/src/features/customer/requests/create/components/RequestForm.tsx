@@ -37,6 +37,7 @@ const KIND_LABEL: Record<RequestKind, MessageKey> = {
 type RequestFormProps = {
   submitting: boolean;
   onSubmit: (body: CreateRequestBody) => void;
+  initialTitle?: string;
 };
 
 function dash(value: string): string {
@@ -55,8 +56,11 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function RequestForm({ submitting, onSubmit }: RequestFormProps) {
-  const [values, setValues] = useState<CreateRequestFormValues>(defaultCreateRequestValues);
+export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormProps) {
+  const [values, setValues] = useState<CreateRequestFormValues>({
+    ...defaultCreateRequestValues,
+    title: initialTitle ?? "",
+  });
   const [errors, setErrors] = useState<CreateRequestFieldErrors>({});
   const [step, setStep] = useState(0);
   const [unlocked, setUnlocked] = useState(0);

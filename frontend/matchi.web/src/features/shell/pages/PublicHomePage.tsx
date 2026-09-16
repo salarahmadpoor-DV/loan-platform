@@ -1,55 +1,235 @@
-import { Box, Button, Stack, Typography } from "@mui/material";
-import { Link as RouterLink } from "react-router-dom";
+import { Box, Button, Container, Stack, Typography } from "@mui/material";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../../shared/auth/AuthProvider";
 import { t } from "../../../shared/i18n";
-import { APP_WORKSPACES, workspaceHome, workspaceLabelKey } from "../../../shared/navigation/navModel";
-import { AppCard } from "../../../shared/ui/AppCard";
-import { PageHeader } from "../../../shared/ui/PageHeader";
+import {
+  findServicePath,
+  professionalJoinPath,
+} from "../../../shared/marketplace/publicPaths";
+import type { HomeCategoryView } from "../../../shared/mocks/homeMocks";
+import { EmptyState } from "../../../shared/ui/EmptyState";
+import { ErrorAlert } from "../../../shared/ui/ErrorAlert";
+import { LoadingState } from "../../../shared/ui/LoadingState";
+import { SectionHeader } from "../../../shared/ui/SectionHeader";
+import { CategoryGrid } from "../home/components/CategoryGrid";
+import { CtaSection } from "../home/components/CtaSection";
+import { HeroVisual } from "../home/components/HeroVisual";
+import { ProfessionalCard } from "../home/components/ProfessionalCard";
+import { SearchBar } from "../home/components/SearchBar";
+import { StepCard } from "../home/components/StepCard";
+import { TrustSection } from "../home/components/TrustSection";
+import { useFeaturedProfessionals } from "../home/hooks/useFeaturedProfessionals";
+import { useServiceCategories } from "../home/hooks/useServiceCategories";
+import { useServiceSearchSuggestions } from "../home/hooks/useServiceSearchSuggestions";
+
+const HOW_STEPS = [
+  { title: "public.how.step1.title", body: "public.how.step1.body" },
+  { title: "public.how.step2.title", body: "public.how.step2.body" },
+  { title: "public.how.step3.title", body: "public.how.step3.body" },
+  { title: "public.how.step4.title", body: "public.how.step4.body" },
+] as const;
+
+const TRUST_ITEMS = [
+  { title: "public.why.item1.title", body: "public.why.item1.body" },
+  { title: "public.why.item2.title", body: "public.why.item2.body" },
+  { title: "public.why.item3.title", body: "public.why.item3.body" },
+  { title: "public.why.item4.title", body: "public.why.item4.body" },
+  { title: "public.why.item5.title", body: "public.why.item5.body" },
+] as const;
 
 export function PublicHomePage() {
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
+  const [query, setQuery] = useState("");
+  const [searchError, setSearchError] = useState<string | undefined>();
+  const categories = useServiceCategories();
+  const professionals = useFeaturedProfessionals();
+  const catalog = useServiceSearchSuggestions();
+
+  const suggestions = catalog.data?.items.map((item) => item.name) ?? [];
+
+  function goFind(search?: string) {
+    navigate(findServicePath(isAuthenticated, user?.roles, search));
+  }
+
+  function goJoin() {
+    navigate(professionalJoinPath(isAuthenticated, user?.roles));
+  }
+
+  function submitSearch() {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setSearchError(t("public.search.required"));
+      return;
+    }
+    setSearchError(undefined);
+    goFind(trimmed);
+  }
+
+  function selectCategory(category: HomeCategoryView) {
+    goFind(category.title);
+  }
+
   return (
-    <Stack spacing={{ xs: 3, md: 4 }}>
-      <PageHeader title={t("app.name")} description={t("public.homeDescription")} />
-      <AppCard>
-        <Typography variant="h6" component="h2" sx={{ mb: 1 }}>
-          {t("auth.signIn")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {t("public.signedInWorkspaces")}
-        </Typography>
-        <Button
-          component={RouterLink}
-          to="/login"
-          variant="contained"
-          size="large"
-          sx={{ width: { xs: "100%", sm: "auto" } }}
-        >
-          {t("auth.signIn")}
-        </Button>
-      </AppCard>
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        spacing={2}
-        useFlexGap
-        sx={{ flexWrap: "wrap" }}
+    <Box>
+      <Box
+        component="section"
+        aria-labelledby="home-hero-heading"
+        sx={{
+          bgcolor: "background.paper",
+          borderBottom: 1,
+          borderColor: "divider",
+          py: { xs: 4, md: 8 },
+        }}
       >
-        {APP_WORKSPACES.map((ws) => (
-          <Box key={ws} sx={{ flex: { sm: "1 1 240px" }, minWidth: 0 }}>
-            <AppCard>
-              <Stack spacing={1.5} sx={{ minHeight: { sm: 120 }, justifyContent: "space-between" }}>
-                <Typography variant="subtitle1">{t(workspaceLabelKey[ws])}</Typography>
-                <Button
-                  component={RouterLink}
-                  to={workspaceHome[ws]}
-                  variant="outlined"
-                  sx={{ alignSelf: { xs: "stretch", sm: "flex-start" } }}
-                >
-                  {t(workspaceLabelKey[ws])}
-                </Button>
-              </Stack>
-            </AppCard>
+        <Container maxWidth="lg">
+          <Box
+            sx={{
+              display: "grid",
+              gap: { xs: 4, md: 6 },
+              gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1.1fr) minmax(0, 0.9fr)" },
+              alignItems: "center",
+            }}
+          >
+            <Stack spacing={2.5}>
+              <Typography id="home-hero-heading" variant="h1" component="h1">
+                {t("public.hero.headline")}
+              </Typography>
+              <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 560 }}>
+                {t("public.hero.subhead")}
+              </Typography>
+              <SearchBar
+                id="home-service-search"
+                label={t("public.hero.searchLabel")}
+                placeholder={t("public.hero.searchPlaceholder")}
+                value={query}
+                onChange={(value) => {
+                  setQuery(value);
+                  if (searchError) {
+                    setSearchError(undefined);
+                  }
+                }}
+                onSubmit={submitSearch}
+                suggestions={suggestions}
+                error={searchError}
+                submitSlot={
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    size="large"
+                    sx={{ width: { xs: "100%", sm: "auto" } }}
+                  >
+                    {t("public.hero.findService")}
+                  </Button>
+                }
+              />
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={goJoin}
+                sx={{ alignSelf: { xs: "stretch", sm: "flex-start" } }}
+              >
+                {t("public.hero.becomeProfessional")}
+              </Button>
+            </Stack>
+            <HeroVisual label={t("public.hero.visualLabel")} />
           </Box>
-        ))}
-      </Stack>
-    </Stack>
+        </Container>
+      </Box>
+
+      <Container maxWidth="lg" sx={{ py: { xs: 5, md: 8 } }}>
+        <Stack spacing={{ xs: 6, md: 8 }}>
+          <Box component="section" aria-labelledby="categories">
+            <SectionHeader
+              id="categories"
+              title={t("public.categories.title")}
+              subtitle={t("public.categories.subtitle")}
+            />
+            {categories.isPending ? <LoadingState /> : null}
+            {categories.isError && !categories.usingMock ? (
+              <ErrorAlert error={categories.error} />
+            ) : null}
+            {!categories.isPending && categories.items.length === 0 ? (
+              <EmptyState title={t("public.categories.empty")} />
+            ) : null}
+            {categories.items.length > 0 ? (
+              <CategoryGrid categories={categories.items} onSelect={selectCategory} />
+            ) : null}
+          </Box>
+
+          <Box component="section" aria-labelledby="how-it-works">
+            <SectionHeader
+              id="how-it-works"
+              title={t("public.how.title")}
+              subtitle={t("public.how.subtitle")}
+            />
+            <Box
+              sx={{
+                display: "grid",
+                gap: 2,
+                gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: "repeat(4, minmax(0, 1fr))" },
+              }}
+            >
+              {HOW_STEPS.map((step, index) => (
+                <StepCard
+                  key={step.title}
+                  step={index + 1}
+                  title={t(step.title)}
+                  body={t(step.body)}
+                />
+              ))}
+            </Box>
+          </Box>
+
+          <Box component="section" aria-labelledby="featured-professionals">
+            <SectionHeader id="featured-professionals" title={t("public.pros.title")} subtitle={t("public.pros.subtitle")} />
+            {professionals.isPending ? <LoadingState /> : null}
+            {professionals.isError ? <ErrorAlert error={professionals.error} /> : null}
+            {!professionals.isPending && (professionals.data?.length ?? 0) === 0 ? (
+              <EmptyState title={t("public.pros.empty")} />
+            ) : null}
+            {professionals.data && professionals.data.length > 0 ? (
+              <Box
+                sx={{
+                  display: "grid",
+                  gap: 2,
+                  gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", lg: "repeat(4, minmax(0, 1fr))" },
+                }}
+              >
+                {professionals.data.map((professional) => (
+                  <ProfessionalCard
+                    key={professional.id}
+                    professional={professional}
+                    onViewProfile={goJoin}
+                  />
+                ))}
+              </Box>
+            ) : null}
+          </Box>
+
+          <Box component="section" aria-labelledby="why-matchi">
+            <SectionHeader id="why-matchi" title={t("public.why.title")} subtitle={t("public.why.subtitle")} />
+            <TrustSection
+              items={TRUST_ITEMS.map((item) => ({
+                title: t(item.title),
+                body: t(item.body),
+              }))}
+            />
+          </Box>
+
+          <Box id="for-professionals">
+            <CtaSection
+              title={t("public.cta.title")}
+              body={t("public.cta.body")}
+              primaryLabel={t("public.cta.find")}
+              secondaryLabel={t("public.cta.join")}
+              onPrimary={() => goFind()}
+              onSecondary={goJoin}
+            />
+          </Box>
+        </Stack>
+      </Container>
+    </Box>
   );
 }

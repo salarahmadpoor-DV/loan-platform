@@ -1,10 +1,11 @@
 import { Button, Stack, TextField, Typography } from "@mui/material";
 import { useState, type FormEvent } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { ApiError } from "../../../shared/api/errors";
 import { useAuth } from "../../../shared/auth/AuthProvider";
 import { decodeAccessToken } from "../../../shared/auth/jwt";
 import { defaultWorkspacePath, resolveWorkspaces } from "../../../shared/auth/workspaces";
+import { safeInternalPath } from "../../../shared/marketplace/publicPaths";
 import { t } from "../../../shared/i18n";
 import { AppCard } from "../../../shared/ui/AppCard";
 import { ErrorAlert } from "../../../shared/ui/ErrorAlert";
@@ -29,6 +30,8 @@ function loginDisplayError(error: unknown, step: "mobile" | "otp"): unknown {
 export function LoginPage() {
   const { isAuthenticated, setSession, user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const nextPath = safeInternalPath(searchParams.get("next"));
   const [step, setStep] = useState<"mobile" | "otp">("mobile");
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
@@ -37,7 +40,7 @@ export function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   if (isAuthenticated && resolveWorkspaces(user?.roles).length > 0) {
-    return <Navigate to={defaultWorkspacePath(user?.roles)} replace />;
+    return <Navigate to={nextPath ?? defaultWorkspacePath(user?.roles)} replace />;
   }
 
   async function onSendOtp(event: FormEvent) {
@@ -112,10 +115,11 @@ export function LoginPage() {
         roles: Array.isArray(result.user.roles) ? result.user.roles : [],
       });
       navigate(
-        defaultWorkspacePath([
-          ...(claims.roles ?? []),
-          ...(Array.isArray(result.user.roles) ? result.user.roles : []),
-        ]),
+        nextPath ??
+          defaultWorkspacePath([
+            ...(claims.roles ?? []),
+            ...(Array.isArray(result.user.roles) ? result.user.roles : []),
+          ]),
         { replace: true },
       );
     } catch (err) {

@@ -52,7 +52,7 @@ If a workspace cannot see a resource, **do not** reuse the customer list hook an
 
 ## CORS
 
-Browser calls need API CORS at deployment. The API project does not configure CORS by default.
+Local Vite (`http://localhost:5173`) to the API uses the Development `LocalFrontend` policy on Matchi.Api. Production origins remain a deployment concern.
 
 ## Forbidden
 

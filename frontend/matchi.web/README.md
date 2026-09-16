@@ -33,11 +33,13 @@ src/
       deals/           # provider-visible deals list
       executions/      # involved executions list
       profile/         # GET /api/providers/me
-    shell/             # public + business placeholders
+    shell/             # public home + business placeholders
   shared/
     api/               # axios client, query keys, errors
     auth/              # session, JWT decode, route guards
     i18n/              # message catalogs + t()
+    marketplace/
+    mocks/             # homepage fallback lists
     navigation/
     ui/                # MUI design-system wrappers
     types/
@@ -64,13 +66,17 @@ Copy `.env.example`. Vite exposes:
 |---|---|
 | `VITE_API_BASE_URL` | Matchi HTTP API origin (no trailing slash required). Example: `http://localhost:5000` |
 
-The browser must be allowed by API CORS at deployment. CORS is not configured in the API repo by default.
+The browser must be allowed by API CORS at deployment. Local Development API allows `http://localhost:5173`.
 
 ## Documentation
 
 Detailed frontend rules live in [`docs/`](./docs/README.md) (architecture, folders, routing, i18n, API usage, Provider API audit).
 
 Do **not** invent HTTP endpoints. Provider list GETs are `GET /api/provider/*` plus `GET /api/providers/me`. See `docs/provider-workspace-api-audit.md`.
+
+## Change log (2026-09-16)
+
+Marketplace homepage and design-token refresh (primary `#2563EB`, secondary `#14B8A6`). Categories use `GET /api/services/categories` with mock fallback. Search suggestions use `GET /api/services`. Featured professionals are mock until public provider search no longer requires `serviceId`.
 
 ## Localization strategy (future)
 

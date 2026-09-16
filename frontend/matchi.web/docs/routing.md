@@ -6,8 +6,8 @@ All routes are declared in `src/app/router.tsx`. Do not register routes inside f
 
 | Path | Guard | Page |
 |---|---|---|
-| `/` | none | `PublicHomePage` |
-| `/login` | none | `LoginPage` (OTP) |
+| `/` | none | `PublicHomePage` (marketplace landing; hashes `#categories`, `#how-it-works`, `#for-professionals`) |
+| `/login` | none | `LoginPage` (OTP). Optional `?next=/internal-path` after verify (same-origin app paths only). |
 
 ## Customer (`RequireAuth` + `RequireWorkspace(customer)` + `CustomerLayout`)
 
@@ -18,7 +18,7 @@ Static segments **before** `:id`.
 | `/customer` | redirect → `dashboard` |
 | `/customer/dashboard` | `CustomerDashboardPage` |
 | `/customer/requests` | `RequestListPage` |
-| `/customer/requests/create` | `CreateRequestPage` (must stay before `:id`) |
+| `/customer/requests/create` | `CreateRequestPage` (must stay before `:id`). Optional `?q=` prefills title from homepage search. |
 | `/customer/requests/:id` | `RequestDetailPage` |
 | `/customer/requests/:id/matches` | `RequestMatchesPage` |
 | `/customer/requests/:requestId/proposals` | `RequestProposalsPage` |

@@ -9,4 +9,4 @@ export { FormSplitLayout } from "./FormSplitLayout";
 export { MarketplaceStepper } from "./MarketplaceStepper";
 export { JourneyTimeline } from "./JourneyTimeline";
 export { PriceSummary } from "./PriceSummary";
-export { ResponsiveCardGrid } from "./ResponsiveCardGrid";
+export { SectionHeader } from "./SectionHeader";

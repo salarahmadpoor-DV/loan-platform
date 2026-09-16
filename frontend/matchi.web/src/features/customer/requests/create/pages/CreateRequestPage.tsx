@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ErrorAlert } from "../../../../../shared/ui/ErrorAlert";
 import { PageHeader } from "../../../../../shared/ui/PageHeader";
 import { t } from "../../../../../shared/i18n";
@@ -7,6 +7,8 @@ import { useCreateRequest } from "../hooks/useCreateRequest";
 
 export function CreateRequestPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialTitle = searchParams.get("q")?.trim() ?? "";
   const create = useCreateRequest();
 
   return (
@@ -18,6 +20,7 @@ export function CreateRequestPage() {
       {create.isError ? <ErrorAlert error={create.error} /> : null}
       <RequestForm
         submitting={create.isPending}
+        initialTitle={initialTitle}
         onSubmit={(body) => {
           create.mutate(body, {
             onSuccess: (result) => {

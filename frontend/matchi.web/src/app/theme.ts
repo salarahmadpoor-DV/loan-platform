@@ -1,15 +1,16 @@
 import { faIR } from "@mui/material/locale";
 import { createTheme } from "@mui/material/styles";
 import { DEFAULT_LOCALE, isRtlLocale } from "../shared/i18n";
+import { matchiColors, matchiRadius, matchiShadows } from "./designTokens";
 
 const FONT_FAMILY =
   '"Vazirmatn", "Tahoma", "Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif';
 
 /**
- * Matchi visual identity: calm marketplace green, generous white-space, RTL-first type.
+ * Matchi visual identity: blue primary + teal secondary, RTL-first type.
  * Typography roles (do not re-declare per screen):
- * h1 Display / Hero · h4 Page title · h6 Section title · subtitle1 Card title
- * body1 Body · body2 Secondary · caption Caption · button Button
+ * h1 Display / Hero · h2 Section · h3 Subsection · h4 Page title
+ * body1 Body · body2 Secondary (bodySmall) · caption Caption · button Button
  * Input labels / helper / error come from MuiInputLabel and MuiFormHelperText.
  */
 export const appTheme = createTheme(
@@ -28,24 +29,35 @@ export const appTheme = createTheme(
     palette: {
       mode: "light",
       primary: {
-        main: "#1a6b4a",
-        dark: "#124c35",
-        light: "#3d8f6a",
-        contrastText: "#ffffff",
+        main: matchiColors.primary,
+        dark: matchiColors.primaryDark,
+        light: matchiColors.primaryLight,
+        contrastText: matchiColors.contrastText,
       },
       secondary: {
-        main: "#2c5f73",
-        contrastText: "#ffffff",
+        main: matchiColors.secondary,
+        dark: matchiColors.secondaryDark,
+        light: matchiColors.secondaryLight,
+        contrastText: matchiColors.contrastText,
+      },
+      success: {
+        main: matchiColors.success,
+      },
+      warning: {
+        main: matchiColors.warning,
+      },
+      error: {
+        main: matchiColors.error,
       },
       background: {
-        default: "#f6f7f6",
-        paper: "#ffffff",
+        default: matchiColors.background,
+        paper: matchiColors.surface,
       },
       text: {
-        primary: "#1c2421",
-        secondary: "#5b6561",
+        primary: matchiColors.text,
+        secondary: matchiColors.mutedText,
       },
-      divider: "rgba(28, 36, 33, 0.1)",
+      divider: matchiColors.border,
     },
     typography: {
       fontFamily: FONT_FAMILY,
@@ -53,22 +65,23 @@ export const appTheme = createTheme(
       htmlFontSize: 16,
       h1: {
         fontWeight: 700,
-        lineHeight: 1.25,
-        letterSpacing: "-0.02em",
-        fontSize: "1.75rem",
-        "@media (min-width:600px)": { fontSize: "2.125rem" },
-        "@media (min-width:1200px)": { fontSize: "2.5rem" },
+        lineHeight: 1.2,
+        letterSpacing: "-0.03em",
+        fontSize: "2rem",
+        "@media (min-width:600px)": { fontSize: "2.5rem" },
+        "@media (min-width:1200px)": { fontSize: "3rem" },
       },
       h2: {
         fontWeight: 700,
         lineHeight: 1.3,
         fontSize: "1.5rem",
-        "@media (min-width:900px)": { fontSize: "1.75rem" },
+        "@media (min-width:900px)": { fontSize: "1.875rem" },
       },
       h3: {
         fontWeight: 600,
         lineHeight: 1.35,
-        fontSize: "1.35rem",
+        fontSize: "1.25rem",
+        "@media (min-width:600px)": { fontSize: "1.375rem" },
       },
       h4: {
         fontWeight: 700,
@@ -126,7 +139,7 @@ export const appTheme = createTheme(
       },
     },
     shape: {
-      borderRadius: 12,
+      borderRadius: matchiRadius.md,
     },
     components: {
       MuiCssBaseline: {
@@ -135,6 +148,7 @@ export const appTheme = createTheme(
             overflowX: "hidden",
             WebkitFontSmoothing: "antialiased",
             MozOsxFontSmoothing: "grayscale",
+            scrollPaddingTop: 72,
           },
           body: {
             overflowX: "hidden",
@@ -151,7 +165,7 @@ export const appTheme = createTheme(
           root: {
             minHeight: 44,
             paddingInline: 16,
-            borderRadius: 10,
+            borderRadius: matchiRadius.sm,
           },
           sizeLarge: {
             minHeight: 48,
@@ -174,7 +188,7 @@ export const appTheme = createTheme(
         styleOverrides: {
           root: {
             minHeight: 44,
-            borderRadius: 8,
+            borderRadius: matchiRadius.sm,
             marginInline: 8,
           },
         },
@@ -182,7 +196,7 @@ export const appTheme = createTheme(
       MuiToolbar: {
         styleOverrides: {
           root: {
-            minHeight: 56,
+            minHeight: 64,
           },
         },
       },
@@ -190,6 +204,7 @@ export const appTheme = createTheme(
         styleOverrides: {
           root: {
             overflow: "hidden",
+            boxShadow: matchiShadows.card,
           },
         },
       },
@@ -259,6 +274,13 @@ export const appTheme = createTheme(
         styleOverrides: {
           root: {
             width: "100%",
+          },
+        },
+      },
+      MuiAppBar: {
+        styleOverrides: {
+          root: {
+            backgroundImage: "none",
           },
         },
       },

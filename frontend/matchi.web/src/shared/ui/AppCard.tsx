@@ -11,7 +11,8 @@ export function AppCard({ children }: AppCardProps) {
       variant="outlined"
       sx={{
         height: "100%",
-        boxShadow: "0 1px 2px rgba(28, 36, 33, 0.04)",
+        borderColor: "divider",
+        bgcolor: "background.paper",
       }}
     >
       <CardContent>{children}</CardContent>

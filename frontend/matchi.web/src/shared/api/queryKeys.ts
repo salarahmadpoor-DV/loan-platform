@@ -8,6 +8,7 @@ export const queryKeys = {
   },
   catalog: {
     services: ["catalog", "services"] as const,
+    categories: ["catalog", "categories"] as const,
     products: ["catalog", "products"] as const,
     businesses: ["catalog", "businesses"] as const,
     providers: ["catalog", "providers"] as const,

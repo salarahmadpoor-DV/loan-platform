@@ -760,10 +760,9 @@ OTP login remains the existing HTTP contract (`POST /api/auth/send-otp`, `POST /
 
 ### Matching frontend decision (Task 9.5)
 
-- Route: `/customer/requests/:id/matches`, behind `RequireAuth` + `RequireWorkspace(customer)`. Entry from request detail (“view matches”). Cancelled requests hide that button; the API still returns **400** if matching is called for a cancelled Request.
+- Route: `/customer/requests/:id/matches`, behind `RequireAuth` + `RequireWorkspace(customer)`. Entry from request detail (“View matches”). Cancelled requests hide that button. The matches page also skips `GET .../matches` when status is Cancelled (the API would return **400**) and explains that matching is unavailable.
 - **Endpoint:** only `GET /api/requests/{requestId}/matches` (owner, Bearer). Empty list is `200 []`. Non-owned → **404**.
-- **DTO (live):** `candidateType` (`Provider` | `Business`), `candidateId`, `displayName`, `score`, `rank`. The API does **not** return per-signal reason flags. The UI lists the documented Task 04 score signals (service +50, product +20, capability +15 Providers only, area +10, availability +5) as “why they appear”, and does not invent extra fields or endpoints.
-- Visualization only: no proposal create, chat, payment, or deal. Next-action buttons (view provider services / view business) are shown disabled until those screens exist. There is no public `GET /api/businesses/{id}` and no public provider-services list for the customer to open in this task.
+- **DTO (live):** `candidateType` (`Provider` | `Business`), `candidateId`, `displayName`, `score`, `rank`. The API does **not** return per-signal reason flags, ratings, location, or profile pages. Cards show only those five fields (plus initials derived from `displayName`). Documented score weights are listed once on the page, not as if they were per-match flags. There is no public customer provider/business profile route, so match cards are informational. Cancelled requests skip `GET .../matches` (API would return 400) and show status from `GET /api/requests/{id}`.
 - TanStack Query key: `queryKeys.matching.byRequest(id)`. Loading, empty, error, and retry (`refetch`) are implemented. Copy is fa-IR via `t()`.
 
 ### Customer proposal frontend decision (Task 9.6)
@@ -1109,6 +1108,7 @@ Dashboard uses live `GET /api/provider/requests|proposals|deals|executions` and 
 | Marketplace create-request / create-proposal UX | `npm run typecheck` / `npm run build` succeeded. Backend/DB/API unchanged. No Task 11.4. No live browser/API test. |
 | Customer create-request flow polish | In-place success, compact mobile stepper, required/optional labels. Backend/DB/API unchanged. |
 | Customer My Requests / request detail polish | List + detail UX from live `RequestDto` only. Matches navigation for Open. Backend/DB/API unchanged. |
+| Customer matches workspace | Read-only `GET /api/requests/{id}/matches` cards from live `MatchResultDto`. Backend/DB/API unchanged. |
 | Customer journey presentation (proposal/deal/execution/review) | `npm run typecheck` / `npm run build` succeeded. Backend/DB/API unchanged. No Task 11.4. No live browser/API test. |
 | Provider workspace presentation | `npm run typecheck` / `npm run build` succeeded. Backend/DB/API unchanged. No Task 11.4. No live browser/API test. |
 

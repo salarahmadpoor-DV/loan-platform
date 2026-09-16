@@ -59,3 +59,25 @@ export function compareMyRequests(
   }
   return new Date(b.createDate).getTime() - new Date(a.createDate).getTime();
 }
+
+export function requestLocationSummary(location: {
+  city: string | null;
+  district: string | null;
+  province: string | null;
+} | null): string | null {
+  if (!location) {
+    return null;
+  }
+  const parts = [location.city, location.district, location.province].filter(
+    (part): part is string => Boolean(part && part.trim()),
+  );
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+export function requestDescriptionSnippet(description: string | null, maxLength = 140): string | null {
+  const text = description?.trim();
+  if (!text) {
+    return null;
+  }
+  return text.length > maxLength ? `${text.slice(0, maxLength)}…` : text;
+}

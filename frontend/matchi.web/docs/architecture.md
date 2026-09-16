@@ -84,6 +84,8 @@ Create request (`/customer/requests/create`) is a six-step presentation wizard (
 
 My Requests (`/customer/requests`) lists owner requests from `GET /api/requests/me`. Cards show title, kind, status (`Open` / `Cancelled`), id, description snippet, location summary when present, created date, and line counts. Detail (`GET /api/requests/{id}`) shows the same DTO plus schedule, line attributes, and a primary View matches action for Open requests (`/customer/requests/:id/matches`). No extra request fields are invented.
 
+Matches (`/customer/requests/:id/matches`) is read-only. Context comes from `GET /api/requests/{id}`. Results come from `GET /api/requests/{id}/matches` (`candidateType`, `candidateId`, `displayName`, `score`, `rank`). Count is the array length. Cancelled requests do not call matches.
+
 Every data-driven block uses `LoadingState` / `EmptyState` / `ErrorAlert` (API category errors are hidden when mock fallback is used).
 
 ## Related docs

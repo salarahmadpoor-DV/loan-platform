@@ -4,35 +4,21 @@ import { t } from "../../../../shared/i18n";
 import { AppCard } from "../../../../shared/ui/AppCard";
 import { StatusChip } from "../../../../shared/ui/StatusChip";
 import { requestKindLabel, type RequestDto } from "../api/requestTypes";
-import { formatRequestDate, isRequestOpen } from "../model/requestPresentation";
+import {
+  formatRequestDate,
+  isRequestOpen,
+  requestDescriptionSnippet,
+  requestLocationSummary,
+} from "../model/requestPresentation";
 import { RequestStatusChip } from "./RequestStatusChip";
 
 type RequestCardProps = {
   request: RequestDto;
 };
 
-function locationSummary(request: RequestDto): string | null {
-  const location = request.location;
-  if (!location) {
-    return null;
-  }
-  const parts = [location.city, location.district, location.province].filter(
-    (part): part is string => Boolean(part && part.trim()),
-  );
-  return parts.length > 0 ? parts.join(" · ") : null;
-}
-
-function descriptionSnippet(request: RequestDto): string | null {
-  const text = request.description?.trim();
-  if (!text) {
-    return null;
-  }
-  return text.length > 140 ? `${text.slice(0, 140)}…` : text;
-}
-
 export function RequestCard({ request }: RequestCardProps) {
-  const place = locationSummary(request);
-  const snippet = descriptionSnippet(request);
+  const place = requestLocationSummary(request.location);
+  const snippet = requestDescriptionSnippet(request.description);
   const open = isRequestOpen(request.status);
 
   return (

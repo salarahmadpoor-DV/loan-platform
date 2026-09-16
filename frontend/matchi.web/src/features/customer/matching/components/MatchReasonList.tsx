@@ -1,17 +1,16 @@
 import { List, ListItem, ListItemText, Typography } from "@mui/material";
 import { t } from "../../../../shared/i18n";
-import {
-  MATCH_SCORE_SIGNALS,
-  isMatchCandidateType,
-} from "../api/matchingTypes";
+import { MATCH_SCORE_SIGNALS, isMatchCandidateType } from "../api/matchingTypes";
 
 type MatchReasonListProps = {
-  candidateType: string;
+  candidateType?: string;
+  showAll?: boolean;
 };
 
-export function MatchReasonList({ candidateType }: MatchReasonListProps) {
-  const isProvider = isMatchCandidateType(candidateType) && candidateType === "Provider";
-  const signals = MATCH_SCORE_SIGNALS.filter((signal) => !signal.providerOnly || isProvider);
+export function MatchReasonList({ candidateType, showAll = false }: MatchReasonListProps) {
+  const isProvider =
+    showAll || (isMatchCandidateType(candidateType ?? "") && candidateType === "Provider");
+  const signals = MATCH_SCORE_SIGNALS.filter((signal) => showAll || !signal.providerOnly || isProvider);
 
   return (
     <>

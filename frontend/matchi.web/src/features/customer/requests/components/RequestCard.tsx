@@ -4,6 +4,7 @@ import { t } from "../../../../shared/i18n";
 import { AppCard } from "../../../../shared/ui/AppCard";
 import { StatusChip } from "../../../../shared/ui/StatusChip";
 import { requestKindLabel, type RequestDto } from "../api/requestTypes";
+import { formatRequestDate, isRequestOpen } from "../model/requestPresentation";
 import { RequestStatusChip } from "./RequestStatusChip";
 
 type RequestCardProps = {
@@ -16,42 +17,93 @@ function locationSummary(request: RequestDto): string | null {
     return null;
   }
   const parts = [location.city, location.district, location.province].filter(
-    (part): part is string => Boolean(part),
+    (part): part is string => Boolean(part && part.trim()),
   );
   return parts.length > 0 ? parts.join(" · ") : null;
 }
 
+function descriptionSnippet(request: RequestDto): string | null {
+  const text = request.description?.trim();
+  if (!text) {
+    return null;
+  }
+  return text.length > 140 ? `${text.slice(0, 140)}…` : text;
+}
+
 export function RequestCard({ request }: RequestCardProps) {
   const place = locationSummary(request);
+  const snippet = descriptionSnippet(request);
+  const open = isRequestOpen(request.status);
 
   return (
-    <AppCard>
-      <Stack spacing={1.5}>
-        <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} useFlexGap>
-          <StatusChip label={requestKindLabel(request.requestType)} />
+    <AppCard
+      sx={{
+        height: "100%",
+        "&:hover": { borderColor: "primary.light" },
+      }}
+    >
+      <Stack spacing={1.5} sx={{ height: "100%" }}>
+        <Stack
+          direction="row"
+          spacing={1}
+          alignItems="flex-start"
+          justifyContent="space-between"
+          sx={{ flexWrap: "wrap" }}
+          useFlexGap
+        >
+          <Typography variant="subtitle1" fontWeight={700} sx={{ minWidth: 0, flex: 1 }}>
+            {request.title}
+          </Typography>
           <RequestStatusChip status={request.status} />
         </Stack>
-        <Typography variant="subtitle1">{request.title}</Typography>
+        <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} useFlexGap>
+          <StatusChip label={requestKindLabel(request.requestType)} tone="info" />
+          <Typography variant="caption" color="text.secondary" sx={{ alignSelf: "center" }}>
+            {t("request.card.id", { id: request.id })}
+          </Typography>
+        </Stack>
+        {snippet ? (
+          <Typography variant="body2" color="text.secondary">
+            {snippet}
+          </Typography>
+        ) : null}
         {place ? (
           <Typography variant="body2" color="text.secondary">
             {place}
           </Typography>
         ) : null}
         <Typography variant="caption" color="text.secondary">
+          {t("request.card.created", { date: formatRequestDate(request.createDate) })}
+          {" · "}
           {t("request.card.counts", {
             services: request.services.length,
             products: request.products.length,
           })}
         </Typography>
-        <Button
-          component={RouterLink}
-          to={`/customer/requests/${request.id}`}
-          variant="outlined"
-          size="small"
-          sx={{ alignSelf: "flex-start" }}
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={1}
+          sx={{ mt: "auto", pt: 0.5 }}
         >
-          {t("request.card.view")}
-        </Button>
+          <Button
+            component={RouterLink}
+            to={`/customer/requests/${request.id}`}
+            variant="contained"
+            sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}
+          >
+            {t("request.card.view")}
+          </Button>
+          {open ? (
+            <Button
+              component={RouterLink}
+              to={`/customer/requests/${request.id}/matches`}
+              variant="outlined"
+              sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}
+            >
+              {t("request.card.viewMatches")}
+            </Button>
+          ) : null}
+        </Stack>
       </Stack>
     </AppCard>
   );

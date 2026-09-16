@@ -17,9 +17,9 @@ Static segments **before** `:id`.
 |---|---|
 | `/customer` | redirect → `dashboard` |
 | `/customer/dashboard` | `CustomerDashboardPage` |
-| `/customer/requests` | `RequestListPage` |
+| `/customer/requests` | `RequestListPage` (`GET /api/requests/me`). Title **My Requests**. Cards show DTO fields only; Open requests link to matches. |
 | `/customer/requests/create` | `CreateRequestPage` (must stay before `:id`). Optional `?q=` prefills title from homepage search. After `POST /api/requests` the page shows an in-place success card (view request, matches, or create another). |
-| `/customer/requests/:id` | `RequestDetailPage` |
+| `/customer/requests/:id` | `RequestDetailPage` (`GET /api/requests/{id}`). Back to list; View matches when status is Open. |
 | `/customer/requests/:id/matches` | `RequestMatchesPage` |
 | `/customer/requests/:requestId/proposals` | `RequestProposalsPage` |
 | `/customer/proposals/:id` | `ProposalDetailPage` |

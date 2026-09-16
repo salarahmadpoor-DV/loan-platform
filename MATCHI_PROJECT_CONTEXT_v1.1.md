@@ -738,7 +738,7 @@ OTP login remains the existing HTTP contract (`POST /api/auth/send-otp`, `POST /
 ### Customer marketplace frontend decision (Task 9.4.1)
 
 - Customer dashboard lives at `/customer/dashboard` (`/customer` redirects there). Workspace home for Customer is that dashboard route.
-- Request list/detail are under `features/customer/requests`. Create is Task 9.4.2 (`/customer/requests/create`). Matching UI is Task 9.5 (`/customer/requests/:id/matches`). Customer proposals are Task 9.6. Customer deals are Task 9.7 (`/customer/deals`, `/customer/deals/:id`). Customer execution read UI is Task 9.8 (on deal detail). Customer reviews are Task 9.9 (deal detail + `/customer/reviews`).
+- Request list/detail are under `features/customer/requests`. List is **My Requests** (`GET /api/requests/me`); detail is `GET /api/requests/{id}` with View matches for Open status. Create is Task 9.4.2 (`/customer/requests/create`). Matching UI is Task 9.5 (`/customer/requests/:id/matches`). Customer proposals are Task 9.6. Customer deals are Task 9.7 (`/customer/deals`, `/customer/deals/:id`). Customer execution read UI is Task 9.8 (on deal detail). Customer reviews are Task 9.9 (deal detail + `/customer/reviews`).
 - **List contract:** live API is `GET /api/requests/me` (array of `RequestDto`), not `GET /api/requests`. Detail is `GET /api/requests/{id}`. IDs remain `long`.
 - `requestType` is `Service | Product | Hybrid`. UI must not assume Service-only. Status is shown as returned (`Open`, `Cancelled`, …).
 - TanStack Query keys: `queryKeys.requests.mine()` and `queryKeys.requests.detail(id)`. Axios `getJson` + existing Bearer interceptor.
@@ -1108,6 +1108,7 @@ Dashboard uses live `GET /api/provider/requests|proposals|deals|executions` and 
 | JWT workspace mapping (frontend) | `npm run typecheck` / `npm run build` succeeded. Backend JWT claim type unchanged. Live OTP matrix not run. |
 | Marketplace create-request / create-proposal UX | `npm run typecheck` / `npm run build` succeeded. Backend/DB/API unchanged. No Task 11.4. No live browser/API test. |
 | Customer create-request flow polish | In-place success, compact mobile stepper, required/optional labels. Backend/DB/API unchanged. |
+| Customer My Requests / request detail polish | List + detail UX from live `RequestDto` only. Matches navigation for Open. Backend/DB/API unchanged. |
 | Customer journey presentation (proposal/deal/execution/review) | `npm run typecheck` / `npm run build` succeeded. Backend/DB/API unchanged. No Task 11.4. No live browser/API test. |
 | Provider workspace presentation | `npm run typecheck` / `npm run build` succeeded. Backend/DB/API unchanged. No Task 11.4. No live browser/API test. |
 

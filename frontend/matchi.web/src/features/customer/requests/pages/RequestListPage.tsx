@@ -1,15 +1,18 @@
-import { Button, Stack } from "@mui/material";
+import { Button } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { t } from "../../../../shared/i18n";
 import { EmptyState } from "../../../../shared/ui/EmptyState";
 import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
 import { LoadingState } from "../../../../shared/ui/LoadingState";
 import { PageHeader } from "../../../../shared/ui/PageHeader";
+import { ResponsiveCardGrid } from "../../../../shared/ui/ResponsiveCardGrid";
 import { RequestCard } from "../components/RequestCard";
 import { useMyRequests } from "../hooks/useMyRequests";
+import { compareMyRequests } from "../model/requestPresentation";
 
 export function RequestListPage() {
   const { data, isPending, isError, error } = useMyRequests();
+  const requests = [...(data ?? [])].sort(compareMyRequests);
 
   return (
     <>
@@ -17,25 +20,35 @@ export function RequestListPage() {
         title={t("request.list.title")}
         description={t("request.list.description")}
         action={
-          <Button component={RouterLink} to="/customer/requests/create" variant="contained">
+          <Button
+            component={RouterLink}
+            to="/customer/requests/create"
+            variant="contained"
+            sx={{ minHeight: 48 }}
+          >
             {t("request.list.create")}
           </Button>
         }
       />
       {isPending ? <LoadingState label={t("request.list.loading")} /> : null}
       {isError ? <ErrorAlert error={error} /> : null}
-      {!isPending && !isError && data?.length === 0 ? (
+      {!isPending && !isError && requests.length === 0 ? (
         <EmptyState
           title={t("request.list.emptyTitle")}
           body={t("request.list.emptyBody")}
+          action={
+            <Button component={RouterLink} to="/customer/requests/create" variant="contained">
+              {t("request.list.create")}
+            </Button>
+          }
         />
       ) : null}
-      {data && data.length > 0 ? (
-        <Stack spacing={2}>
-          {data.map((request) => (
+      {requests.length > 0 ? (
+        <ResponsiveCardGrid>
+          {requests.map((request) => (
             <RequestCard key={request.id} request={request} />
           ))}
-        </Stack>
+        </ResponsiveCardGrid>
       ) : null}
     </>
   );

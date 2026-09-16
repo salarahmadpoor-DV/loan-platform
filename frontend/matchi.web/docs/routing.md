@@ -18,7 +18,7 @@ Static segments **before** `:id`.
 | `/customer` | redirect → `dashboard` |
 | `/customer/dashboard` | `CustomerDashboardPage` |
 | `/customer/requests` | `RequestListPage` |
-| `/customer/requests/create` | `CreateRequestPage` (must stay before `:id`). Optional `?q=` prefills title from homepage search. |
+| `/customer/requests/create` | `CreateRequestPage` (must stay before `:id`). Optional `?q=` prefills title from homepage search. After `POST /api/requests` the page shows an in-place success card (view request, matches, or create another). |
 | `/customer/requests/:id` | `RequestDetailPage` |
 | `/customer/requests/:id/matches` | `RequestMatchesPage` |
 | `/customer/requests/:requestId/proposals` | `RequestProposalsPage` |

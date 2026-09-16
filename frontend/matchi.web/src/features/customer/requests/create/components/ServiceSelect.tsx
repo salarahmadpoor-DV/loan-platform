@@ -1,4 +1,5 @@
 import { Autocomplete, TextField, Typography } from "@mui/material";
+import type { ReactNode } from "react";
 import { t } from "../../../../../shared/i18n";
 import type { CatalogService } from "../api/createRequestTypes";
 import { useCatalogServices } from "../hooks/useCatalogServices";
@@ -8,12 +9,22 @@ type ServiceSelectProps = {
   onChange: (serviceId: string) => void;
   error?: string;
   disabled?: boolean;
+  required?: boolean;
+  label?: ReactNode;
 };
 
-export function ServiceSelect({ value, onChange, error, disabled }: ServiceSelectProps) {
+export function ServiceSelect({
+  value,
+  onChange,
+  error,
+  disabled,
+  required,
+  label,
+}: ServiceSelectProps) {
   const catalog = useCatalogServices();
   const items = catalog.data?.items ?? [];
   const selected = items.find((item) => String(item.id) === value) ?? null;
+  const fieldLabel = label ?? t("request.create.serviceSelect");
 
   if (catalog.isError || (!catalog.isPending && items.length === 0)) {
     return (
@@ -28,6 +39,7 @@ export function ServiceSelect({ value, onChange, error, disabled }: ServiceSelec
           error={Boolean(error)}
           helperText={error}
           disabled={disabled}
+          required={required}
           fullWidth
           inputProps={{ inputMode: "numeric" }}
         />
@@ -47,7 +59,8 @@ export function ServiceSelect({ value, onChange, error, disabled }: ServiceSelec
       renderInput={(params) => (
         <TextField
           {...params}
-          label={t("request.create.serviceSelect")}
+          label={fieldLabel}
+          required={required}
           error={Boolean(error)}
           helperText={error}
         />

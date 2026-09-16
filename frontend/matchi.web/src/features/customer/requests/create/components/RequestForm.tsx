@@ -1,5 +1,6 @@
 import { Alert, Box, Button, Stack, TextField, Typography } from "@mui/material";
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import { t, type MessageKey } from "../../../../../shared/i18n";
 import type { RequestKind } from "../../../../../shared/types/marketplace";
 import { AppCard } from "../../../../../shared/ui/AppCard";
@@ -43,6 +44,22 @@ type RequestFormProps = {
 function dash(value: string): string {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : t("common.notSpecified");
+}
+
+function fieldLabel(label: string, required: boolean): ReactNode {
+  return (
+    <>
+      {label}
+      <Typography
+        component="span"
+        variant="caption"
+        color="text.secondary"
+        sx={{ marginInlineStart: 0.75 }}
+      >
+        ({required ? t("request.create.required") : t("request.create.optional")})
+      </Typography>
+    </>
+  );
 }
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
@@ -150,8 +167,13 @@ export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormP
         activeStep={step}
         maxUnlocked={unlocked}
         onStep={goToStep}
+        progressLabel={t("request.create.stepProgress", {
+          current: step + 1,
+          total: STEP_KEYS.length,
+        })}
       />
       <FormSplitLayout
+        hideSummaryOnMobile
         main={
           <AppCard>
             <Stack spacing={2}>
@@ -162,7 +184,7 @@ export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormP
                     {t("request.create.needHint")}
                   </Typography>
                   <TextField
-                    label={t("request.create.title")}
+                    label={fieldLabel(t("request.create.title"), true)}
                     value={values.title}
                     onChange={(event) => patch({ title: event.target.value })}
                     required
@@ -178,6 +200,9 @@ export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormP
               {step === 1 ? (
                 <>
                   <Typography variant="h6">{t("request.create.step.type")}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {t("request.create.required")}
+                  </Typography>
                   <RequestKindSelector
                     value={values.requestType}
                     disabled={submitting}
@@ -190,8 +215,11 @@ export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormP
               {step === 2 ? (
                 <>
                   <Typography variant="h6">{t("request.create.step.describe")}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("request.create.describeHint")}
+                  </Typography>
                   <TextField
-                    label={t("request.create.description")}
+                    label={fieldLabel(t("request.create.description"), false)}
                     value={values.description}
                     onChange={(event) => patch({ description: event.target.value })}
                     fullWidth
@@ -210,6 +238,8 @@ export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormP
                         onChange={(serviceId) => patch({ serviceId })}
                         error={errors.serviceId}
                         disabled={submitting}
+                        required
+                        label={fieldLabel(t("request.create.serviceSelect"), true)}
                       />
                     </Stack>
                   ) : null}
@@ -220,7 +250,7 @@ export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormP
                         {t("request.create.productHint")}
                       </Typography>
                       <TextField
-                        label={t("request.create.productId")}
+                        label={fieldLabel(t("request.create.productId"), false)}
                         value={values.productId}
                         onChange={(event) => patch({ productId: event.target.value })}
                         error={Boolean(errors.productId)}
@@ -245,7 +275,7 @@ export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormP
                   ) : null}
                   {showProduct ? (
                     <TextField
-                      label={t("request.create.productCategoryId")}
+                      label={fieldLabel(t("request.create.productCategoryId"), false)}
                       value={values.productCategoryId}
                       onChange={(event) => patch({ productCategoryId: event.target.value })}
                       error={Boolean(errors.productCategoryId) || Boolean(errors.productId)}
@@ -261,20 +291,24 @@ export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormP
               {step === 4 ? (
                 <>
                   <Typography variant="h6">{t("request.create.step.details")}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {t("request.create.detailsHint")}
+                  </Typography>
                   {showService ? (
                     <>
                       <TextField
-                        label={t("request.create.serviceQuantity")}
+                        label={fieldLabel(t("request.create.serviceQuantity"), true)}
                         value={values.serviceQuantity}
                         onChange={(event) => patch({ serviceQuantity: event.target.value })}
                         error={Boolean(errors.serviceQuantity)}
                         helperText={errors.serviceQuantity}
                         disabled={submitting}
+                        required
                         fullWidth
                         inputProps={{ inputMode: "decimal" }}
                       />
                       <TextField
-                        label={t("request.create.serviceLineDescription")}
+                        label={fieldLabel(t("request.create.serviceLineDescription"), false)}
                         value={values.serviceDescription}
                         onChange={(event) => patch({ serviceDescription: event.target.value })}
                         disabled={submitting}
@@ -285,24 +319,25 @@ export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormP
                   {showProduct ? (
                     <>
                       <TextField
-                        label={t("request.create.productQuantity")}
+                        label={fieldLabel(t("request.create.productQuantity"), true)}
                         value={values.productQuantity}
                         onChange={(event) => patch({ productQuantity: event.target.value })}
                         error={Boolean(errors.productQuantity)}
                         helperText={errors.productQuantity}
                         disabled={submitting}
+                        required
                         fullWidth
                         inputProps={{ inputMode: "decimal" }}
                       />
                       <TextField
-                        label={t("request.create.productUnit")}
+                        label={fieldLabel(t("request.create.productUnit"), false)}
                         value={values.productUnit}
                         onChange={(event) => patch({ productUnit: event.target.value })}
                         disabled={submitting}
                         fullWidth
                       />
                       <TextField
-                        label={t("request.create.productLineDescription")}
+                        label={fieldLabel(t("request.create.productLineDescription"), false)}
                         value={values.productDescription}
                         onChange={(event) => patch({ productDescription: event.target.value })}
                         disabled={submitting}
@@ -380,15 +415,26 @@ export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormP
                   zIndex: 1,
                 }}
               >
-                <Button
-                  type="button"
-                  variant="outlined"
-                  onClick={goBack}
-                  disabled={step === 0 || submitting}
-                  sx={{ minHeight: 48, width: { xs: "100%", sm: "auto" } }}
-                >
-                  {t("request.create.back")}
-                </Button>
+                {step === 0 ? (
+                  <Button
+                    component={RouterLink}
+                    to="/customer/requests"
+                    variant="outlined"
+                    sx={{ minHeight: 48, width: { xs: "100%", sm: "auto" } }}
+                  >
+                    {t("request.create.cancel")}
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    onClick={goBack}
+                    disabled={submitting}
+                    sx={{ minHeight: 48, width: { xs: "100%", sm: "auto" } }}
+                  >
+                    {t("request.create.back")}
+                  </Button>
+                )}
                 {step < lastStep ? (
                   <Button
                     type="submit"

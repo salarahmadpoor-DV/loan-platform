@@ -5,10 +5,16 @@ type FormSplitLayoutProps = {
   main: ReactNode;
   summary: ReactNode;
   wide?: boolean;
+  hideSummaryOnMobile?: boolean;
 };
 
 /** Desktop: form + sticky summary. Mobile: stacked, no overflow. */
-export function FormSplitLayout({ main, summary, wide = false }: FormSplitLayoutProps) {
+export function FormSplitLayout({
+  main,
+  summary,
+  wide = false,
+  hideSummaryOnMobile = false,
+}: FormSplitLayoutProps) {
   return (
     <Box
       sx={{
@@ -22,12 +28,14 @@ export function FormSplitLayout({ main, summary, wide = false }: FormSplitLayout
         maxWidth: { md: wide ? "100%" : 1080 },
         width: "100%",
         minWidth: 0,
+        mx: "auto",
       }}
     >
       <Box sx={{ minWidth: 0 }}>{main}</Box>
       <Box
         sx={{
           minWidth: 0,
+          display: hideSummaryOnMobile ? { xs: "none", md: "block" } : "block",
           position: { md: "sticky" },
           top: { md: 80 },
         }}

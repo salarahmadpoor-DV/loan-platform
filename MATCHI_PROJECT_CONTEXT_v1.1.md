@@ -1020,7 +1020,7 @@ Customer is no longer added when role claims are missing. Switcher and `RequireW
 
 **Status:** COMPLETE (frontend only). No backend, DB, API contract, or Task 11.4 work.
 
-Customer create request (`/customer/requests/create`) is a six-step **presentation** flow: need, type (Service / Product / Hybrid), describe, location (copy only; category id remains the existing product-line field), additional details, review. Desktop uses form + sticky summary (`FormSplitLayout`). Mobile stacks vertically with a sticky Continue / Submit control. Validation rules in `createRequestForm.ts` are unchanged; step errors are a subset of the same client checks. Submit remains one `POST /api/requests`.
+Customer create request (`/customer/requests/create`) is a six-step **presentation** flow: need, type (Service / Product / Hybrid), describe, location (copy only; category id remains the existing product-line field), additional details, review. Desktop uses form + sticky summary (`FormSplitLayout`). Mobile uses a compact progress indicator, hides the side summary, and keeps a sticky Continue / Submit control. Required/optional labels sit on fields. Kind is selected with outlined cards. After a successful POST the page shows an in-place success card (view request, view matches, create another). Validation rules in `createRequestForm.ts` are unchanged; step errors are a subset of the same client checks. Submit remains one `POST /api/requests`.
 
 Provider create proposal (`/provider/requests/:requestId/proposal`) keeps Task 11.3 contracts (`POST /api/requests/{id}/proposals`, `GET /api/providers/me/services|products`). The form highlights selected catalog lines, quantity × unit price, item totals, then Subtotal / Delivery fee / Total. Schedule, expiration, and message stay optional fields already on the body. Item type still follows inbox `requestType` (Service-only, Product-only, or Hybrid both).
 
@@ -1107,6 +1107,7 @@ Dashboard uses live `GET /api/provider/requests|proposals|deals|executions` and 
 | Visual foundation (frontend) | Vazirmatn + responsive shells. Backend/DB unchanged. |
 | JWT workspace mapping (frontend) | `npm run typecheck` / `npm run build` succeeded. Backend JWT claim type unchanged. Live OTP matrix not run. |
 | Marketplace create-request / create-proposal UX | `npm run typecheck` / `npm run build` succeeded. Backend/DB/API unchanged. No Task 11.4. No live browser/API test. |
+| Customer create-request flow polish | In-place success, compact mobile stepper, required/optional labels. Backend/DB/API unchanged. |
 | Customer journey presentation (proposal/deal/execution/review) | `npm run typecheck` / `npm run build` succeeded. Backend/DB/API unchanged. No Task 11.4. No live browser/API test. |
 | Provider workspace presentation | `npm run typecheck` / `npm run build` succeeded. Backend/DB/API unchanged. No Task 11.4. No live browser/API test. |
 

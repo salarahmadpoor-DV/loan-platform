@@ -160,6 +160,7 @@ export const faIR: Record<MessageKey, string> = {
   "request.status.Cancelled": "لغو شده",
   "request.card.view": "مشاهده جزئیات",
   "request.card.viewMatches": "مشاهده تطبیق‌ها",
+  "request.card.viewProposals": "مشاهده پیشنهادها",
   "request.card.counts": "{services} خدمت · {products} کالا",
   "request.card.created": "ایجاد شده در {date}",
   "request.card.id": "درخواست #{id}",
@@ -203,7 +204,11 @@ export const faIR: Record<MessageKey, string> = {
   "dashboard.goToRequests": "رفتن به درخواست‌ها",
   "dashboard.next": "گام‌های بعدی",
   "dashboard.nextTitle": "تطبیق، پیشنهاد و معامله",
-  "dashboard.nextBody": "بازخورد، پرداخت و گفتگو هنوز در این فضای کاری مشتری نیستند.",
+  "dashboard.nextBody":
+    "درخواست باز را باز کنید، تطبیق‌ها را ببینید، پیشنهادهای ارائه‌دهنده یا کسب‌وکار را مقایسه کنید و با پذیرش، معامله بسازید.",
+  "dashboard.nextMatching": "مشاهده تطبیق‌ها",
+  "dashboard.nextProposals": "بررسی پیشنهادها",
+  "dashboard.nextDeals": "مشاهده معاملات",
   "dashboard.loading": "در حال بارگذاری خلاصه درخواست‌ها",
   "request.create.pageTitle": "ثبت درخواست",
   "request.create.pageDescription":
@@ -311,11 +316,14 @@ export const faIR: Record<MessageKey, string> = {
   "journey.notApplicable": "موضوعیت ندارد",
   "proposal.list.title": "پیشنهادها",
   "proposal.list.description":
-    "پیشنهادهای ارائه‌دهنده یا کسب‌وکار را مقایسه کنید. هویت همان نوع طرف و شناسه در API است.",
+    "پیشنهادهای ارائه‌دهنده یا کسب‌وکار را بررسی و مقایسه کنید و با پذیرش یکی معامله بسازید. رد کردن معامله نمی‌سازد.",
   "proposal.list.loading": "در حال بارگذاری پیشنهادها",
   "proposal.list.emptyTitle": "هنوز پیشنهادی نیست",
   "proposal.list.emptyBody": "وقتی ارائه‌دهنده یا کسب‌وکار پیشنهاد بدهد، اینجا دیده می‌شود.",
   "proposal.list.retry": "تلاش دوباره",
+  "proposal.review.title": "بررسی پیشنهادها",
+  "proposal.review.body":
+    "هر کارت فهرست زنده به‌علاوه جزئیات (اقلام، زمان، پیام) است. پذیرش معامله می‌سازد. رد فقط همان پیشنهاد را تغییر می‌دهد.",
   "proposal.invalidLink": "این پیوند پیشنهاد معتبر نیست.",
   "proposal.party": "{type} #{id}",
   "proposal.price": "مبلغ",
@@ -329,6 +337,10 @@ export const faIR: Record<MessageKey, string> = {
   "proposal.view": "جزئیات پیشنهاد",
   "proposal.accept": "پذیرش پیشنهاد",
   "proposal.accepting": "در حال پذیرش…",
+  "proposal.reject": "رد پیشنهاد",
+  "proposal.rejecting": "در حال رد…",
+  "proposal.rejectSuccess": "پیشنهاد رد شد. معامله‌ای ساخته نشد.",
+  "proposal.backToRequest": "بازگشت به درخواست",
   "proposal.status.Pending": "در انتظار",
   "proposal.status.Accepted": "پذیرفته‌شده",
   "proposal.status.Rejected": "ردشده",
@@ -649,5 +661,5 @@ export const faIR: Record<MessageKey, string> = {
     "این پوسته برای کاربری است که دست‌کم یک کسب‌وکار با OwnerUserId دارد. عضویت BusinessProvider مالکیت نیست و ثبت‌نام جداگانه هم نیست.",
   "business.dashboard.emptyTitle": "فعالیتی نیست",
   "business.dashboard.emptyBody":
-    "کاتالوگ، اعضا و اجراهای این فضا در این کار ساخته نشده‌اند.",
+    "کاتالوگ، اعضا، اجرا و صندوق درخواست کسب‌وکار هنوز در این فضا نیست. مالک کسب‌وکار با POST /api/requests/{id}/proposals و proposerType Business پیشنهاد می‌دهد. فهرست بازار کسب‌وکار در API نیست.",
 };

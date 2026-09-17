@@ -18,6 +18,7 @@ import {
 } from "../api/requestTypes";
 import { RequestStatusChip } from "../components/RequestStatusChip";
 import { useRequest } from "../hooks/useRequest";
+import { useRequestProposals } from "../../proposals/hooks/useRequestProposals";
 import {
   formatRequestDateTime,
   isRequestOpen,
@@ -81,6 +82,7 @@ export function RequestDetailPage() {
 function RequestDetailBody({ request }: { request: RequestDto }) {
   const places = locationLines(request);
   const open = isRequestOpen(request.status);
+  const proposalsQuery = useRequestProposals(request.id);
 
   return (
     <Stack spacing={2}>
@@ -89,6 +91,10 @@ function RequestDetailBody({ request }: { request: RequestDto }) {
           current: "request",
           requestId: request.id,
           requestExists: true,
+          proposalsLoaded: Boolean(proposalsQuery.data) && !proposalsQuery.isError,
+          hasProposals: (proposalsQuery.data?.length ?? 0) > 0,
+          proposalAccepted:
+            proposalsQuery.data?.some((item) => item.status.toLowerCase() === "accepted") ?? false,
         })}
       />
       <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} useFlexGap>
@@ -99,8 +105,8 @@ function RequestDetailBody({ request }: { request: RequestDto }) {
         </Typography>
       </Stack>
 
-      {open ? (
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+        {open ? (
           <Button
             component={RouterLink}
             to={`/customer/requests/${request.id}/matches`}
@@ -109,16 +115,16 @@ function RequestDetailBody({ request }: { request: RequestDto }) {
           >
             {t("request.detail.viewMatches")}
           </Button>
-          <Button
-            component={RouterLink}
-            to={`/customer/requests/${request.id}/proposals`}
-            variant="outlined"
-            sx={{ minHeight: 48 }}
-          >
-            {t("request.detail.viewProposals")}
-          </Button>
-        </Stack>
-      ) : null}
+        ) : null}
+        <Button
+          component={RouterLink}
+          to={`/customer/requests/${request.id}/proposals`}
+          variant={open ? "outlined" : "contained"}
+          sx={{ minHeight: 48 }}
+        >
+          {t("request.detail.viewProposals")}
+        </Button>
+      </Stack>
 
       <AppCard>
         <Typography variant="subtitle2" color="text.secondary">

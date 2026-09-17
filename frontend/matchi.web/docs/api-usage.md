@@ -46,6 +46,10 @@ Many GETs are **customer-owned** even if the URL looks generic:
 | `GET /api/businesses/me` | `BUSINESS_VIEW` — businesses owned by this user (`OwnerUserId`) |
 | `GET /api/deals/{id}/executions` | customer, proposal party, or assigned provider |
 | `POST /api/requests/{id}/proposals` | Provider or Business **owner** (not membership). Provider UI sends `proposerType: "Provider"` only. |
+| `GET /api/requests/{id}/proposals` | request owner — list for customer review |
+| `GET /api/proposals/{id}` | request owner — detail (items, message, schedule) |
+| `POST /api/proposals/{id}/accept` | request owner — Pending + Request Open; creates Deal |
+| `POST /api/proposals/{id}/reject` | request owner — Pending only; no Deal |
 | `GET /api/providers/me/services` | `PROVIDER_VIEW` — current Provider service links |
 | `GET /api/providers/me/products` | `PROVIDER_VIEW` — current Provider product links |
 | `POST /api/deals/{id}/reviews` | deal customer |

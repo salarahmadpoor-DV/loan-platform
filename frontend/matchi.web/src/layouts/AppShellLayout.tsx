@@ -42,7 +42,6 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
   const { logout } = useAuth();
   const { workspaces: availableWorkspaces } = useWorkspaceAccess();
   const items = workspaceNav[workspace];
-  const drawerAnchor = theme.direction === "rtl" ? "right" : "left";
   const menuId = "workspace-nav";
   const locale = getLocale();
 
@@ -75,7 +74,7 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
               },
             }}
           >
-          <ListItemText
+            <ListItemText
               primary={t(item.labelKey)}
               primaryTypographyProps={{ variant: "body2", fontWeight: 600 }}
             />
@@ -86,13 +85,7 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
   );
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        minHeight: "100vh",
-        minWidth: 0,
-      }}
-    >
+    <Box sx={{ minHeight: "100vh", minWidth: 0, width: "100%" }}>
       <AppBar
         position="fixed"
         elevation={0}
@@ -112,42 +105,47 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
       >
         <Toolbar
           sx={{
-            gap: 1,
+            display: "grid",
+            gridTemplateColumns: "auto minmax(0, 1fr) auto",
+            columnGap: { xs: 1, sm: 2 },
+            alignItems: "center",
             px: { xs: 1, sm: 2 },
             minHeight: APP_BAR_HEIGHT,
-            flexWrap: "nowrap",
+            width: "100%",
           }}
         >
-          {!isDesktop ? (
-            <IconButton
-              color="inherit"
-              aria-label={t("nav.openMenu")}
-              aria-expanded={mobileOpen}
-              aria-controls={menuId}
-              onClick={() => setMobileOpen(true)}
-            >
-              <Typography component="span" fontWeight={700} aria-hidden>
-                ≡
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+            {!isDesktop ? (
+              <IconButton
+                color="inherit"
+                aria-label={t("nav.openMenu")}
+                aria-expanded={mobileOpen}
+                aria-controls={menuId}
+                onClick={() => setMobileOpen(true)}
+              >
+                <Typography component="span" fontWeight={700} aria-hidden>
+                  ≡
+                </Typography>
+              </IconButton>
+            ) : null}
+            <Stack spacing={0} sx={{ minWidth: 0 }}>
+              <Typography variant="subtitle1" component="p" noWrap>
+                {t("app.name")}
               </Typography>
-            </IconButton>
-          ) : null}
-          <Stack spacing={0} sx={{ flexGrow: { xs: 1, md: 0 }, minWidth: 0, flexShrink: 1 }}>
-            <Typography variant="subtitle1" component="p" noWrap>
-              {t("app.name")}
-            </Typography>
-            <Typography
-              variant="caption"
-              color={workspace === "provider" ? "secondary.main" : "text.secondary"}
-              noWrap
-            >
-              {t("workspace.shell", { name: t(workspaceLabelKey[workspace]) })}
-            </Typography>
+              <Typography
+                variant="caption"
+                color={workspace === "provider" ? "secondary.main" : "text.secondary"}
+                noWrap
+              >
+                {t("workspace.shell", { name: t(workspaceLabelKey[workspace]) })}
+              </Typography>
+            </Stack>
           </Stack>
           {isDesktop ? (
             <Stack
               direction="row"
               spacing={0.5}
-              sx={{ flexGrow: 1, minWidth: 0, flexWrap: "nowrap", overflow: "hidden" }}
+              sx={{ minWidth: 0, justifyContent: "flex-start", flexWrap: "nowrap", overflow: "hidden" }}
             >
               {availableWorkspaces.map((ws) => (
                 <Button
@@ -161,115 +159,138 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
                 </Button>
               ))}
             </Stack>
-          ) : null}
-          <Button
-            color="inherit"
-            onClick={() => changeAppLocale(locale === "fa-IR" ? "en-US" : "fa-IR")}
-            sx={{ flexShrink: 0 }}
-            aria-label={t("locale.switch")}
-          >
-            {locale === "fa-IR" ? t("locale.en") : t("locale.fa")}
-          </Button>
-          <Button color="inherit" onClick={() => logout()} sx={{ flexShrink: 0 }}>
-            {t("auth.signOut")}
-          </Button>
+          ) : (
+            <Box />
+          )}
+          <Stack direction="row" spacing={1} sx={{ alignItems: "center", justifyContent: "flex-end" }}>
+            <Button
+              color="inherit"
+              onClick={() => changeAppLocale(locale === "fa-IR" ? "en-US" : "fa-IR")}
+              sx={{ flexShrink: 0 }}
+              aria-label={t("locale.switch")}
+            >
+              {locale === "fa-IR" ? t("locale.en") : t("locale.fa")}
+            </Button>
+            <Button color="inherit" onClick={() => logout()} sx={{ flexShrink: 0 }}>
+              {t("auth.signOut")}
+            </Button>
+          </Stack>
         </Toolbar>
       </AppBar>
+
+      {!isDesktop ? (
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          anchor="left"
+          onClose={() => setMobileOpen(false)}
+          ModalProps={{ keepMounted: true }}
+          sx={{
+            "& .MuiDrawer-paper": {
+              width: { xs: "min(100%, 300px)", sm: DRAWER_WIDTH },
+              boxSizing: "border-box",
+            },
+          }}
+        >
+          <Box id={menuId}>{drawer}</Box>
+        </Drawer>
+      ) : null}
+
       <Box
-        component="nav"
-        aria-label={t("workspace.shell", { name: t(workspaceLabelKey[workspace]) })}
-        sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "minmax(0, 1fr)",
+            md: `${DRAWER_WIDTH}px minmax(0, 1fr)`,
+          },
+          width: "100%",
+          minWidth: 0,
+          minHeight: "100vh",
+          boxSizing: "border-box",
+          pt: `${APP_BAR_HEIGHT}px`,
+        }}
       >
         {isDesktop ? (
-          <Drawer
-            variant="permanent"
-            open
-            anchor={drawerAnchor}
+          <Box
+            component="nav"
+            aria-label={t("workspace.shell", { name: t(workspaceLabelKey[workspace]) })}
             sx={{
-              "& .MuiDrawer-paper": {
-                width: DRAWER_WIDTH,
-                boxSizing: "border-box",
-                top: APP_BAR_HEIGHT,
-                height: `calc(100% - ${APP_BAR_HEIGHT}px)`,
-                borderColor: "divider",
-              },
+              minWidth: 0,
+              borderInlineEnd: 1,
+              borderColor: "divider",
+              bgcolor: "background.paper",
+              position: "sticky",
+              top: APP_BAR_HEIGHT,
+              alignSelf: "start",
+              height: `calc(100vh - ${APP_BAR_HEIGHT}px)`,
+              overflowY: "auto",
             }}
           >
             {drawer}
-          </Drawer>
-        ) : (
-          <Drawer
-            variant="temporary"
-            open={mobileOpen}
-            anchor={drawerAnchor}
-            onClose={() => setMobileOpen(false)}
-            ModalProps={{ keepMounted: true }}
-            sx={{
-              "& .MuiDrawer-paper": { width: { xs: "min(100%, 300px)", sm: DRAWER_WIDTH }, boxSizing: "border-box" },
-            }}
-          >
-            <Box id={menuId}>{drawer}</Box>
-          </Drawer>
-        )}
-      </Box>
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          minWidth: 0,
-          p: { xs: 1.5, sm: 2.5, md: 3 },
-          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
-          mt: `${APP_BAR_HEIGHT}px`,
-        }}
-      >
-        <PageContainer>
-          {!isDesktop ? (
-            <Stack spacing={1} sx={{ mb: 2 }}>
-              <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} useFlexGap>
-                {availableWorkspaces.map((ws) => (
-                  <Button
-                    key={ws}
-                    size="small"
-                    variant={ws === workspace ? "contained" : "outlined"}
-                    onClick={() => navigate(workspaceHome[ws])}
-                    sx={{ flex: { xs: "1 1 calc(50% - 8px)", sm: "0 1 auto" }, minHeight: 40 }}
-                  >
-                    {t(workspaceLabelKey[ws])}
-                  </Button>
-                ))}
+          </Box>
+        ) : null}
+
+        <Box
+          component="main"
+          sx={{
+            minWidth: 0,
+            width: "100%",
+            maxWidth: "100%",
+            p: { xs: 1.5, sm: 2.5, md: 3 },
+            boxSizing: "border-box",
+          }}
+        >
+          <PageContainer>
+            {!isDesktop ? (
+              <Stack spacing={1} sx={{ mb: 2 }}>
+                <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} useFlexGap>
+                  {availableWorkspaces.map((ws) => (
+                    <Button
+                      key={ws}
+                      size="small"
+                      variant={ws === workspace ? "contained" : "outlined"}
+                      onClick={() => navigate(workspaceHome[ws])}
+                      sx={{ flex: { xs: "1 1 calc(50% - 8px)", sm: "0 1 auto" }, minHeight: 40 }}
+                    >
+                      {t(workspaceLabelKey[ws])}
+                    </Button>
+                  ))}
+                </Stack>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  sx={{
+                    flexWrap: { xs: "nowrap", sm: "wrap" },
+                    overflowX: { xs: "auto", sm: "visible" },
+                    pb: { xs: 0.5, sm: 0 },
+                  }}
+                  useFlexGap
+                >
+                  {items.map((item) => (
+                    <Button
+                      key={item.to}
+                      component={NavLink}
+                      to={item.to}
+                      end={item.to === workspaceHome[workspace]}
+                      size="small"
+                      variant="outlined"
+                      sx={{
+                        flexShrink: 0,
+                        minHeight: 40,
+                        "&.active": { bgcolor: "action.selected", borderColor: "primary.main" },
+                      }}
+                    >
+                      {t(item.labelKey)}
+                    </Button>
+                  ))}
+                </Stack>
               </Stack>
-              <Stack
-                direction="row"
-                spacing={1}
-                sx={{
-                  flexWrap: { xs: "nowrap", sm: "wrap" },
-                  overflowX: { xs: "auto", sm: "visible" },
-                  pb: { xs: 0.5, sm: 0 },
-                }}
-                useFlexGap
-              >
-                {items.map((item) => (
-                  <Button
-                    key={item.to}
-                    component={NavLink}
-                    to={item.to}
-                    end={item.to === workspaceHome[workspace]}
-                    size="small"
-                    variant="outlined"
-                    sx={{
-                      flexShrink: 0,
-                      minHeight: 40,
-                      "&.active": { bgcolor: "action.selected", borderColor: "primary.main" },
-                    }}
-                  >
-                    {t(item.labelKey)}
-                  </Button>
-                ))}
-              </Stack>
-            </Stack>
-          ) : null}
-          <Outlet />
-        </PageContainer>
+            ) : null}
+            <Box sx={{ minWidth: 0 }}>
+              <Outlet />
+            </Box>
+          </PageContainer>
+        </Box>
       </Box>
     </Box>
   );

@@ -162,6 +162,7 @@ export const enUS: Record<MessageKey, string> = {
   "request.status.Cancelled": "Cancelled",
   "request.card.view": "View details",
   "request.card.viewMatches": "View matches",
+  "request.card.viewProposals": "View proposals",
   "request.card.counts": "{services} service(s) · {products} product(s)",
   "request.card.created": "Created {date}",
   "request.card.id": "Request #{id}",
@@ -205,7 +206,11 @@ export const enUS: Record<MessageKey, string> = {
   "dashboard.goToRequests": "Go to requests",
   "dashboard.next": "Next steps",
   "dashboard.nextTitle": "Matching, proposals, and deals",
-  "dashboard.nextBody": "Reviews, payment, and chat are not in this customer workspace yet.",
+  "dashboard.nextBody":
+    "Open a request to view matches, review Provider or Business proposals, and accept one to create a deal.",
+  "dashboard.nextMatching": "View matches",
+  "dashboard.nextProposals": "Review proposals",
+  "dashboard.nextDeals": "View deals",
   "dashboard.loading": "Loading request summary",
   "request.create.pageTitle": "Create request",
   "request.create.pageDescription":
@@ -316,11 +321,14 @@ export const enUS: Record<MessageKey, string> = {
   "journey.notApplicable": "Not applicable",
   "proposal.list.title": "Proposals",
   "proposal.list.description":
-    "Compare Provider or Business proposals for this request. Identity is the party type and id from the API.",
+    "Review and compare Provider or Business proposals for this request, then accept one to create a deal. Reject does not create a deal.",
   "proposal.list.loading": "Loading proposals",
   "proposal.list.emptyTitle": "No proposals yet",
   "proposal.list.emptyBody": "When a Provider or Business submits a proposal, it will show up here.",
   "proposal.list.retry": "Try again",
+  "proposal.review.title": "Review proposals",
+  "proposal.review.body":
+    "Each card uses the live proposal list plus detail (items, schedule, message). Accept creates a Deal. Reject only changes that proposal.",
   "proposal.invalidLink": "This proposal link is not valid.",
   "proposal.party": "{type} #{id}",
   "proposal.price": "Price",
@@ -334,6 +342,10 @@ export const enUS: Record<MessageKey, string> = {
   "proposal.view": "Proposal details",
   "proposal.accept": "Accept proposal",
   "proposal.accepting": "Accepting…",
+  "proposal.reject": "Reject proposal",
+  "proposal.rejecting": "Rejecting…",
+  "proposal.rejectSuccess": "Proposal rejected. No deal was created.",
+  "proposal.backToRequest": "Back to request",
   "proposal.status.Pending": "Pending",
   "proposal.status.Accepted": "Accepted",
   "proposal.status.Rejected": "Rejected",
@@ -656,5 +668,5 @@ export const enUS: Record<MessageKey, string> = {
     "This shell is for users who own at least one Business (OwnerUserId). BusinessProvider membership is not ownership and is not a separate registration.",
   "business.dashboard.emptyTitle": "No activity yet",
   "business.dashboard.emptyBody":
-    "Catalog, members, and executions for this workspace are not built in this task.",
+    "Catalog, members, executions, and a Business request inbox are not in this workspace yet. A Business owner proposes with POST /api/requests/{id}/proposals (proposerType Business). There is no Business marketplace list API.",
 };

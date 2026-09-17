@@ -33,8 +33,9 @@ shared/       api, auth, i18n, navigation, ui primitives, marketplace types
 OTP login
   → Customer dashboard
   → Create / list / detail Request (Service | Product | Hybrid)
-  → Matching (read-only)
-  → Proposals (list / detail / accept)
+  → Matching (read-only Provider/Business candidates)
+  → Proposals (review / compare / accept / reject)
+  → Deal list / detail
   → Deal list / detail
   → Execution + assignments (read-only)
   → Review (eligibility + XOR submit)
@@ -73,7 +74,7 @@ Reuse `shared/ui`: `AppCard`, `PageHeader`, `PageContainer`, `FormSplitLayout`, 
 
 Typography lives on the MUI theme (`app/theme.ts`): Vazirmatn (loaded in `index.html`), RTL `fa-IR`. Roles: `h1` display, `h2` section, `h3` subsection, `h4` page title (`PageHeader`), `body1`/`body2` body/secondary, `caption`, `button`.
 
-Layouts: `AppShellLayout` (Customer/Provider/Business) uses a permanent drawer from `md` up and a temporary drawer below; main content is capped (`lg` 1120px / `xl` 1280px). The shell shows the current workspace name; Provider uses a secondary accent on the caption and a thicker bottom border. `PublicLayout` has sticky `PublicHeader` + `PublicFooter`. Public header is a three-column CSS grid (brand | nav | actions) so Emotion RTL does not double-flip a flex row. Desktop/laptop (`md+`, including 900/1024/1280) stays one horizontal row; below `md` the existing drawer is used. Document `dir` + MUI `theme.direction` + Emotion `stylis-plugin-rtl` (not per-item `direction`). Locale toggle switches fa-IR RTL and en-US LTR. Login stays `sm`; public home is full-width sections with `lg` containers.
+Layouts: `AppShellLayout` (Customer/Provider/Business) uses a two-column CSS grid from `md` up (`sidebar | minmax(0, 1fr) main`) so `dir` places the sidebar on the inline-start edge (right in RTL, left in LTR) without a fixed Drawer `left`/`right` fight against `stylis-plugin-rtl`. Below `md` the existing temporary Drawer is used (`anchor="left"`; the RTL plugin maps it to the start edge). The workspace header is a three-column grid (identity | switcher | actions), same pattern as the public header. Main content is `min-width: 0` so forms/cards can shrink instead of clipping. Page content is capped (`lg` 1120px / `xl` 1280px). The shell shows the current workspace name; Provider uses a secondary accent on the caption and a thicker bottom border. `PublicLayout` has sticky `PublicHeader` + `PublicFooter`. Public header is a three-column CSS grid (brand | nav | actions) so Emotion RTL does not double-flip a flex row. Desktop/laptop (`md+`, including 900/1024/1280) stays one horizontal row; below `md` the existing drawer is used. Document `dir` + MUI `theme.direction` + Emotion `stylis-plugin-rtl` (not per-item `direction`). Locale toggle switches fa-IR RTL and en-US LTR. Login stays `sm`; public home is full-width sections with `lg` containers.
 
 ## Public homepage
 
@@ -85,7 +86,9 @@ Create request (`/customer/requests/create`) is a six-step presentation wizard (
 
 My Requests (`/customer/requests`) lists owner requests from `GET /api/requests/me`. Cards show title, kind, status (`Open` / `Cancelled`), id, description snippet, location summary when present, created date, and line counts. Detail (`GET /api/requests/{id}`) shows the same DTO plus schedule, line attributes, and a primary View matches action for Open requests (`/customer/requests/:id/matches`). No extra request fields are invented.
 
-Matches (`/customer/requests/:id/matches`) is read-only. Context comes from `GET /api/requests/{id}`. Results come from `GET /api/requests/{id}/matches` (`candidateType`, `candidateId`, `displayName`, `score`, `rank`). Count is the array length. Cancelled requests do not call matches.
+Matches (`/customer/requests/:id/matches`) is read-only. Context comes from `GET /api/requests/{id}`. Results come from `GET /api/requests/{id}/matches` (`candidateType`, `candidateId`, `displayName`, `score`, `rank`). Count is the array length. Cancelled requests do not call matches. Open requests (and any request that already has proposals) link to `/customer/requests/:id/proposals`.
+
+Customer proposal review (`/customer/requests/:requestId/proposals`) lists `GET /api/requests/{id}/proposals` and hydrates items/schedule/message from `GET /api/proposals/{id}`. Compare columns appear when there are two or more proposals. Accept is `POST /api/proposals/{id}/accept` (creates Deal). Reject is `POST /api/proposals/{id}/reject` (no Deal). Sibling Pending proposals are not auto-rejected. Party labels are `{Provider|Business} #{id}` (no display name on the DTO). Provider create-proposal remains `POST /api/requests/{id}/proposals` with `proposerType: "Provider"`. Business owner create uses the same POST with `proposerType: "Business"`; there is no Business inbox GET, so the Business shell does not add a fake marketplace.
 
 Provider marketplace (`/provider/requests`, alias `/provider/marketplace`) lists `GET /api/provider/requests` (`ProviderRequestInboxItemDto`). Detail (`/provider/requests/:requestId`) reads that list from the query cache; there is no provider `GET /api/requests/{id}`. Open requests can open Create Proposal (`POST /api/requests/{id}/proposals` as `proposerType: "Provider"`). Cards show only inbox fields. Customer identity and street address are not on the contract.
 

@@ -11,6 +11,7 @@ import { StatusChip } from "../../../../shared/ui/StatusChip";
 import { formatDateTime } from "../../../customer/proposals/model/proposalDisplay";
 import { requestKindLabel } from "../../../customer/requests/api/requestTypes";
 import { RequestStatusChip } from "../../../customer/requests/components/RequestStatusChip";
+import { isRequestOpen } from "../../../customer/requests/model/requestPresentation";
 import { useProviderInboxItem } from "../hooks/useProviderInboxItem";
 import { inboxHeading, inboxLocationLines } from "../model/inboxDisplay";
 import type { ProviderRequestInboxItem } from "../api/providerRequestTypes";
@@ -141,6 +142,18 @@ function ProviderRequestDetailBody({ item }: { item: ProviderRequestInboxItem })
       <Typography variant="caption" color="text.secondary">
         {t("request.detail.created", { date: formatDateTime(item.createdDate) })}
       </Typography>
+
+      {isRequestOpen(item.status) ? (
+        <Button
+          component={RouterLink}
+          to={`/provider/requests/${item.requestId}/proposal`}
+          state={{ inboxItem: item }}
+          variant="contained"
+          sx={{ alignSelf: "flex-start", minHeight: 48 }}
+        >
+          {t("provider.proposalCreate.create")}
+        </Button>
+      ) : null}
 
       <Button
         component={RouterLink}

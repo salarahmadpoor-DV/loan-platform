@@ -48,7 +48,7 @@ JWT role `PROVIDER` or `ADMIN`. Permission claims are not used. Users without th
 
 Nav: داشبورد / بازار / پیشنهادهای من / معاملات / اجراها / پروفایل.
 
-Marketplace cards open `/provider/requests/:requestId` (inbox DTO only). Do not call owner `GET /api/requests/{id}`. The create-proposal route remains but is not the marketplace primary action.
+Marketplace cards open `/provider/requests/:requestId` (inbox DTO only). Open requests can continue to `/provider/requests/:requestId/proposal` (`POST /api/requests/{id}/proposals`). Do not call owner `GET /api/requests/{id}`.
 
 ## Business (`RequireWorkspace(business)` + `BusinessLayout`)
 

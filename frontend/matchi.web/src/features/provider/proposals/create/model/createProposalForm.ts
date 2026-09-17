@@ -1,4 +1,5 @@
 import { t } from "../../../../../shared/i18n";
+import { ApiError } from "../../../../../shared/api/errors";
 import type {
   CreateProviderProposalBody,
   CreateProviderProposalItemBody,
@@ -220,8 +221,8 @@ export function validateCreateProposalForm(
 
 export function toCreateProposalBody(values: CreateProposalFormValues): CreateProviderProposalBody {
   const items: CreateProviderProposalItemBody[] = values.items.map((item, index) => {
-    const quantity = parsePositive(item.quantity) ?? 0;
-    const unitPrice = parseNonNegative(item.unitPrice) ?? 0;
+    const quantity = roundDecimal(parsePositive(item.quantity) ?? 0, 3);
+    const unitPrice = roundDecimal(parseNonNegative(item.unitPrice) ?? 0, 2);
     const description = item.description.trim() || null;
     if (item.itemType === "Service") {
       return {
@@ -231,7 +232,7 @@ export function toCreateProposalBody(values: CreateProposalFormValues): CreatePr
         description,
         quantity,
         unitPrice,
-        totalPrice: quantity * unitPrice,
+        totalPrice: roundDecimal(quantity * unitPrice, 2),
         displayOrder: index,
       };
     }
@@ -242,7 +243,7 @@ export function toCreateProposalBody(values: CreateProposalFormValues): CreatePr
       description,
       quantity,
       unitPrice,
-      totalPrice: quantity * unitPrice,
+        totalPrice: roundDecimal(quantity * unitPrice, 2),
       displayOrder: index,
     };
   });
@@ -257,8 +258,8 @@ export function toCreateProposalBody(values: CreateProposalFormValues): CreatePr
 
   return {
     proposerType: "Provider",
-    totalPrice: parseNonNegative(values.totalPrice) ?? 0,
-    deliveryFee: parseNonNegative(values.deliveryFee) ?? 0,
+    totalPrice: roundDecimal(parseNonNegative(values.totalPrice) ?? 0, 2),
+    deliveryFee: roundDecimal(parseNonNegative(values.deliveryFee) ?? 0, 2),
     ...(message ? { message } : {}),
     ...(proposedDate ? { proposedDate } : {}),
     ...(proposedTimeFrom ? { proposedTimeFrom } : {}),
@@ -267,3 +268,38 @@ export function toCreateProposalBody(values: CreateProposalFormValues): CreatePr
     items,
   };
 }
+
+/** Matches backend HasPrecision: prices 18,2; item quantity 18,3. */
+export function roundDecimal(value: number, scale: number): number {
+  const factor = 10 ** scale;
+  return Math.round(value * factor) / factor;
+}
+
+export function mapProposalApiFieldErrors(error: unknown): CreateProposalFieldErrors {
+  if (!(error instanceof ApiError) || !error.fieldErrors) {
+    return {};
+  }
+  const mapped: CreateProposalFieldErrors = {};
+  for (const [rawKey, messages] of Object.entries(error.fieldErrors)) {
+    const message = messages.find((item) => item.length > 0);
+    if (!message) {
+      continue;
+    }
+    mapped[normalizeProposalErrorKey(rawKey)] = message;
+  }
+  return mapped;
+}
+
+function normalizeProposalErrorKey(rawKey: string): string {
+  const withIndexes = rawKey.replace(/\[(\d+)\]/g, ".$1");
+  return withIndexes
+    .split(".")
+    .map((segment) => {
+      if (/^\d+$/.test(segment)) {
+        return segment;
+      }
+      return segment.charAt(0).toLowerCase() + segment.slice(1);
+    })
+    .join(".");
+}
+

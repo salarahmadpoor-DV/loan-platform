@@ -41,6 +41,8 @@ type CreateProposalFormProps = {
   servicesFailed: boolean;
   productsFailed: boolean;
   submitting: boolean;
+  disabled?: boolean;
+  serverErrors?: CreateProposalFieldErrors;
   onSubmit: (body: CreateProviderProposalBody) => void;
 };
 
@@ -82,6 +84,8 @@ export function CreateProposalForm({
   servicesFailed,
   productsFailed,
   submitting,
+  disabled = false,
+  serverErrors,
   onSubmit,
 }: CreateProposalFormProps) {
   const [values, setValues] = useState<CreateProposalFormValues>(() =>
@@ -93,6 +97,8 @@ export function CreateProposalForm({
   const allowed = allowedItemTypes(requestType);
   const subtotal = useMemo(() => itemsSubtotal(values), [values]);
   const computedTotal = useMemo(() => suggestedProposalTotal(values), [values]);
+  const locked = submitting || disabled;
+  const shownErrors = { ...serverErrors, ...errors };
 
   useEffect(() => {
     setValues((current) => ({
@@ -174,7 +180,7 @@ export function CreateProposalForm({
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (submitting) {
+    if (locked) {
       return;
     }
     const nextErrors = validateCreateProposalForm(values, requestType);
@@ -190,7 +196,8 @@ export function CreateProposalForm({
       type="submit"
       variant="contained"
       size="large"
-      disabled={submitting}
+      disabled={locked}
+      aria-live="polite"
       sx={{ minHeight: 48, width: "100%" }}
     >
       {submitting ? t("provider.proposalCreate.submitting") : t("provider.proposalCreate.submit")}
@@ -214,9 +221,9 @@ export function CreateProposalForm({
                   total: formatMoney(itemLineTotal(item)),
                 })}
               </Typography>
-              {errors[`items.${index}.quantity`] || errors[`items.${index}.unitPrice`] ? (
+              {shownErrors[`items.${index}.quantity`] || shownErrors[`items.${index}.unitPrice`] ? (
                 <Typography color="error" variant="caption" role="alert">
-                  {errors[`items.${index}.quantity`] ?? errors[`items.${index}.unitPrice`]}
+                  {shownErrors[`items.${index}.quantity`] ?? shownErrors[`items.${index}.unitPrice`]}
                 </Typography>
               ) : null}
             </Stack>
@@ -229,9 +236,9 @@ export function CreateProposalForm({
           value={values.deliveryFee}
           onChange={(event) => patch({ deliveryFee: event.target.value })}
           fullWidth
-          error={Boolean(errors.deliveryFee)}
-          helperText={errors.deliveryFee}
-          disabled={submitting}
+          error={Boolean(shownErrors.deliveryFee)}
+          helperText={shownErrors.deliveryFee}
+          disabled={locked}
           inputProps={{ inputMode: "decimal" }}
         />
         <Divider />
@@ -246,9 +253,9 @@ export function CreateProposalForm({
           onChange={(event) => patch({ totalPrice: event.target.value })}
           required
           fullWidth
-          error={Boolean(errors.totalPrice)}
-          helperText={errors.totalPrice ?? t("provider.proposalCreate.totalHint")}
-          disabled={submitting}
+          error={Boolean(shownErrors.totalPrice)}
+          helperText={shownErrors.totalPrice ?? t("provider.proposalCreate.totalHint")}
+          disabled={locked}
           inputProps={{ inputMode: "decimal" }}
         />
         {values.proposedDate || values.proposedTimeFrom || values.expireAt ? (
@@ -271,14 +278,22 @@ export function CreateProposalForm({
   );
 
   return (
-    <Stack component="form" spacing={2} onSubmit={handleSubmit} noValidate sx={{ minWidth: 0 }}>
+    <Stack
+      component="form"
+      spacing={2}
+      onSubmit={handleSubmit}
+      noValidate
+      aria-busy={submitting}
+      sx={{ minWidth: 0 }}
+    >
       <FormSplitLayout
+        hideSummaryOnMobile
         main={
           <Stack spacing={2} sx={{ minWidth: 0 }}>
             <Typography variant="h6">{t("provider.proposalCreate.items")}</Typography>
-            {errors.items ? (
+            {shownErrors.items ? (
               <Typography color="error" variant="caption" role="alert">
-                {errors.items}
+                {shownErrors.items}
               </Typography>
             ) : null}
 
@@ -298,7 +313,7 @@ export function CreateProposalForm({
                       <Button
                         type="button"
                         color="inherit"
-                        disabled={submitting}
+                        disabled={locked}
                         onClick={() =>
                           patch({
                             items: values.items.filter((_, itemIndex) => itemIndex !== index),
@@ -319,10 +334,10 @@ export function CreateProposalForm({
                       onChange={(event) =>
                         handleItemType(index, event.target.value as ProposalItemType)
                       }
-                      disabled={submitting}
+                      disabled={locked}
                       fullWidth
-                      error={Boolean(errors[`items.${index}.itemType`])}
-                      helperText={errors[`items.${index}.itemType`]}
+                      error={Boolean(shownErrors[`items.${index}.itemType`])}
+                      helperText={shownErrors[`items.${index}.itemType`]}
                     >
                       {allowed.map((type) => (
                         <MenuItem key={type} value={type}>
@@ -347,8 +362,8 @@ export function CreateProposalForm({
                       options={serviceOptions}
                       loading={servicesLoading}
                       catalogFailed={servicesFailed}
-                      error={errors[`items.${index}.serviceId`]}
-                      disabled={submitting}
+                      error={shownErrors[`items.${index}.serviceId`]}
+                      disabled={locked}
                       onChange={(serviceId) => patchItem(index, { serviceId })}
                     />
                   ) : (
@@ -358,8 +373,8 @@ export function CreateProposalForm({
                       options={productOptions}
                       loading={productsLoading}
                       catalogFailed={productsFailed}
-                      error={errors[`items.${index}.productId`]}
-                      disabled={submitting}
+                      error={shownErrors[`items.${index}.productId`]}
+                      disabled={locked}
                       onChange={(productId) => handleProductSelect(index, productId)}
                     />
                   )}
@@ -376,9 +391,10 @@ export function CreateProposalForm({
                       label={t("provider.proposalCreate.quantity")}
                       value={item.quantity}
                       onChange={(event) => patchItem(index, { quantity: event.target.value })}
-                      error={Boolean(errors[`items.${index}.quantity`])}
-                      helperText={errors[`items.${index}.quantity`]}
-                      disabled={submitting}
+                      error={Boolean(shownErrors[`items.${index}.quantity`])}
+                      helperText={shownErrors[`items.${index}.quantity`]}
+                      disabled={locked}
+                      required
                       fullWidth
                       inputProps={{ inputMode: "decimal" }}
                     />
@@ -386,9 +402,9 @@ export function CreateProposalForm({
                       label={t("provider.proposalCreate.unitPrice")}
                       value={item.unitPrice}
                       onChange={(event) => patchItem(index, { unitPrice: event.target.value })}
-                      error={Boolean(errors[`items.${index}.unitPrice`])}
-                      helperText={errors[`items.${index}.unitPrice`]}
-                      disabled={submitting}
+                      error={Boolean(shownErrors[`items.${index}.unitPrice`])}
+                      helperText={shownErrors[`items.${index}.unitPrice`]}
+                      disabled={locked}
                       fullWidth
                       inputProps={{ inputMode: "decimal" }}
                     />
@@ -415,11 +431,11 @@ export function CreateProposalForm({
                     onChange={(event) =>
                       patchItem(index, { description: event.target.value.slice(0, 2000) })
                     }
-                    error={Boolean(errors[`items.${index}.description`])}
+                    error={Boolean(shownErrors[`items.${index}.description`])}
                     helperText={
-                      errors[`items.${index}.description`] ?? `${item.description.length}/2000`
+                      shownErrors[`items.${index}.description`] ?? `${item.description.length}/2000`
                     }
-                    disabled={submitting}
+                    disabled={locked}
                     fullWidth
                     multiline
                     minRows={2}
@@ -431,7 +447,7 @@ export function CreateProposalForm({
             <Button
               type="button"
               variant="outlined"
-              disabled={submitting}
+              disabled={locked}
               onClick={() => patch({ items: [...values.items, createEmptyItem(requestType)] })}
               sx={{ minHeight: 48, width: { xs: "100%", sm: "auto" }, alignSelf: { sm: "flex-start" } }}
             >
@@ -454,7 +470,7 @@ export function CreateProposalForm({
                     type="date"
                     value={values.proposedDate}
                     onChange={(event) => patch({ proposedDate: event.target.value })}
-                    disabled={submitting}
+                    disabled={locked}
                     fullWidth
                     InputLabelProps={{ shrink: true }}
                   />
@@ -463,9 +479,9 @@ export function CreateProposalForm({
                     type="datetime-local"
                     value={values.expireAt}
                     onChange={(event) => patch({ expireAt: event.target.value })}
-                    error={Boolean(errors.expireAt)}
-                    helperText={errors.expireAt}
-                    disabled={submitting}
+                    error={Boolean(shownErrors.expireAt)}
+                    helperText={shownErrors.expireAt}
+                    disabled={locked}
                     fullWidth
                     InputLabelProps={{ shrink: true }}
                   />
@@ -474,9 +490,9 @@ export function CreateProposalForm({
                     type="time"
                     value={values.proposedTimeFrom}
                     onChange={(event) => patch({ proposedTimeFrom: event.target.value })}
-                    error={Boolean(errors.proposedTimeFrom)}
-                    helperText={errors.proposedTimeFrom}
-                    disabled={submitting}
+                    error={Boolean(shownErrors.proposedTimeFrom)}
+                    helperText={shownErrors.proposedTimeFrom}
+                    disabled={locked}
                     fullWidth
                     InputLabelProps={{ shrink: true }}
                   />
@@ -485,9 +501,9 @@ export function CreateProposalForm({
                     type="time"
                     value={values.proposedTimeTo}
                     onChange={(event) => patch({ proposedTimeTo: event.target.value })}
-                    error={Boolean(errors.proposedTimeTo)}
-                    helperText={errors.proposedTimeTo}
-                    disabled={submitting}
+                    error={Boolean(shownErrors.proposedTimeTo)}
+                    helperText={shownErrors.proposedTimeTo}
+                    disabled={locked}
                     fullWidth
                     InputLabelProps={{ shrink: true }}
                   />
@@ -505,9 +521,9 @@ export function CreateProposalForm({
                   fullWidth
                   multiline
                   minRows={3}
-                  error={Boolean(errors.message)}
-                  helperText={errors.message ?? `${values.message.length}/2000`}
-                  disabled={submitting}
+                  error={Boolean(shownErrors.message)}
+                  helperText={shownErrors.message ?? `${values.message.length}/2000`}
+                  disabled={locked}
                 />
               </Stack>
             </AppCard>

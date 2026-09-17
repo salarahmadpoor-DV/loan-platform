@@ -965,7 +965,7 @@ Not used: `GET /api/requests/{id}`, `providerId`, `businessId`, customer proposa
 
 **Catalog limitation:** selectors require `PROVIDER_VIEW` on `/me/services` and `/me/products`. If those fail or are empty, numeric id fallback. Backend still checks offered/active catalog.
 
-**Success:** `{ proposalId }` shown; links to `/provider/requests` and `/provider/proposals`. No proposal-detail page.
+**Success:** `{ proposalId }` shown. Links: back to request, marketplace, `/provider/proposals`. No provider `GET /api/proposals/{id}` (that GET is request-owner). Form hidden when inbox status is not Open. Duplicate proposals are not rejected by the backend unique index.
 
 **Validation:** client mirrors FluentValidation ranges/XOR/from&lt;to/future expireAt; backend remains authoritative. Duplicate submit blocked while pending. 400/401/403/404/network via existing ErrorAlert.
 
@@ -1110,6 +1110,7 @@ Dashboard uses live `GET /api/provider/requests|proposals|deals|executions` and 
 | Customer My Requests / request detail polish | List + detail UX from live `RequestDto` only. Matches navigation for Open. Backend/DB/API unchanged. |
 | Customer matches workspace | Read-only `GET /api/requests/{id}/matches` cards from live `MatchResultDto`. Backend/DB/API unchanged. |
 | Provider marketplace workspace | Read-only `GET /api/provider/requests` list + detail from inbox DTO. Backend/DB/API unchanged. |
+| Provider proposal workflow | `POST /api/requests/{id}/proposals` from existing create form; Open-only CTA. Backend/DB/API unchanged. |
 | Customer journey presentation (proposal/deal/execution/review) | `npm run typecheck` / `npm run build` succeeded. Backend/DB/API unchanged. No Task 11.4. No live browser/API test. |
 | Provider workspace presentation | `npm run typecheck` / `npm run build` succeeded. Backend/DB/API unchanged. No Task 11.4. No live browser/API test. |
 

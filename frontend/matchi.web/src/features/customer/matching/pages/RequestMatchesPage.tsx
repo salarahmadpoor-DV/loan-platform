@@ -12,6 +12,7 @@ import { ResponsiveCardGrid } from "../../../../shared/ui/ResponsiveCardGrid";
 import { RequestContextCard } from "../../requests/components/RequestContextCard";
 import { useRequest } from "../../requests/hooks/useRequest";
 import { isRequestCancelled, isRequestOpen } from "../../requests/model/requestPresentation";
+import { useRequestProposals } from "../../proposals/hooks/useRequestProposals";
 import { MatchCard } from "../components/MatchCard";
 import { MatchCardSkeletonGrid } from "../components/MatchCardSkeletonGrid";
 import { MatchReasonList } from "../components/MatchReasonList";
@@ -31,6 +32,7 @@ export function RequestMatchesPage() {
   const requestQuery = useRequest(requestId);
   const cancelled = requestQuery.data ? isRequestCancelled(requestQuery.data.status) : false;
   const matchesQuery = useRequestMatches(requestId, requestQuery.isSuccess && !cancelled);
+  const proposalsQuery = useRequestProposals(requestId);
 
   if (requestId == null) {
     return (
@@ -67,6 +69,10 @@ export function RequestMatchesPage() {
           requestExists: Boolean(requestQuery.data),
           matchesLoaded: Boolean(matchesQuery.data) && !matchesQuery.isError,
           hasMatches: (matchesQuery.data?.length ?? 0) > 0,
+          proposalsLoaded: Boolean(proposalsQuery.data) && !proposalsQuery.isError,
+          hasProposals: (proposalsQuery.data?.length ?? 0) > 0,
+          proposalAccepted:
+            proposalsQuery.data?.some((item) => item.status.toLowerCase() === "accepted") ?? false,
         })}
       />
 
@@ -90,7 +96,7 @@ export function RequestMatchesPage() {
         </Box>
       ) : null}
 
-      {requestOpen ? (
+      {requestOpen || (proposalsQuery.data && proposalsQuery.data.length > 0) ? (
         <Button
           component={RouterLink}
           to={`/customer/requests/${requestId}/proposals`}

@@ -770,7 +770,7 @@ OTP login remains the existing HTTP contract (`POST /api/auth/send-otp`, `POST /
 - Routes (Customer workspace, `RequireAuth` + `RequireWorkspace(customer)`):
   - `/customer/requests/:requestId/proposals` — list
   - `/customer/proposals/:id` — detail + accept
-- **Endpoints used:** `GET /api/requests/{requestId}/proposals`, `GET /api/proposals/{proposalId}`, `POST /api/proposals/{proposalId}/accept`. Reject and create-proposal are **not** in this task. Deal GET screens are Task 9.7.
+- **Endpoints used:** `GET /api/requests/{requestId}/proposals`, `GET /api/proposals/{proposalId}`, `POST /api/proposals/{proposalId}/accept`, `POST /api/proposals/{proposalId}/reject`. Provider create-proposal is `POST /api/requests/{id}/proposals`. Deal GET screens are Task 9.7.
 - **List DTO (live):** `id`, `requestId`, `proposerType`, `proposerId`, `totalPrice`, `deliveryFee`, `status`, `expireAt`, `createDate`. There is **no** party display name and **no** `message` on the list. The UI shows `{Provider|Business} #{proposerId}` and a “no message” hint; `message`, schedule, and items are on detail.
 - Party XOR is `Provider` or `Business` (`proposerType`). Items are `Service` or `Product` (Hybrid requests can have both). Accept is shown only for `Pending`. Success returns `{ proposalId, status, dealId }`. After accept, the UI links to `/customer/deals/{dealId}` (Task 9.7).
 - Query keys: `queryKeys.proposals.byRequest(id)`, `queryKeys.proposals.detail(id)`. Accept invalidates proposals, requests, and deals. fa-IR via `t()`.

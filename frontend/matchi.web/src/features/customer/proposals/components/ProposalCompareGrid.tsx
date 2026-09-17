@@ -1,4 +1,5 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import { t } from "../../../../shared/i18n";
 import { AppCard } from "../../../../shared/ui/AppCard";
 import { PriceSummary } from "../../../../shared/ui/PriceSummary";
@@ -10,6 +11,7 @@ import {
 } from "../model/proposalDisplay";
 import { AcceptProposalButton } from "./AcceptProposalButton";
 import { ProposalStatusChip } from "./ProposalStatusChip";
+import { RejectProposalButton } from "./RejectProposalButton";
 
 type ProposalCompareGridProps = {
   proposals: ProposalListItem[];
@@ -110,6 +112,15 @@ export function ProposalCompareGrid({
                 }
               />
               <AcceptProposalButton proposalId={proposal.id} status={proposal.status} fullWidth />
+              <RejectProposalButton proposalId={proposal.id} status={proposal.status} fullWidth />
+              <Button
+                component={RouterLink}
+                to={`/customer/proposals/${proposal.id}`}
+                variant="outlined"
+                sx={{ minHeight: 44, width: "100%" }}
+              >
+                {t("proposal.view")}
+              </Button>
             </Box>
           </AppCard>
         );

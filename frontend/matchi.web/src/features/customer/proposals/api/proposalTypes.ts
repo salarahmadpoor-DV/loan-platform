@@ -45,3 +45,8 @@ export type AcceptProposalResult = {
   status: string;
   dealId: number;
 };
+
+export type RejectProposalResult = {
+  proposalId: number;
+  status: string;
+};

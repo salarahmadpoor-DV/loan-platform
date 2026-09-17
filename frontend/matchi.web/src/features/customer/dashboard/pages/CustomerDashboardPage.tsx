@@ -11,12 +11,15 @@ import { PageHeader } from "../../../../shared/ui/PageHeader";
 import { StatusChip } from "../../../../shared/ui/StatusChip";
 import { isRequestKind, requestKindLabel } from "../../requests/api/requestTypes";
 import { useMyRequests } from "../../requests/hooks/useMyRequests";
+import { isRequestOpen } from "../../requests/model/requestPresentation";
 
 export function CustomerDashboardPage() {
   const { user } = useAuth();
   const { data, isPending, isError, error } = useMyRequests();
   const requests = data ?? [];
-  const openCount = requests.filter((item) => item.status.toLowerCase() === "open").length;
+  const openRequests = requests.filter((item) => isRequestOpen(item.status));
+  const openCount = openRequests.length;
+  const focusRequest = openRequests[0];
 
   return (
     <>
@@ -89,10 +92,51 @@ export function CustomerDashboardPage() {
       <Typography variant="subtitle1" sx={{ mt: 3, mb: 1 }}>
         {t("dashboard.next")}
       </Typography>
-      <EmptyState
-        title={t("dashboard.nextTitle")}
-        body={t("dashboard.nextBody")}
-      />
+      <AppCard>
+        <Typography variant="subtitle1">{t("dashboard.nextTitle")}</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          {t("dashboard.nextBody")}
+        </Typography>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 2, flexWrap: "wrap" }} useFlexGap>
+          {focusRequest ? (
+            <>
+              <Button
+                component={RouterLink}
+                to={`/customer/requests/${focusRequest.id}/matches`}
+                variant="contained"
+                sx={{ minHeight: 48 }}
+              >
+                {t("dashboard.nextMatching")}
+              </Button>
+              <Button
+                component={RouterLink}
+                to={`/customer/requests/${focusRequest.id}/proposals`}
+                variant="outlined"
+                sx={{ minHeight: 48 }}
+              >
+                {t("dashboard.nextProposals")}
+              </Button>
+            </>
+          ) : (
+            <Button
+              component={RouterLink}
+              to="/customer/requests/create"
+              variant="contained"
+              sx={{ minHeight: 48 }}
+            >
+              {t("request.list.create")}
+            </Button>
+          )}
+          <Button
+            component={RouterLink}
+            to="/customer/deals"
+            variant="outlined"
+            sx={{ minHeight: 48 }}
+          >
+            {t("dashboard.nextDeals")}
+          </Button>
+        </Stack>
+      </AppCard>
     </>
   );
 }

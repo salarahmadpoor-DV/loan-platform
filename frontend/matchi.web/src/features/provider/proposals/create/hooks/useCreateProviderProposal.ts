@@ -11,6 +11,7 @@ export function useCreateProviderProposal(requestId: number) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.provider.proposals() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.provider.requests() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.proposals.all });
     },
   });
 }

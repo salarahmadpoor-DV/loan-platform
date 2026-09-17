@@ -3,6 +3,7 @@ import type {
   AcceptProposalResult,
   ProposalDetail,
   ProposalListItem,
+  RejectProposalResult,
 } from "./proposalTypes";
 
 export function getRequestProposals(requestId: number): Promise<ProposalListItem[]> {
@@ -15,4 +16,8 @@ export function getProposalById(proposalId: number): Promise<ProposalDetail> {
 
 export function acceptProposal(proposalId: number): Promise<AcceptProposalResult> {
   return postJson<AcceptProposalResult>(`/api/proposals/${proposalId}/accept`);
+}
+
+export function rejectProposal(proposalId: number): Promise<RejectProposalResult> {
+  return postJson<RejectProposalResult>(`/api/proposals/${proposalId}/reject`);
 }

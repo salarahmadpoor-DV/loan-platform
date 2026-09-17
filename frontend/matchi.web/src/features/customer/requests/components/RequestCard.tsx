@@ -80,6 +80,7 @@ export function RequestCard({ request }: RequestCardProps) {
             {t("request.card.view")}
           </Button>
           {open ? (
+            <>
             <Button
               component={RouterLink}
               to={`/customer/requests/${request.id}/matches`}
@@ -88,6 +89,15 @@ export function RequestCard({ request }: RequestCardProps) {
             >
               {t("request.card.viewMatches")}
             </Button>
+            <Button
+              component={RouterLink}
+              to={`/customer/requests/${request.id}/proposals`}
+              variant="outlined"
+              sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}
+            >
+              {t("request.card.viewProposals")}
+            </Button>
+            </>
           ) : null}
         </Stack>
       </Stack>

@@ -11,6 +11,7 @@ import {
   proposerPartyLabel,
 } from "../model/proposalDisplay";
 import { AcceptProposalButton } from "./AcceptProposalButton";
+import { RejectProposalButton } from "./RejectProposalButton";
 import { ProposalStatusChip } from "./ProposalStatusChip";
 
 type ProposalCardProps = {
@@ -105,6 +106,7 @@ export function ProposalCard({
           {t("proposal.created", { date: formatDateTime(proposal.createDate) })}
         </Typography>
         <AcceptProposalButton proposalId={proposal.id} status={proposal.status} />
+        <RejectProposalButton proposalId={proposal.id} status={proposal.status} />
         <Button
           component={RouterLink}
           to={`/customer/proposals/${proposal.id}`}

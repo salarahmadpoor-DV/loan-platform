@@ -17,6 +17,7 @@ import { useRequest } from "../../requests/hooks/useRequest";
 import type { ProposalDetail, ProposalItem } from "../api/proposalTypes";
 import { AcceptProposalButton } from "../components/AcceptProposalButton";
 import { ProposalStatusChip } from "../components/ProposalStatusChip";
+import { RejectProposalButton } from "../components/RejectProposalButton";
 import { useProposal } from "../hooks/useProposal";
 import {
   formatDateTime,
@@ -69,6 +70,14 @@ function ProposalDetailBody({ proposal }: { proposal: ProposalDetail }) {
       <JourneyTimeline steps={journey} />
       <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} useFlexGap>
         <ProposalStatusChip status={proposal.status} />
+        <Button
+          component={RouterLink}
+          to={`/customer/requests/${proposal.requestId}/proposals`}
+          variant="text"
+          sx={{ minHeight: 40 }}
+        >
+          {t("proposal.list.title")}
+        </Button>
       </Stack>
 
       <FormSplitLayout
@@ -156,6 +165,7 @@ function ProposalDetailBody({ proposal }: { proposal: ProposalDetail }) {
                 total={proposal.totalPrice}
               />
               <AcceptProposalButton proposalId={proposal.id} status={proposal.status} fullWidth />
+              <RejectProposalButton proposalId={proposal.id} status={proposal.status} fullWidth />
             </Stack>
           </AppCard>
         }

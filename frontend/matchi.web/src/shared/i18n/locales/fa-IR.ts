@@ -16,6 +16,10 @@ export const faIR: Record<MessageKey, string> = {
   "workspace.customer": "مشتری",
   "workspace.provider": "ارائه‌دهنده",
   "workspace.business": "کسب‌وکار",
+  "workspace.shell": "فضای کاری {name}",
+  "locale.switch": "تغییر زبان",
+  "locale.fa": "فارسی",
+  "locale.en": "English",
   "auth.signOut": "خروج",
   "auth.signIn": "ورود",
   "auth.loginTitle": "ورود",
@@ -108,6 +112,8 @@ export const faIR: Record<MessageKey, string> = {
   "public.cta.body": "درخواست بسازید یا به‌عنوان متخصص بپیوندید؛ همان حساب مَتچی.",
   "public.cta.find": "یافتن متخصص",
   "public.cta.join": "پیوستن به‌عنوان متخصص",
+  "public.cta.joinHint":
+    "ثبت‌نام جداگانه برای «صاحب کسب‌وکار» وجود ندارد. از همان حساب استفاده کنید. فضای کاری ارائه‌دهنده فقط با نقش PROVIDER در توکن باز می‌شود.",
   "public.footer.tagline": "بازارگاهی برای ثبت نیاز، مقایسه پیشنهاد و پیگیری کار.",
   "public.category.home.title": "خانه و تعمیرات",
   "public.category.home.body": "لوله‌کشی، برق، بازسازی و تعمیرات خانگی.",
@@ -453,7 +459,7 @@ export const faIR: Record<MessageKey, string> = {
   "provider.dashboard.title": "داشبورد ارائه‌دهنده",
   "provider.dashboard.welcome": "خوش آمدید{name}",
   "provider.dashboard.intro":
-    "این فضای کاری ارائه‌دهنده است. درخواست‌های هم‌خوان، پیشنهادها، معاملات و اجراها از APIهای همین نقش خوانده می‌شوند.",
+    "این فضای کاری ارائه‌دهنده است. بازار، پیشنهادها، معاملات و اجراها از APIهای همین نقش هستند — نه فهرست درخواست مشتری.",
   "provider.dashboard.summary": "خلاصه فعالیت",
   "provider.dashboard.loading": "در حال بارگذاری خلاصه ارائه‌دهنده",
   "provider.dashboard.emptyTitle": "هنوز فعالیتی نیست",
@@ -618,4 +624,18 @@ export const faIR: Record<MessageKey, string> = {
   "provider.profile.coordinatesValue": "موقعیت {lat}، {lng}",
   "provider.profile.noCoordinates": "مختصاتی روی این پروفایل نیست.",
   "provider.profile.recorded": "ثبت‌شده روی پروفایل",
+  "provider.profile.businessesTitle": "کسب‌وکارهای شما",
+  "provider.profile.businessesBody":
+    "کسب‌وکارهای مالک از GET /api/businesses/me. ایجاد کسب‌وکار نقش BUSINESS_OWNER را اضافه نمی‌کند و ممکن است فضای کاری کسب‌وکار باز نشود.",
+  "provider.profile.businessesEmpty": "کسب‌وکاری در این پاسخ نیست.",
+  "provider.profile.businessesRetry": "تلاش دوباره",
+  "provider.profile.openBusinessWorkspace": "باز کردن فضای کاری کسب‌وکار",
+  "provider.profile.noBusinessRole":
+    "این حساب نقش BUSINESS_OWNER ندارد؛ بنابراین فضای کاری کسب‌وکار در دسترس نیست.",
+  "business.dashboard.title": "فضای کاری کسب‌وکار",
+  "business.dashboard.description":
+    "این پوسته برای نقش BUSINESS_OWNER است. عضویت BusinessProvider ثبت‌نام جداگانه نیست.",
+  "business.dashboard.emptyTitle": "فعالیتی نیست",
+  "business.dashboard.emptyBody":
+    "کاتالوگ، اعضا و اجراهای این فضا در این کار ساخته نشده‌اند.",
 };

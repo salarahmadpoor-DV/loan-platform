@@ -52,7 +52,7 @@ export function professionalJoinPath(
     return providerWorkspacePath;
   }
   if (isAuthenticated) {
-    return defaultWorkspacePath(roles);
+    return "/#for-professionals";
   }
   return loginPathWithNext(providerWorkspacePath);
 }

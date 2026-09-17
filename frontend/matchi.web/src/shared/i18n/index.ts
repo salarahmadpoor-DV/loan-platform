@@ -1,7 +1,9 @@
-import { DEFAULT_LOCALE, type Locale } from "./keys";
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES, type Locale } from "./keys";
 import type { MessageKey } from "./keys";
 import { enUS } from "./locales/en-US";
 import { faIR } from "./locales/fa-IR";
+
+const LOCALE_STORAGE_KEY = "matchi.locale";
 
 const catalogs: Record<Locale, Record<MessageKey, string>> = {
   "fa-IR": faIR,
@@ -9,6 +11,23 @@ const catalogs: Record<Locale, Record<MessageKey, string>> = {
 };
 
 let currentLocale: Locale = DEFAULT_LOCALE;
+const localeListeners = new Set<(locale: Locale) => void>();
+
+export function isSupportedLocale(value: string | null | undefined): value is Locale {
+  return SUPPORTED_LOCALES.includes(value as Locale);
+}
+
+export function readStoredLocale(): Locale {
+  try {
+    const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
+    if (isSupportedLocale(stored)) {
+      return stored;
+    }
+  } catch {
+    /* ignore */
+  }
+  return DEFAULT_LOCALE;
+}
 
 export function getLocale(): Locale {
   return currentLocale;
@@ -24,6 +43,27 @@ export function applyDocumentLocale(locale: Locale = currentLocale): void {
   const root = document.documentElement;
   root.lang = locale === "fa-IR" ? "fa" : "en";
   root.dir = isRtlLocale(locale) ? "rtl" : "ltr";
+}
+
+export function setLocale(locale: Locale): void {
+  if (currentLocale === locale) {
+    applyDocumentLocale(locale);
+    return;
+  }
+  applyDocumentLocale(locale);
+  try {
+    localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+  } catch {
+    /* ignore */
+  }
+  localeListeners.forEach((listener) => listener(locale));
+}
+
+export function subscribeLocale(listener: (locale: Locale) => void): () => void {
+  localeListeners.add(listener);
+  return () => {
+    localeListeners.delete(listener);
+  };
 }
 
 export function t(key: MessageKey, vars?: Record<string, string | number>): string {

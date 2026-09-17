@@ -14,17 +14,19 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { matchiShadows } from "../../../../app/designTokens";
 import { useAuth } from "../../../../shared/auth/AuthProvider";
 import { defaultWorkspacePath } from "../../../../shared/auth/workspaces";
-import { t } from "../../../../shared/i18n";
+import { getLocale, t } from "../../../../shared/i18n";
+import { changeAppLocale } from "../../../../shared/i18n/LocaleProvider";
 import { findServicePath } from "../../../../shared/marketplace/publicPaths";
 
 const NAV_LINKS = [
   { hash: "categories", labelKey: "public.nav.findServices" as const },
   { hash: "how-it-works", labelKey: "public.nav.howItWorks" as const },
+  { hash: "for-professionals", labelKey: "public.nav.forProfessionals" as const },
 ];
 
 function scrollToSection(hash: string) {
@@ -34,7 +36,7 @@ function scrollToSection(hash: string) {
 
 export function PublicHeader() {
   const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
+  const compactNav = !useMediaQuery(theme.breakpoints.up("lg"));
   const [open, setOpen] = useState(false);
   const [elevated, setElevated] = useState(false);
   const navigate = useNavigate();
@@ -43,11 +45,13 @@ export function PublicHeader() {
   const findPath = findServicePath(isAuthenticated, user?.roles);
   const workspacePath = defaultWorkspacePath(user?.roles);
   const drawerAnchor = theme.direction === "rtl" ? "right" : "left";
+  const menuId = useId();
   const primaryPath = isAuthenticated
     ? workspacePath === "/"
       ? findPath
       : workspacePath
     : findPath;
+  const locale = getLocale();
 
   useEffect(() => {
     const onScroll = () => setElevated(window.scrollY > 8);
@@ -77,9 +81,20 @@ export function PublicHeader() {
     }
   }, [location.pathname, location.hash]);
 
+  const localeToggle = (
+    <Button
+      color="inherit"
+      onClick={() => changeAppLocale(locale === "fa-IR" ? "en-US" : "fa-IR")}
+      aria-label={t("locale.switch")}
+    >
+      {locale === "fa-IR" ? t("locale.en") : t("locale.fa")}
+    </Button>
+  );
+
   const actions = (
     <Stack direction="row" spacing={1} sx={{ flexShrink: 0, alignItems: "center" }}>
-      {!isAuthenticated ? (
+      {localeToggle}
+      {!isAuthenticated && !compactNav ? (
         <Button color="inherit" onClick={() => go("/login")}>
           {t("auth.signIn")}
         </Button>
@@ -104,9 +119,22 @@ export function PublicHeader() {
       }}
     >
       <Container maxWidth="lg" disableGutters>
-        <Toolbar sx={{ gap: 1, px: { xs: 1.5, sm: 3 } }}>
-          {!isDesktop ? (
-            <IconButton color="inherit" aria-label={t("nav.openMenu")} onClick={() => setOpen(true)}>
+        <Toolbar
+          sx={{
+            gap: 1,
+            px: { xs: 1.5, sm: 3 },
+            flexWrap: "nowrap",
+            minHeight: { xs: 64, lg: 72 },
+          }}
+        >
+          {compactNav ? (
+            <IconButton
+              color="inherit"
+              aria-label={t("nav.openMenu")}
+              aria-expanded={open}
+              aria-controls={menuId}
+              onClick={() => setOpen(true)}
+            >
               <Typography component="span" fontWeight={700} aria-hidden>
                 ≡
               </Typography>
@@ -118,7 +146,13 @@ export function PublicHeader() {
             direction="row"
             spacing={1}
             alignItems="center"
-            sx={{ color: "inherit", textDecoration: "none", flexGrow: { xs: 1, md: 0 }, minWidth: 0 }}
+            sx={{
+              color: "inherit",
+              textDecoration: "none",
+              flexGrow: compactNav ? 1 : 0,
+              minWidth: 0,
+              flexShrink: 0,
+            }}
           >
             <Box
               aria-hidden
@@ -134,22 +168,22 @@ export function PublicHeader() {
               {t("app.name")}
             </Typography>
           </Stack>
-          {isDesktop ? (
+          {!compactNav ? (
             <Stack
               direction="row"
               spacing={0.5}
-              sx={{ flexGrow: 1, px: 2 }}
+              sx={{ flexGrow: 1, px: 2, minWidth: 0, flexWrap: "nowrap" }}
               component="nav"
               aria-label={t("public.nav.findServices")}
             >
               {NAV_LINKS.map((link) => (
-                <Button key={link.hash} color="inherit" onClick={() => goSection(link.hash)}>
+                <Button key={link.hash} color="inherit" onClick={() => goSection(link.hash)} sx={{ flexShrink: 0 }}>
                   {t(link.labelKey)}
                 </Button>
               ))}
             </Stack>
           ) : (
-            <Box sx={{ flexGrow: 1 }} />
+            <Box sx={{ flexGrow: 1, minWidth: 0 }} />
           )}
           {actions}
         </Toolbar>
@@ -161,7 +195,7 @@ export function PublicHeader() {
         ModalProps={{ keepMounted: true }}
         sx={{ "& .MuiDrawer-paper": { width: { xs: "min(100%, 300px)" } } }}
       >
-        <Box sx={{ p: 2 }} role="presentation">
+        <Box id={menuId} sx={{ p: 2 }} role="presentation">
           <Typography variant="subtitle1" sx={{ mb: 1 }}>
             {t("app.name")}
           </Typography>
@@ -180,6 +214,14 @@ export function PublicHeader() {
               <ListItemText
                 primary={isAuthenticated ? t("public.nav.workspace") : t("public.nav.getStarted")}
               />
+            </ListItemButton>
+            <ListItemButton
+              onClick={() => {
+                changeAppLocale(locale === "fa-IR" ? "en-US" : "fa-IR");
+                setOpen(false);
+              }}
+            >
+              <ListItemText primary={locale === "fa-IR" ? t("locale.en") : t("locale.fa")} />
             </ListItemButton>
           </List>
           <Button fullWidth onClick={() => setOpen(false)}>

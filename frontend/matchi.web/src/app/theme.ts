@@ -1,6 +1,6 @@
-import { faIR } from "@mui/material/locale";
+import { enUS, faIR } from "@mui/material/locale";
 import { createTheme } from "@mui/material/styles";
-import { DEFAULT_LOCALE, isRtlLocale } from "../shared/i18n";
+import { DEFAULT_LOCALE, isRtlLocale, type Locale } from "../shared/i18n";
 import { matchiColors, matchiRadius, matchiShadows } from "./designTokens";
 
 const FONT_FAMILY =
@@ -13,9 +13,11 @@ const FONT_FAMILY =
  * body1 Body · body2 Secondary (bodySmall) · caption Caption · button Button
  * Input labels / helper / error come from MuiInputLabel and MuiFormHelperText.
  */
-export const appTheme = createTheme(
+export function createAppTheme(locale: Locale = DEFAULT_LOCALE) {
+  const rtl = isRtlLocale(locale);
+  return createTheme(
   {
-    direction: isRtlLocale(DEFAULT_LOCALE) ? "rtl" : "ltr",
+    direction: rtl ? "rtl" : "ltr",
     breakpoints: {
       values: {
         xs: 0,
@@ -296,5 +298,8 @@ export const appTheme = createTheme(
       },
     },
   },
-  faIR,
-);
+  rtl ? faIR : enUS,
+  );
+}
+
+export const appTheme = createAppTheme(DEFAULT_LOCALE);

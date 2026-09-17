@@ -16,6 +16,10 @@ export const enUS: Record<MessageKey, string> = {
   "workspace.customer": "Customer",
   "workspace.provider": "Provider",
   "workspace.business": "Business",
+  "workspace.shell": "{name} workspace",
+  "locale.switch": "Switch language",
+  "locale.fa": "فارسی",
+  "locale.en": "English",
   "auth.signOut": "Sign out",
   "auth.signIn": "Sign in",
   "auth.loginTitle": "Sign in",
@@ -110,6 +114,8 @@ export const enUS: Record<MessageKey, string> = {
   "public.cta.body": "Create a request or join as a professional using the same Matchi account.",
   "public.cta.find": "Find a Professional",
   "public.cta.join": "Join as a Professional",
+  "public.cta.joinHint":
+    "There is no separate Business Owner registration. Use the same account. The Provider workspace opens only when the JWT includes the PROVIDER role.",
   "public.footer.tagline": "A marketplace to request work, compare proposals, and follow the job through.",
   "public.category.home.title": "Home & Repair",
   "public.category.home.body": "Plumbing, electrical, renovation, and household fixes.",
@@ -458,7 +464,7 @@ export const enUS: Record<MessageKey, string> = {
   "provider.dashboard.title": "Provider dashboard",
   "provider.dashboard.welcome": "Welcome{name}",
   "provider.dashboard.intro":
-    "This is the Provider workspace. Matching requests, your proposals, deals, and executions come from Provider-role APIs.",
+    "This is the Provider workspace. Marketplace, proposals, deals, and executions use Provider-role APIs — not the Customer request list.",
   "provider.dashboard.summary": "Activity summary",
   "provider.dashboard.loading": "Loading provider summary",
   "provider.dashboard.emptyTitle": "No activity yet",
@@ -625,4 +631,18 @@ export const enUS: Record<MessageKey, string> = {
   "provider.profile.coordinatesValue": "Location {lat}, {lng}",
   "provider.profile.noCoordinates": "No coordinates on this profile.",
   "provider.profile.recorded": "Recorded on profile",
+  "provider.profile.businessesTitle": "Businesses you own",
+  "provider.profile.businessesBody":
+    "Owned businesses from GET /api/businesses/me. Creating a business does not add a BUSINESS_OWNER role, so the Business workspace may stay closed.",
+  "provider.profile.businessesEmpty": "No owned businesses in this response.",
+  "provider.profile.businessesRetry": "Try again",
+  "provider.profile.openBusinessWorkspace": "Open Business workspace",
+  "provider.profile.noBusinessRole":
+    "This account does not have the BUSINESS_OWNER role, so the Business workspace is not available.",
+  "business.dashboard.title": "Business workspace",
+  "business.dashboard.description":
+    "This shell is for the BUSINESS_OWNER role. Membership (BusinessProvider) is not a separate registration.",
+  "business.dashboard.emptyTitle": "No activity yet",
+  "business.dashboard.emptyBody":
+    "Catalog, members, and executions for this workspace are not built in this task.",
 };

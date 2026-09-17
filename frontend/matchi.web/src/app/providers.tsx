@@ -1,11 +1,9 @@
-import CssBaseline from "@mui/material/CssBaseline";
-import { ThemeProvider } from "@mui/material/styles";
 import { QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "../shared/auth/AuthProvider";
+import { LocaleProvider } from "../shared/i18n/LocaleProvider";
 import { queryClient } from "./queryClient";
-import { appTheme } from "./theme";
 
 type AppProvidersProps = {
   children: ReactNode;
@@ -14,12 +12,11 @@ type AppProvidersProps = {
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={appTheme}>
-        <CssBaseline />
+      <LocaleProvider>
         <BrowserRouter>
           <AuthProvider>{children}</AuthProvider>
         </BrowserRouter>
-      </ThemeProvider>
+      </LocaleProvider>
     </QueryClientProvider>
   );
 }

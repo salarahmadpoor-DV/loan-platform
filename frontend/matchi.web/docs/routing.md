@@ -31,7 +31,7 @@ Customer sidebar (plus dashboard home): درخواست‌ها / معاملات /
 
 ## Provider (`RequireAuth` + `RequireWorkspace(provider)` + `ProviderLayout`)
 
-JWT role `PROVIDER` or `ADMIN`. Permission claims are not used. Users without those roles are redirected to their first allowed workspace (not kept on `/provider` as Customer).
+JWT role `PROVIDER` or `ADMIN`. Permission claims are not used. Default post-login path for `PROVIDER` is `/provider/dashboard` even if `USER` is also present. Users without those roles who open `/provider/*` are redirected to their default allowed workspace (not kept on `/provider` as Customer).
 
 | Path | Page |
 |---|---|

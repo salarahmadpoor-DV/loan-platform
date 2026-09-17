@@ -236,7 +236,7 @@ export function PublicHomePage() {
           <Box id="for-professionals">
             <CtaSection
               title={t("public.cta.title")}
-              body={t("public.cta.body")}
+              body={`${t("public.cta.body")} ${t("public.cta.joinHint")}`}
               primaryLabel={t("public.cta.find")}
               secondaryLabel={t("public.cta.join")}
               onPrimary={() => goFind()}

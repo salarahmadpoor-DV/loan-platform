@@ -56,10 +56,11 @@ Provider routes include inbox lists (Task 11.1–11.2) and Provider create-propo
 - Session: `RequireAuth` on `/customer/*`, `/provider/*`, `/business/*`
 - Workspace: `RequireWorkspace` using JWT **role names**, not permission claims:
   - `USER` → Customer
-  - `USER` + `PROVIDER` → Customer + Provider
+  - `USER` + `PROVIDER` → Customer + Provider; **default landing is `/provider/dashboard`**
   - `USER` + `BUSINESS_OWNER` → Customer + Business
   - `PROVIDER` alone → Provider (Customer is not implied)
   - `ADMIN` → Customer + Provider + Business (no Admin UI)
+- There is **no** `/register/business` or Business Owner registration. OTP always ensures `USER`. `POST /api/providers` creates a provider profile but does **not** assign the `PROVIDER` role. `POST /api/businesses` creates an owned business but does **not** assign `BUSINESS_OWNER`. The Provider Profile lists `GET /api/businesses/me` when that call succeeds.
 - Roles are read from the access token (`ClaimTypes.Role` URI and/or JWT `role` / `roles`) in `decodeAccessToken`. `PROVIDER_*` permission claims must **not** unlock the Provider shell. After refresh, the session is rebuilt from the persisted JWT only.
 
 OTP: `POST /api/auth/send-otp`, `POST /api/auth/verify-otp`. `refreshToken` is ignored. 401 on authenticated calls clears the session and redirects to `/login`.
@@ -72,7 +73,7 @@ Reuse `shared/ui`: `AppCard`, `PageHeader`, `PageContainer`, `FormSplitLayout`, 
 
 Typography lives on the MUI theme (`app/theme.ts`): Vazirmatn (loaded in `index.html`), RTL `fa-IR`. Roles: `h1` display, `h2` section, `h3` subsection, `h4` page title (`PageHeader`), `body1`/`body2` body/secondary, `caption`, `button`.
 
-Layouts: `AppShellLayout` (Customer/Provider/Business) uses a permanent drawer from `md` up and a temporary drawer below; main content is capped (`lg` 1120px / `xl` 1280px). `PublicLayout` has sticky `PublicHeader` + `PublicFooter`. Login stays `sm`; public home is full-width sections with `lg` containers.
+Layouts: `AppShellLayout` (Customer/Provider/Business) uses a permanent drawer from `md` up and a temporary drawer below; main content is capped (`lg` 1120px / `xl` 1280px). The shell shows the current workspace name. `PublicLayout` has sticky `PublicHeader` + `PublicFooter`. Public desktop nav uses the `lg` breakpoint so 1024/900 widths use the drawer instead of wrapping. Document `dir` + MUI `theme.direction` + Emotion `stylis-plugin-rtl` (not per-component `direction: rtl`). Locale toggle switches fa-IR RTL and en-US LTR. Login stays `sm`; public home is full-width sections with `lg` containers.
 
 ## Public homepage
 

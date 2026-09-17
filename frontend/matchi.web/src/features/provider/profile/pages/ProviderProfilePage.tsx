@@ -1,15 +1,23 @@
 import { Button, Stack, Typography } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
+import { canAccessWorkspace } from "../../../../shared/auth/workspaces";
+import { useAuth } from "../../../../shared/auth/AuthProvider";
 import { t } from "../../../../shared/i18n";
 import { AppCard } from "../../../../shared/ui/AppCard";
+import { EmptyState } from "../../../../shared/ui/EmptyState";
 import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
 import { FormSplitLayout } from "../../../../shared/ui/FormSplitLayout";
 import { LoadingState } from "../../../../shared/ui/LoadingState";
 import { PageHeader } from "../../../../shared/ui/PageHeader";
 import { StatusChip } from "../../../../shared/ui/StatusChip";
+import { useMyBusinesses } from "../hooks/useMyBusinesses";
 import { useMyProviderProfile } from "../hooks/useMyProviderProfile";
 
 export function ProviderProfilePage() {
+  const { user } = useAuth();
   const { data, isPending, isError, error, refetch, isFetching } = useMyProviderProfile();
+  const businesses = useMyBusinesses();
+  const canOpenBusiness = canAccessWorkspace("business", user?.roles);
 
   return (
     <>
@@ -78,6 +86,65 @@ export function ProviderProfilePage() {
           }
         />
       ) : null}
+
+      <Stack spacing={1.5} sx={{ mt: 3 }}>
+        <Typography variant="h6">{t("provider.profile.businessesTitle")}</Typography>
+        <Typography variant="body2" color="text.secondary">
+          {t("provider.profile.businessesBody")}
+        </Typography>
+        {businesses.isPending ? <LoadingState /> : null}
+        {businesses.isError ? (
+          <Stack spacing={1}>
+            <ErrorAlert error={businesses.error} />
+            <Button
+              variant="outlined"
+              onClick={() => {
+                void businesses.refetch();
+              }}
+              disabled={businesses.isFetching}
+              sx={{ minHeight: 44, alignSelf: "flex-start" }}
+            >
+              {t("provider.profile.businessesRetry")}
+            </Button>
+          </Stack>
+        ) : null}
+        {businesses.data && businesses.data.length === 0 ? (
+          <EmptyState title={t("provider.profile.businessesEmpty")} />
+        ) : null}
+        {businesses.data && businesses.data.length > 0 ? (
+          <Stack spacing={1.5}>
+            {businesses.data.map((business) => (
+              <AppCard key={business.id}>
+                <Stack spacing={0.75}>
+                  <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} useFlexGap>
+                    <Typography variant="subtitle1">{business.name}</Typography>
+                    <StatusChip label={business.status} tone="info" />
+                  </Stack>
+                  {business.city || business.province ? (
+                    <Typography variant="body2" color="text.secondary">
+                      {[business.city, business.province].filter(Boolean).join(" · ")}
+                    </Typography>
+                  ) : null}
+                </Stack>
+              </AppCard>
+            ))}
+          </Stack>
+        ) : null}
+        {canOpenBusiness ? (
+          <Button
+            component={RouterLink}
+            to="/business"
+            variant="outlined"
+            sx={{ alignSelf: "flex-start", minHeight: 48 }}
+          >
+            {t("provider.profile.openBusinessWorkspace")}
+          </Button>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            {t("provider.profile.noBusinessRole")}
+          </Typography>
+        )}
+      </Stack>
     </>
   );
 }

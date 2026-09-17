@@ -1,9 +1,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./app/App";
-import { applyDocumentLocale, DEFAULT_LOCALE } from "./shared/i18n";
+import { applyDocumentLocale, readStoredLocale } from "./shared/i18n";
 
-applyDocumentLocale(DEFAULT_LOCALE);
+applyDocumentLocale(readStoredLocale());
 
 const root = document.getElementById("root");
 if (!root) {

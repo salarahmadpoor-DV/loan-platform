@@ -727,10 +727,11 @@ OTP login remains the existing HTTP contract (`POST /api/auth/send-otp`, `POST /
 - **Axios:** Bearer is attached automatically except on send-otp/verify-otp (so a leftover token cannot fail the login calls). Other 401s clear the session and redirect to `/login`, unless the user is already on `/login`. There is no refresh-token interceptor.
 - **Workspaces from JWT roles (not permission claims):**
   - `USER` → Customer (`/customer`)
-  - `USER` + `PROVIDER` → Customer + Provider
+  - `USER` + `PROVIDER` → Customer + Provider; login/home workspace action opens `/provider/dashboard`
   - `USER` + `BUSINESS_OWNER` → Customer + Business
   - `PROVIDER` without `USER` → Provider only (Customer is not implied)
   - `ADMIN` → Customer + Provider + Business (no Admin UI)
+- There is no separate Business Owner registration. `CreateProvider` / `CreateBusiness` do not grant `PROVIDER` / `BUSINESS_OWNER` roles.
 - **JWT role claim:** `JwtTokenService` writes `ClaimTypes.Role` (`http://schemas.microsoft.com/ws/2008/06/identity/claims/role`). The compact JWT name may also be `role` / `roles`. The frontend reads all of those in `extractRolesFromPayload`. Permission claims (`permission`) are ignored. Role codes are normalized to uppercase (`USER`, `PROVIDER`, `BUSINESS_OWNER`, `ADMIN`).
 - **Session source of truth:** login unions OTP `user.roles` with decoded JWT roles, then persists only the access token. Reload re-decodes the JWT. Customer is added only when `USER` or `ADMIN` is present — not as a blind fallback for empty/unparsed roles.
 - Route protection: `/` and `/login` are public. `/customer/*`, `/provider/*`, and `/business/*` require a session; workspace routes require the matching role set. Unauthorized workspace URLs redirect to the first *allowed* workspace (or `/` if none), they do not render Customer inside a Provider/Business URL.

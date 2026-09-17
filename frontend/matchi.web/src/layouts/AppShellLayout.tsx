@@ -15,7 +15,8 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { t } from "../shared/i18n";
+import { t, getLocale } from "../shared/i18n";
+import { changeAppLocale } from "../shared/i18n/LocaleProvider";
 import { useAuth } from "../shared/auth/AuthProvider";
 import { resolveWorkspaces } from "../shared/auth/workspaces";
 import {
@@ -27,7 +28,7 @@ import {
 import { PageContainer } from "../shared/ui/PageContainer";
 
 const DRAWER_WIDTH = 260;
-const APP_BAR_HEIGHT = 56;
+const APP_BAR_HEIGHT = 64;
 
 type AppShellLayoutProps = {
   workspace: AppWorkspace;
@@ -42,11 +43,13 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
   const availableWorkspaces = resolveWorkspaces(user?.roles);
   const items = workspaceNav[workspace];
   const drawerAnchor = theme.direction === "rtl" ? "right" : "left";
+  const menuId = "workspace-nav";
+  const locale = getLocale();
 
   const drawer = (
     <Box sx={{ pt: 1, px: 0.5 }} onClick={() => setMobileOpen(false)}>
       <Typography variant="overline" color="text.secondary" sx={{ px: 2, py: 1, display: "block" }}>
-        {t(workspaceLabelKey[workspace])}
+        {t("workspace.shell", { name: t(workspaceLabelKey[workspace]) })}
       </Typography>
       <List disablePadding>
         {items.map((item) => (
@@ -63,8 +66,7 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
                 bgcolor: "action.selected",
                 color: "primary.main",
                 fontWeight: 700,
-                borderRight: theme.direction === "rtl" ? 0 : 3,
-                borderLeft: theme.direction === "rtl" ? 3 : 0,
+                borderInlineStart: 3,
                 borderColor: "primary.main",
               },
             }}
@@ -83,7 +85,6 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
     <Box
       sx={{
         display: "flex",
-        flexDirection: theme.direction === "rtl" ? "row-reverse" : "row",
         minHeight: "100vh",
         minWidth: 0,
       }}
@@ -105,13 +106,15 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
             gap: 1,
             px: { xs: 1, sm: 2 },
             minHeight: APP_BAR_HEIGHT,
-            flexWrap: { xs: "wrap", sm: "nowrap" },
+            flexWrap: "nowrap",
           }}
         >
           {!isDesktop ? (
             <IconButton
               color="inherit"
               aria-label={t("nav.openMenu")}
+              aria-expanded={mobileOpen}
+              aria-controls={menuId}
               onClick={() => setMobileOpen(true)}
             >
               <Typography component="span" fontWeight={700} aria-hidden>
@@ -119,19 +122,19 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
               </Typography>
             </IconButton>
           ) : null}
-          <Typography
-            variant="subtitle1"
-            component="p"
-            sx={{ flexGrow: { xs: 1, md: 0 }, minWidth: 0 }}
-            noWrap
-          >
-            {t("app.name")}
-          </Typography>
+          <Stack spacing={0} sx={{ flexGrow: { xs: 1, md: 0 }, minWidth: 0, flexShrink: 1 }}>
+            <Typography variant="subtitle1" component="p" noWrap>
+              {t("app.name")}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" noWrap>
+              {t("workspace.shell", { name: t(workspaceLabelKey[workspace]) })}
+            </Typography>
+          </Stack>
           {isDesktop ? (
             <Stack
               direction="row"
               spacing={0.5}
-              sx={{ flexGrow: 1, minWidth: 0, flexWrap: "wrap", rowGap: 0.5 }}
+              sx={{ flexGrow: 1, minWidth: 0, flexWrap: "nowrap", overflow: "hidden" }}
             >
               {availableWorkspaces.map((ws) => (
                 <Button
@@ -146,6 +149,14 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
               ))}
             </Stack>
           ) : null}
+          <Button
+            color="inherit"
+            onClick={() => changeAppLocale(locale === "fa-IR" ? "en-US" : "fa-IR")}
+            sx={{ flexShrink: 0 }}
+            aria-label={t("locale.switch")}
+          >
+            {locale === "fa-IR" ? t("locale.en") : t("locale.fa")}
+          </Button>
           <Button color="inherit" onClick={() => logout()} sx={{ flexShrink: 0 }}>
             {t("auth.signOut")}
           </Button>
@@ -153,6 +164,7 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
       </AppBar>
       <Box
         component="nav"
+        aria-label={t("workspace.shell", { name: t(workspaceLabelKey[workspace]) })}
         sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}
       >
         {isDesktop ? (
@@ -183,7 +195,7 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
               "& .MuiDrawer-paper": { width: { xs: "min(100%, 300px)", sm: DRAWER_WIDTH }, boxSizing: "border-box" },
             }}
           >
-            {drawer}
+            <Box id={menuId}>{drawer}</Box>
           </Drawer>
         )}
       </Box>

@@ -1,18 +1,22 @@
 import { workspaceHome, type AppWorkspace } from "../navigation/navModel";
 import { normalizeRoleCodes } from "./jwt";
 
+export type WorkspaceCapabilities = {
+  hasProviderProfile: boolean;
+  ownsBusiness: boolean;
+};
+
 /**
- * Workspace access from JWT **role codes** only (not `permission` claims).
+ * Workspace access from JWT **ADMIN/USER** plus live capabilities:
+ * Provider profile (`Providers.UserId`) and owned businesses (`Businesses.OwnerUserId`).
  *
- * USER → Customer
- * PROVIDER → Provider (also Customer if USER or ADMIN is present)
- * BUSINESS_OWNER → Business
- * ADMIN → Customer + Provider + Business
- *
- * Default landing: PROVIDER role opens `/provider/dashboard` even when USER is also present.
- * `PROVIDER_VIEW` / other permission strings are ignored.
+ * JWT `PROVIDER` / `BUSINESS_OWNER` codes are not treated as identity.
+ * BusinessProvider membership does not grant the Business workspace.
  */
-export function resolveWorkspaces(roles: readonly string[] | undefined): AppWorkspace[] {
+export function resolveWorkspaces(
+  roles: readonly string[] | undefined,
+  capabilities?: WorkspaceCapabilities,
+): AppWorkspace[] {
   const set = new Set(normalizeRoleCodes(roles));
 
   if (set.has("ADMIN")) {
@@ -23,23 +27,24 @@ export function resolveWorkspaces(roles: readonly string[] | undefined): AppWork
   if (set.has("USER")) {
     workspaces.push("customer");
   }
-  if (set.has("PROVIDER")) {
+  if (capabilities?.hasProviderProfile) {
     workspaces.push("provider");
   }
-  if (set.has("BUSINESS_OWNER")) {
+  if (capabilities?.ownsBusiness) {
     workspaces.push("business");
   }
   return workspaces;
 }
 
-export function defaultWorkspacePath(roles: readonly string[] | undefined): string {
-  const codes = new Set(normalizeRoleCodes(roles));
-  const available = resolveWorkspaces(roles);
+export function defaultWorkspacePath(
+  roles: readonly string[] | undefined,
+  capabilities?: WorkspaceCapabilities,
+): string {
+  const available = resolveWorkspaces(roles, capabilities);
   if (available.length === 0) {
     return "/";
   }
-  // USER is always granted on OTP, so USER+PROVIDER must not land in Customer.
-  if (codes.has("PROVIDER") && available.includes("provider")) {
+  if (available.includes("provider")) {
     return workspaceHome.provider;
   }
   return workspaceHome[available[0]];
@@ -48,6 +53,7 @@ export function defaultWorkspacePath(roles: readonly string[] | undefined): stri
 export function canAccessWorkspace(
   workspace: AppWorkspace,
   roles: readonly string[] | undefined,
+  capabilities?: WorkspaceCapabilities,
 ): boolean {
-  return resolveWorkspaces(roles).includes(workspace);
+  return resolveWorkspaces(roles, capabilities).includes(workspace);
 }

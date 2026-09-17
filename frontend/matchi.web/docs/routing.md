@@ -31,7 +31,7 @@ Customer sidebar (plus dashboard home): درخواست‌ها / معاملات /
 
 ## Provider (`RequireAuth` + `RequireWorkspace(provider)` + `ProviderLayout`)
 
-JWT role `PROVIDER` or `ADMIN`. Permission claims are not used. Default post-login path for `PROVIDER` is `/provider/dashboard` even if `USER` is also present. Users without those roles who open `/provider/*` are redirected to their default allowed workspace (not kept on `/provider` as Customer).
+JWT `USER` or `ADMIN`, plus a Provider row for this user (`GET /api/providers/me`). Marketplace APIs use policy `ProviderWorkspace` (Provider profile or ADMIN). Default post-login path is `/provider/dashboard` when a Provider profile exists.
 
 | Path | Page |
 |---|---|
@@ -44,13 +44,15 @@ JWT role `PROVIDER` or `ADMIN`. Permission claims are not used. Default post-log
 | `/provider/proposals` | my proposals (`GET /api/provider/proposals`) |
 | `/provider/deals` | my deals (`GET /api/provider/deals`) |
 | `/provider/executions` | my executions (`GET /api/provider/executions`) |
-| `/provider/profile` | profile (`GET /api/providers/me`) |
+| `/provider/profile` | profile (`GET /api/providers/me`), owned businesses (`GET /api/businesses/me`), memberships (`GET /api/providers/me/businesses`) |
 
 Nav: داشبورد / بازار / پیشنهادهای من / معاملات / اجراها / پروفایل.
 
 Marketplace cards open `/provider/requests/:requestId` (inbox DTO only). Open requests can continue to `/provider/requests/:requestId/proposal` (`POST /api/requests/{id}/proposals`). Do not call owner `GET /api/requests/{id}`.
 
 ## Business (`RequireWorkspace(business)` + `BusinessLayout`)
+
+Requires JWT `ADMIN` or at least one owned business (`GET /api/businesses/me`). Membership is not enough.
 
 | Path | Status |
 |---|---|
@@ -63,7 +65,7 @@ Marketplace cards open `/provider/requests/:requestId` (inbox DTO only). Open re
 
 | Path | Behavior |
 |---|---|
-| `/app` | redirect to first workspace from JWT roles |
+| `/app` | redirect to default workspace (Provider if a profile exists, else first allowed) |
 | `*` | redirect `/` |
 
 ## Rules

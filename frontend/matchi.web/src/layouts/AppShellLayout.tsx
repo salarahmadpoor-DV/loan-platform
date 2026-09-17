@@ -18,7 +18,7 @@ import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { t, getLocale } from "../shared/i18n";
 import { changeAppLocale } from "../shared/i18n/LocaleProvider";
 import { useAuth } from "../shared/auth/AuthProvider";
-import { resolveWorkspaces } from "../shared/auth/workspaces";
+import { useWorkspaceAccess } from "../shared/auth/useWorkspaceAccess";
 import {
   workspaceHome,
   workspaceLabelKey,
@@ -39,8 +39,8 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
   const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
-  const availableWorkspaces = resolveWorkspaces(user?.roles);
+  const { logout } = useAuth();
+  const { workspaces: availableWorkspaces } = useWorkspaceAccess();
   const items = workspaceNav[workspace];
   const drawerAnchor = theme.direction === "rtl" ? "right" : "left";
   const menuId = "workspace-nav";
@@ -48,7 +48,11 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
 
   const drawer = (
     <Box sx={{ pt: 1, px: 0.5 }} onClick={() => setMobileOpen(false)}>
-      <Typography variant="overline" color="text.secondary" sx={{ px: 2, py: 1, display: "block" }}>
+      <Typography
+        variant="overline"
+        color={workspace === "provider" ? "secondary.main" : "text.secondary"}
+        sx={{ px: 2, py: 1, display: "block" }}
+      >
         {t("workspace.shell", { name: t(workspaceLabelKey[workspace]) })}
       </Typography>
       <List disablePadding>
@@ -95,8 +99,13 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
         color="inherit"
         sx={{
           zIndex: (t) => t.zIndex.drawer + 1,
-          borderBottom: 1,
-          borderColor: "divider",
+          borderBottom: 3,
+          borderColor:
+            workspace === "provider"
+              ? "secondary.main"
+              : workspace === "business"
+                ? "warning.main"
+                : "divider",
           bgcolor: "background.paper",
           color: "text.primary",
         }}
@@ -126,7 +135,11 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
             <Typography variant="subtitle1" component="p" noWrap>
               {t("app.name")}
             </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap>
+            <Typography
+              variant="caption"
+              color={workspace === "provider" ? "secondary.main" : "text.secondary"}
+              noWrap
+            >
               {t("workspace.shell", { name: t(workspaceLabelKey[workspace]) })}
             </Typography>
           </Stack>

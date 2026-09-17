@@ -24,7 +24,7 @@ export const faIR: Record<MessageKey, string> = {
   "auth.signIn": "ورود",
   "auth.loginTitle": "ورود",
   "auth.loginDescription":
-    "شماره موبایل خود را وارد کنید. کد یک‌بارمصرف را خودتان وارد کنید؛ این برنامه پیامک ارسال نمی‌کند.",
+    "شماره موبایل خود را وارد کنید. کد یک‌بارمصرف را خودتان وارد کنید؛ این برنامه پیامک ارسال نمی‌کند. فضاهای کاری از حساب کاربر، پروفایل ارائه‌دهنده و کسب‌وکارهای مالک باز می‌شوند.",
   "auth.mobile": "شماره موبایل",
   "auth.mobileHelper": "در صورت نیاز کد کشور را وارد کنید، مثلاً ‎+98912…",
   "auth.continue": "ادامه",
@@ -52,7 +52,7 @@ export const faIR: Record<MessageKey, string> = {
   "error.retry": "انجام درخواست ممکن نشد. دوباره تلاش کنید.",
   "public.homeDescription": "انواع درخواست: خدمت، کالا، ترکیبی.",
   "public.signedInWorkspaces":
-    "پس از ورود، فضای کاری بر اساس نقش حساب شماست. پوستهٔ فروشنده وجود ندارد.",
+    "پس از ورود، فضای مشتری برای USER است. فضای ارائه‌دهنده با پروفایل Provider و فضای کسب‌وکار با مالکیت Business باز می‌شود. پوستهٔ فروشنده وجود ندارد.",
   "public.nav.findServices": "جستجوی خدمت",
   "public.nav.howItWorks": "روش کار",
   "public.nav.forProfessionals": "برای متخصصان",
@@ -113,7 +113,7 @@ export const faIR: Record<MessageKey, string> = {
   "public.cta.find": "یافتن متخصص",
   "public.cta.join": "پیوستن به‌عنوان متخصص",
   "public.cta.joinHint":
-    "ثبت‌نام جداگانه برای «صاحب کسب‌وکار» وجود ندارد. از همان حساب استفاده کنید. فضای کاری ارائه‌دهنده فقط با نقش PROVIDER در توکن باز می‌شود.",
+    "ثبت‌نام جداگانه برای «صاحب کسب‌وکار» وجود ندارد. فضای ارائه‌دهنده با پروفایل Provider و فضای کسب‌وکار با مالکیت Business باز می‌شود.",
   "public.footer.tagline": "بازارگاهی برای ثبت نیاز، مقایسه پیشنهاد و پیگیری کار.",
   "public.category.home.title": "خانه و تعمیرات",
   "public.category.home.body": "لوله‌کشی، برق، بازسازی و تعمیرات خانگی.",
@@ -626,15 +626,27 @@ export const faIR: Record<MessageKey, string> = {
   "provider.profile.recorded": "ثبت‌شده روی پروفایل",
   "provider.profile.businessesTitle": "کسب‌وکارهای شما",
   "provider.profile.businessesBody":
-    "کسب‌وکارهای مالک از GET /api/businesses/me. ایجاد کسب‌وکار نقش BUSINESS_OWNER را اضافه نمی‌کند و ممکن است فضای کاری کسب‌وکار باز نشود.",
+    "کسب‌وکارهای مالک از GET /api/businesses/me (OwnerUserId). عضویت جداگانه است و فضای کاری کسب‌وکار را باز نمی‌کند.",
   "provider.profile.businessesEmpty": "کسب‌وکاری در این پاسخ نیست.",
   "provider.profile.businessesRetry": "تلاش دوباره",
   "provider.profile.openBusinessWorkspace": "باز کردن فضای کاری کسب‌وکار",
   "provider.profile.noBusinessRole":
-    "این حساب نقش BUSINESS_OWNER ندارد؛ بنابراین فضای کاری کسب‌وکار در دسترس نیست.",
+    "این حساب مالک کسب‌وکاری نیست؛ بنابراین فضای کاری کسب‌وکار در دسترس نیست.",
+  "provider.profile.ownedTitle": "کسب‌وکارهایی که مالک آن‌ها هستید",
+  "provider.profile.ownedBody":
+    "مالکیت با OwnerUserId همین کاربر است (GET /api/businesses/me). عضویت جداگانه فهرست می‌شود.",
+  "provider.profile.ownedEmpty": "کسب‌وکاری به نام شما نیست.",
+  "provider.profile.membershipsTitle": "عضویت در کسب‌وکارها",
+  "provider.profile.membershipsBody":
+    "کسب‌وکارهایی که این ارائه‌دهنده عضو آن‌هاست (GET /api/providers/me/businesses). عضویت با مالکیت یکی نیست.",
+  "provider.profile.membershipsEmpty": "عضویت BusinessProvider در این پاسخ نیست.",
+  "provider.profile.membershipRole": "نقش عضویت: {role}",
+  "provider.profile.membershipBusiness": "کسب‌وکار #{id}",
+  "provider.profile.noBusinessOwnership":
+    "مالکیت کسب‌وکار (OwnerUserId) فضای کاری کسب‌وکار را باز می‌کند. عضویت به‌تنهایی کافی نیست.",
   "business.dashboard.title": "فضای کاری کسب‌وکار",
   "business.dashboard.description":
-    "این پوسته برای نقش BUSINESS_OWNER است. عضویت BusinessProvider ثبت‌نام جداگانه نیست.",
+    "این پوسته برای کاربری است که دست‌کم یک کسب‌وکار با OwnerUserId دارد. عضویت BusinessProvider مالکیت نیست و ثبت‌نام جداگانه هم نیست.",
   "business.dashboard.emptyTitle": "فعالیتی نیست",
   "business.dashboard.emptyBody":
     "کاتالوگ، اعضا و اجراهای این فضا در این کار ساخته نشده‌اند.",

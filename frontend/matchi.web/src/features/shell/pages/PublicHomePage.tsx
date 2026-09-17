@@ -2,6 +2,7 @@ import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../shared/auth/AuthProvider";
+import { useWorkspaceAccess } from "../../../shared/auth/useWorkspaceAccess";
 import { t } from "../../../shared/i18n";
 import {
   findServicePath,
@@ -41,6 +42,7 @@ const TRUST_ITEMS = [
 export function PublicHomePage() {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
+  const { capabilities } = useWorkspaceAccess();
   const [query, setQuery] = useState("");
   const [searchError, setSearchError] = useState<string | undefined>();
   const categories = useServiceCategories();
@@ -50,11 +52,11 @@ export function PublicHomePage() {
   const suggestions = catalog.data?.items.map((item) => item.name) ?? [];
 
   function goFind(search?: string) {
-    navigate(findServicePath(isAuthenticated, user?.roles, search));
+    navigate(findServicePath(isAuthenticated, user?.roles, search, capabilities));
   }
 
   function goJoin() {
-    navigate(professionalJoinPath(isAuthenticated, user?.roles));
+    navigate(professionalJoinPath(isAuthenticated, user?.roles, capabilities));
   }
 
   function submitSearch() {

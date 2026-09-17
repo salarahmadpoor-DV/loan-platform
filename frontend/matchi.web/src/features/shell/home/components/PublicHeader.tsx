@@ -18,7 +18,7 @@ import { useEffect, useId, useState } from "react";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { matchiShadows } from "../../../../app/designTokens";
 import { useAuth } from "../../../../shared/auth/AuthProvider";
-import { defaultWorkspacePath } from "../../../../shared/auth/workspaces";
+import { useWorkspaceAccess } from "../../../../shared/auth/useWorkspaceAccess";
 import { getLocale, t } from "../../../../shared/i18n";
 import { changeAppLocale } from "../../../../shared/i18n/LocaleProvider";
 import { findServicePath } from "../../../../shared/marketplace/publicPaths";
@@ -26,7 +26,6 @@ import { findServicePath } from "../../../../shared/marketplace/publicPaths";
 const NAV_LINKS = [
   { hash: "categories", labelKey: "public.nav.findServices" as const },
   { hash: "how-it-works", labelKey: "public.nav.howItWorks" as const },
-  { hash: "for-professionals", labelKey: "public.nav.forProfessionals" as const },
 ];
 
 function scrollToSection(hash: string) {
@@ -36,21 +35,17 @@ function scrollToSection(hash: string) {
 
 export function PublicHeader() {
   const theme = useTheme();
-  const compactNav = !useMediaQuery(theme.breakpoints.up("lg"));
+  const compactNav = !useMediaQuery(theme.breakpoints.up("md"));
   const [open, setOpen] = useState(false);
   const [elevated, setElevated] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, user } = useAuth();
-  const findPath = findServicePath(isAuthenticated, user?.roles);
-  const workspacePath = defaultWorkspacePath(user?.roles);
+  const { defaultPath, capabilities } = useWorkspaceAccess();
+  const findPath = findServicePath(isAuthenticated, user?.roles, undefined, capabilities);
   const drawerAnchor = theme.direction === "rtl" ? "right" : "left";
   const menuId = useId();
-  const primaryPath = isAuthenticated
-    ? workspacePath === "/"
-      ? findPath
-      : workspacePath
-    : findPath;
+  const primaryPath = isAuthenticated ? (defaultPath === "/" ? findPath : defaultPath) : findPath;
   const locale = getLocale();
 
   useEffect(() => {
@@ -91,20 +86,6 @@ export function PublicHeader() {
     </Button>
   );
 
-  const actions = (
-    <Stack direction="row" spacing={1} sx={{ flexShrink: 0, alignItems: "center" }}>
-      {localeToggle}
-      {!isAuthenticated && !compactNav ? (
-        <Button color="inherit" onClick={() => go("/login")}>
-          {t("auth.signIn")}
-        </Button>
-      ) : null}
-      <Button variant="contained" onClick={() => go(primaryPath)}>
-        {isAuthenticated ? t("public.nav.workspace") : t("public.nav.getStarted")}
-      </Button>
-    </Stack>
-  );
-
   return (
     <AppBar
       position="sticky"
@@ -120,72 +101,82 @@ export function PublicHeader() {
     >
       <Container maxWidth="lg" disableGutters>
         <Toolbar
+          disableGutters
           sx={{
-            gap: 1,
+            display: "grid",
+            gridTemplateColumns: "auto minmax(0, 1fr) auto",
+            columnGap: { xs: 1, sm: 2 },
+            alignItems: "center",
             px: { xs: 1.5, sm: 3 },
-            flexWrap: "nowrap",
             minHeight: { xs: 64, lg: 72 },
+            width: "100%",
           }}
         >
-          {compactNav ? (
-            <IconButton
-              color="inherit"
-              aria-label={t("nav.openMenu")}
-              aria-expanded={open}
-              aria-controls={menuId}
-              onClick={() => setOpen(true)}
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+            {compactNav ? (
+              <IconButton
+                color="inherit"
+                aria-label={t("nav.openMenu")}
+                aria-expanded={open}
+                aria-controls={menuId}
+                onClick={() => setOpen(true)}
+              >
+                <Typography component="span" fontWeight={700} aria-hidden>
+                  ≡
+                </Typography>
+              </IconButton>
+            ) : null}
+            <Stack
+              component={RouterLink}
+              to="/"
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              sx={{ color: "inherit", textDecoration: "none", minWidth: 0 }}
             >
-              <Typography component="span" fontWeight={700} aria-hidden>
-                ≡
+              <Box
+                aria-hidden
+                sx={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 1,
+                  bgcolor: "primary.main",
+                  flexShrink: 0,
+                }}
+              />
+              <Typography variant="h6" component="span" noWrap sx={{ fontWeight: 700 }}>
+                {t("app.name")}
               </Typography>
-            </IconButton>
-          ) : null}
-          <Stack
-            component={RouterLink}
-            to="/"
-            direction="row"
-            spacing={1}
-            alignItems="center"
-            sx={{
-              color: "inherit",
-              textDecoration: "none",
-              flexGrow: compactNav ? 1 : 0,
-              minWidth: 0,
-              flexShrink: 0,
-            }}
-          >
-            <Box
-              aria-hidden
-              sx={{
-                width: 28,
-                height: 28,
-                borderRadius: 1,
-                bgcolor: "primary.main",
-                flexShrink: 0,
-              }}
-            />
-            <Typography variant="h6" component="span" noWrap sx={{ fontWeight: 700 }}>
-              {t("app.name")}
-            </Typography>
+            </Stack>
           </Stack>
           {!compactNav ? (
             <Stack
               direction="row"
               spacing={0.5}
-              sx={{ flexGrow: 1, px: 2, minWidth: 0, flexWrap: "nowrap" }}
+              sx={{ minWidth: 0, justifyContent: "flex-start" }}
               component="nav"
               aria-label={t("public.nav.findServices")}
             >
               {NAV_LINKS.map((link) => (
-                <Button key={link.hash} color="inherit" onClick={() => goSection(link.hash)} sx={{ flexShrink: 0 }}>
+                <Button key={link.hash} color="inherit" onClick={() => goSection(link.hash)}>
                   {t(link.labelKey)}
                 </Button>
               ))}
             </Stack>
           ) : (
-            <Box sx={{ flexGrow: 1, minWidth: 0 }} />
+            <Box />
           )}
-          {actions}
+          <Stack direction="row" spacing={1} sx={{ alignItems: "center", justifyContent: "flex-end" }}>
+            {localeToggle}
+            {!isAuthenticated && !compactNav ? (
+              <Button color="inherit" onClick={() => go("/login")}>
+                {t("auth.signIn")}
+              </Button>
+            ) : null}
+            <Button variant="contained" onClick={() => go(primaryPath)}>
+              {isAuthenticated ? t("public.nav.workspace") : t("public.nav.getStarted")}
+            </Button>
+          </Stack>
         </Toolbar>
       </Container>
       <Drawer
@@ -205,6 +196,9 @@ export function PublicHeader() {
                 <ListItemText primary={t(link.labelKey)} />
               </ListItemButton>
             ))}
+            <ListItemButton onClick={() => goSection("for-professionals")}>
+              <ListItemText primary={t("public.nav.forProfessionals")} />
+            </ListItemButton>
             {!isAuthenticated ? (
               <ListItemButton onClick={() => go("/login")}>
                 <ListItemText primary={t("auth.signIn")} />

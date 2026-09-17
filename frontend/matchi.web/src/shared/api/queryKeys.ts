@@ -60,5 +60,6 @@ export const queryKeys = {
     myServices: () => [...queryKeys.provider.all, "me", "services"] as const,
     myProducts: () => [...queryKeys.provider.all, "me", "products"] as const,
     myBusinesses: () => [...queryKeys.provider.all, "me", "businesses"] as const,
+    memberships: () => [...queryKeys.provider.all, "me", "memberships"] as const,
   },
 } as const;

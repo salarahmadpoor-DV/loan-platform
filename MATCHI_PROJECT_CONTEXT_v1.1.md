@@ -725,16 +725,15 @@ OTP login remains the existing HTTP contract (`POST /api/auth/send-otp`, `POST /
 - **OTP flow:** Login is two steps. Step 1 posts `{ mobile }` to `POST /api/auth/send-otp` and stores `requestId` in component state only. Step 2 posts `{ mobile, otp, requestId }` to `POST /api/auth/verify-otp`. The UI never assumes SMS delivery; the user types the code. `refreshToken` from verify is ignored and not stored.
 - **Token storage:** Zustand holds `accessToken` + decoded `user` (`id`, `mobile`, `roles`) in memory. Only the access token is persisted, in `localStorage` key `matchi.accessToken`. On load, the token is decoded (no extra JWT library); expired or invalid tokens are dropped. User profile is not written to storage.
 - **Axios:** Bearer is attached automatically except on send-otp/verify-otp (so a leftover token cannot fail the login calls). Other 401s clear the session and redirect to `/login`, unless the user is already on `/login`. There is no refresh-token interceptor.
-- **Workspaces from JWT roles (not permission claims):**
+- **Workspaces from USER + capabilities (not JWT PROVIDER / BUSINESS_OWNER identity):**
   - `USER` → Customer (`/customer`)
-  - `USER` + `PROVIDER` → Customer + Provider; login/home workspace action opens `/provider/dashboard`
-  - `USER` + `BUSINESS_OWNER` → Customer + Business
-  - `PROVIDER` without `USER` → Provider only (Customer is not implied)
+  - Provider row for this user (`GET /api/providers/me`) → Provider; login opens `/provider/dashboard`
+  - Owned business (`GET /api/businesses/me` non-empty, `OwnerUserId`) → Business
   - `ADMIN` → Customer + Provider + Business (no Admin UI)
-- There is no separate Business Owner registration. `CreateProvider` / `CreateBusiness` do not grant `PROVIDER` / `BUSINESS_OWNER` roles.
-- **JWT role claim:** `JwtTokenService` writes `ClaimTypes.Role` (`http://schemas.microsoft.com/ws/2008/06/identity/claims/role`). The compact JWT name may also be `role` / `roles`. The frontend reads all of those in `extractRolesFromPayload`. Permission claims (`permission`) are ignored. Role codes are normalized to uppercase (`USER`, `PROVIDER`, `BUSINESS_OWNER`, `ADMIN`).
-- **Session source of truth:** login unions OTP `user.roles` with decoded JWT roles, then persists only the access token. Reload re-decodes the JWT. Customer is added only when `USER` or `ADMIN` is present — not as a blind fallback for empty/unparsed roles.
-- Route protection: `/` and `/login` are public. `/customer/*`, `/provider/*`, and `/business/*` require a session; workspace routes require the matching role set. Unauthorized workspace URLs redirect to the first *allowed* workspace (or `/` if none), they do not render Customer inside a Provider/Business URL.
+- There is no separate Business Owner registration. Ownership is `Businesses.OwnerUserId`. Membership is `BusinessProvider` and does not open the Business shell. `ProviderWorkspace` authorizes a Provider profile (or ADMIN), not `RequireRole("PROVIDER")`.
+- **JWT role claim:** `JwtTokenService` writes `ClaimTypes.Role`. OTP still assigns `USER` only (plus seeded `ADMIN` for the demo user). Permission claims (`permission`) still gate many APIs. Workspace shells no longer treat `PROVIDER` / `BUSINESS_OWNER` JWT codes as identity.
+- **Session source of truth:** login unions OTP `user.roles` with decoded JWT roles, then persists only the access token. Reload re-decodes the JWT. After login, the SPA loads provider-profile and owned-business existence to resolve workspaces.
+- Route protection: `/` and `/login` are public. `/customer/*`, `/provider/*`, and `/business/*` require a session; workspace routes require USER/ADMIN plus the matching capability. Unauthorized workspace URLs redirect to the default allowed workspace (Provider first when a profile exists).
 
 ### Customer marketplace frontend decision (Task 9.4.1)
 
@@ -843,12 +842,12 @@ Provider workspace can now list eligible requests, own proposals, related deals,
 
 | Method | Path | Auth |
 |---|---|---|
-| GET | `/api/provider/requests` | JWT role `PROVIDER` (`ProviderWorkspace`) |
-| GET | `/api/provider/proposals` | JWT role `PROVIDER` |
-| GET | `/api/provider/deals` | JWT role `PROVIDER` |
-| GET | `/api/provider/executions` | JWT role `PROVIDER` |
+| GET | `/api/provider/requests` | Policy `ProviderWorkspace` (Provider profile or ADMIN) |
+| GET | `/api/provider/proposals` | Same |
+| GET | `/api/provider/deals` | Same |
+| GET | `/api/provider/executions` | Same |
 
-Empty lists: `200 []`. Missing Provider profile: **404**. Unauthenticated: **401**. Authenticated without role `PROVIDER` (typical customer `USER` token): **403** at the API (policy), before handlers.
+Empty lists: `200 []`. Missing Provider profile after policy: **404**. Unauthenticated: **401**. Authenticated `USER` with no `Providers.UserId` row: **403** at the API (policy). JWT `PROVIDER` is not required.
 
 **Inbox DTO** `ProviderRequestInboxItemDto`: `requestId`, `requestType`, `serviceSummary`, `categorySummary`, `location` (`province`/`city`/`district`, omitted if empty), `createdDate`, `status`.
 
@@ -862,8 +861,8 @@ Customer matching `GET /api/requests/{id}/matches` is unchanged (request owner o
 
 ### Authorization decisions
 
-- Workspace APIs use JWT **roles**, not `PROVIDER_*` permission claims. Policy name is `ProviderWorkspace` (not `PROVIDER`) because `PermissionPolicyProvider` treats unknown policy names as permission requirements.
-- `USER` = customer workspace. `PROVIDER` = provider workspace. `BUSINESS_OWNER` = business workspace.
+- Marketplace APIs use policy `ProviderWorkspace` (`ProviderProfileRequirement`: Provider row for the user, or ADMIN). The policy name is not a permission code because `PermissionPolicyProvider` treats unknown names as permission requirements. JWT `PROVIDER` is not identity.
+- Frontend workspaces: `USER` → Customer; Provider profile → Provider; owned business (`OwnerUserId`) → Business. `BusinessProvider` membership is not ownership. There is no Business Owner registration type.
 - Inbox eligibility reuses Provider matching rules (open, non-deleted requests; service/product overlap). Inactive providers get `[]`. Business match candidates are not listed in the Provider inbox.
 - Proposals: `Proposal.ProviderId == current Provider.Id` only (all statuses).
 - Deals: `Proposal.ProviderId == current Provider` **or** an execution assignment with `Status = Assigned` for that Provider. **`BusinessProvider` membership is not a grant.**
@@ -882,7 +881,7 @@ Customer matching `GET /api/requests/{id}/matches` is unchanged (request owner o
 
 **Status:** COMPLETE (frontend only). Backend and database were not changed.
 
-Provider shell uses existing `ProviderLayout`, `RequireAuth`, and `RequireWorkspace(provider)` (JWT role `PROVIDER` / `ADMIN`, not permission claims).
+Provider shell uses existing `ProviderLayout`, `RequireAuth`, and `RequireWorkspace(provider)`. Access is JWT `USER`/`ADMIN` plus a Provider profile (`GET /api/providers/me`), not a JWT `PROVIDER` registration role.
 
 ### Routes
 

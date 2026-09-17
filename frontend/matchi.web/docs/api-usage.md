@@ -37,11 +37,13 @@ Many GETs are **customer-owned** even if the URL looks generic:
 | `GET /api/requests/{id}/proposals` | request owner only |
 | `GET /api/proposals/{id}` | request owner only |
 | `GET /api/deals` / `GET /api/deals/{id}` | **customer** (`Request.Customer.UserId`) only |
-| `GET /api/provider/requests` | JWT role `PROVIDER` — matching-eligible open requests |
-| `GET /api/provider/proposals` | JWT role `PROVIDER` — own proposals |
-| `GET /api/provider/deals` | JWT role `PROVIDER` — own proposal or Assigned executor |
-| `GET /api/provider/executions` | JWT role `PROVIDER` — party or Assigned |
-| `GET /api/providers/me` | `PROVIDER_VIEW` — current Provider profile |
+| `GET /api/provider/requests` | Policy `ProviderWorkspace` (Provider row for this user, or ADMIN) — matching-eligible open requests |
+| `GET /api/provider/proposals` | Same — own proposals |
+| `GET /api/provider/deals` | Same — own proposal or Assigned executor |
+| `GET /api/provider/executions` | Same — party or Assigned |
+| `GET /api/providers/me` | `PROVIDER_VIEW` — current Provider profile (workspace capability) |
+| `GET /api/providers/me/businesses` | `PROVIDER_VIEW` — BusinessProvider memberships (not ownership) |
+| `GET /api/businesses/me` | `BUSINESS_VIEW` — businesses owned by this user (`OwnerUserId`) |
 | `GET /api/deals/{id}/executions` | customer, proposal party, or assigned provider |
 | `POST /api/requests/{id}/proposals` | Provider or Business **owner** (not membership). Provider UI sends `proposerType: "Provider"` only. |
 | `GET /api/providers/me/services` | `PROVIDER_VIEW` — current Provider service links |

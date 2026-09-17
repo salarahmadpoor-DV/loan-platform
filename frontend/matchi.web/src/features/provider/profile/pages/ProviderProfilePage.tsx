@@ -1,7 +1,6 @@
 import { Button, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { canAccessWorkspace } from "../../../../shared/auth/workspaces";
-import { useAuth } from "../../../../shared/auth/AuthProvider";
+import { useWorkspaceAccess } from "../../../../shared/auth/useWorkspaceAccess";
 import { t } from "../../../../shared/i18n";
 import { AppCard } from "../../../../shared/ui/AppCard";
 import { EmptyState } from "../../../../shared/ui/EmptyState";
@@ -11,13 +10,15 @@ import { LoadingState } from "../../../../shared/ui/LoadingState";
 import { PageHeader } from "../../../../shared/ui/PageHeader";
 import { StatusChip } from "../../../../shared/ui/StatusChip";
 import { useMyBusinesses } from "../hooks/useMyBusinesses";
+import { useMyProviderMemberships } from "../hooks/useMyProviderMemberships";
 import { useMyProviderProfile } from "../hooks/useMyProviderProfile";
 
 export function ProviderProfilePage() {
-  const { user } = useAuth();
+  const { canAccess } = useWorkspaceAccess();
   const { data, isPending, isError, error, refetch, isFetching } = useMyProviderProfile();
-  const businesses = useMyBusinesses();
-  const canOpenBusiness = canAccessWorkspace("business", user?.roles);
+  const owned = useMyBusinesses();
+  const memberships = useMyProviderMemberships();
+  const canOpenBusiness = canAccess("business");
 
   return (
     <>
@@ -88,32 +89,32 @@ export function ProviderProfilePage() {
       ) : null}
 
       <Stack spacing={1.5} sx={{ mt: 3 }}>
-        <Typography variant="h6">{t("provider.profile.businessesTitle")}</Typography>
+        <Typography variant="h6">{t("provider.profile.ownedTitle")}</Typography>
         <Typography variant="body2" color="text.secondary">
-          {t("provider.profile.businessesBody")}
+          {t("provider.profile.ownedBody")}
         </Typography>
-        {businesses.isPending ? <LoadingState /> : null}
-        {businesses.isError ? (
+        {owned.isPending ? <LoadingState /> : null}
+        {owned.isError ? (
           <Stack spacing={1}>
-            <ErrorAlert error={businesses.error} />
+            <ErrorAlert error={owned.error} />
             <Button
               variant="outlined"
               onClick={() => {
-                void businesses.refetch();
+                void owned.refetch();
               }}
-              disabled={businesses.isFetching}
+              disabled={owned.isFetching}
               sx={{ minHeight: 44, alignSelf: "flex-start" }}
             >
               {t("provider.profile.businessesRetry")}
             </Button>
           </Stack>
         ) : null}
-        {businesses.data && businesses.data.length === 0 ? (
-          <EmptyState title={t("provider.profile.businessesEmpty")} />
+        {owned.data && owned.data.length === 0 ? (
+          <EmptyState title={t("provider.profile.ownedEmpty")} />
         ) : null}
-        {businesses.data && businesses.data.length > 0 ? (
+        {owned.data && owned.data.length > 0 ? (
           <Stack spacing={1.5}>
-            {businesses.data.map((business) => (
+            {owned.data.map((business) => (
               <AppCard key={business.id}>
                 <Stack spacing={0.75}>
                   <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} useFlexGap>
@@ -141,9 +142,54 @@ export function ProviderProfilePage() {
           </Button>
         ) : (
           <Typography variant="body2" color="text.secondary">
-            {t("provider.profile.noBusinessRole")}
+            {t("provider.profile.noBusinessOwnership")}
           </Typography>
         )}
+      </Stack>
+
+      <Stack spacing={1.5} sx={{ mt: 3 }}>
+        <Typography variant="h6">{t("provider.profile.membershipsTitle")}</Typography>
+        <Typography variant="body2" color="text.secondary">
+          {t("provider.profile.membershipsBody")}
+        </Typography>
+        {memberships.isPending ? <LoadingState /> : null}
+        {memberships.isError ? (
+          <Stack spacing={1}>
+            <ErrorAlert error={memberships.error} />
+            <Button
+              variant="outlined"
+              onClick={() => {
+                void memberships.refetch();
+              }}
+              disabled={memberships.isFetching}
+              sx={{ minHeight: 44, alignSelf: "flex-start" }}
+            >
+              {t("provider.profile.businessesRetry")}
+            </Button>
+          </Stack>
+        ) : null}
+        {memberships.data && memberships.data.length === 0 ? (
+          <EmptyState title={t("provider.profile.membershipsEmpty")} />
+        ) : null}
+        {memberships.data && memberships.data.length > 0 ? (
+          <Stack spacing={1.5}>
+            {memberships.data.map((item) => (
+              <AppCard key={`${item.businessId}-${item.joinedAt}`}>
+                <Stack spacing={0.5}>
+                  <Typography variant="subtitle1">
+                    {item.businessName?.trim() || t("provider.profile.membershipBusiness", { id: item.businessId })}
+                  </Typography>
+                  <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} useFlexGap>
+                    <StatusChip label={item.status} tone="neutral" />
+                    <Typography variant="body2" color="text.secondary">
+                      {t("provider.profile.membershipRole", { role: item.role })}
+                    </Typography>
+                  </Stack>
+                </Stack>
+              </AppCard>
+            ))}
+          </Stack>
+        ) : null}
       </Stack>
     </>
   );

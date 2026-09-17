@@ -462,7 +462,7 @@ GET /api/provider/deals
 GET /api/provider/executions
 ```
 
-Bearer. Policy `ProviderWorkspace` = authenticated + JWT role `PROVIDER` (not permission claims). `USER` without `PROVIDER` → **403**. Missing Provider profile → **404**. Empty lists are `200 []`.
+Bearer. Policy `ProviderWorkspace` = authenticated user with a Provider row (`Providers.UserId`) or ADMIN. A `USER` with no Provider profile → **403**. Missing profile after the policy still yields **404** from handlers. Empty lists are `200 []`. JWT `PROVIDER` is not required.
 
 Does **not** replace customer matching (`GET /api/requests/{id}/matches`). Inbox uses the same eligibility rules as Provider matching (open requests only; Business candidates are not included).
 

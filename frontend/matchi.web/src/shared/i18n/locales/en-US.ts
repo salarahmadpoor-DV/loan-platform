@@ -24,7 +24,7 @@ export const enUS: Record<MessageKey, string> = {
   "auth.signIn": "Sign in",
   "auth.loginTitle": "Sign in",
   "auth.loginDescription":
-    "Use your mobile number. Enter the one-time code yourself — this app does not send SMS.",
+    "Use your mobile number. Enter the one-time code yourself — this app does not send SMS. Workspaces open from your User account, Provider profile, and owned businesses.",
   "auth.mobile": "Mobile number",
   "auth.mobileHelper": "Include country code if needed, for example +98912…",
   "auth.continue": "Continue",
@@ -53,7 +53,7 @@ export const enUS: Record<MessageKey, string> = {
   "error.retry": "Unable to complete the request. Please try again.",
   "public.homeDescription": "Request kinds: Service, Product, Hybrid.",
   "public.signedInWorkspaces":
-    "Sign in with a mobile one-time code. Available workspaces depend on your account roles. There is no Seller shell.",
+    "Sign in with a mobile one-time code. Workspaces follow your User account: Customer for USER, Provider if you have a Provider profile, Business if you own a business. There is no Seller shell.",
   "public.nav.findServices": "Find Services",
   "public.nav.howItWorks": "How It Works",
   "public.nav.forProfessionals": "For Professionals",
@@ -115,7 +115,7 @@ export const enUS: Record<MessageKey, string> = {
   "public.cta.find": "Find a Professional",
   "public.cta.join": "Join as a Professional",
   "public.cta.joinHint":
-    "There is no separate Business Owner registration. Use the same account. The Provider workspace opens only when the JWT includes the PROVIDER role.",
+    "There is no separate Business Owner registration. Provider workspace opens when this account has a Provider profile. Business workspace opens when this account owns a business.",
   "public.footer.tagline": "A marketplace to request work, compare proposals, and follow the job through.",
   "public.category.home.title": "Home & Repair",
   "public.category.home.body": "Plumbing, electrical, renovation, and household fixes.",
@@ -633,15 +633,27 @@ export const enUS: Record<MessageKey, string> = {
   "provider.profile.recorded": "Recorded on profile",
   "provider.profile.businessesTitle": "Businesses you own",
   "provider.profile.businessesBody":
-    "Owned businesses from GET /api/businesses/me. Creating a business does not add a BUSINESS_OWNER role, so the Business workspace may stay closed.",
+    "Owned businesses from GET /api/businesses/me (OwnerUserId). Memberships are listed separately and do not open the Business workspace.",
   "provider.profile.businessesEmpty": "No owned businesses in this response.",
   "provider.profile.businessesRetry": "Try again",
   "provider.profile.openBusinessWorkspace": "Open Business workspace",
   "provider.profile.noBusinessRole":
-    "This account does not have the BUSINESS_OWNER role, so the Business workspace is not available.",
+    "This account does not own a business, so the Business workspace is not available.",
+  "provider.profile.ownedTitle": "Businesses you own",
+  "provider.profile.ownedBody":
+    "Ownership is Businesses.OwnerUserId for this user (GET /api/businesses/me). Membership is listed separately.",
+  "provider.profile.ownedEmpty": "You do not own a business.",
+  "provider.profile.membershipsTitle": "Business memberships",
+  "provider.profile.membershipsBody":
+    "Businesses this Provider belongs to (GET /api/providers/me/businesses). Membership is not ownership.",
+  "provider.profile.membershipsEmpty": "No BusinessProvider memberships in this response.",
+  "provider.profile.membershipRole": "Membership role: {role}",
+  "provider.profile.membershipBusiness": "Business #{id}",
+  "provider.profile.noBusinessOwnership":
+    "Owning a business (OwnerUserId) opens the Business workspace. Being a member does not.",
   "business.dashboard.title": "Business workspace",
   "business.dashboard.description":
-    "This shell is for the BUSINESS_OWNER role. Membership (BusinessProvider) is not a separate registration.",
+    "This shell is for users who own at least one Business (OwnerUserId). BusinessProvider membership is not ownership and is not a separate registration.",
   "business.dashboard.emptyTitle": "No activity yet",
   "business.dashboard.emptyBody":
     "Catalog, members, and executions for this workspace are not built in this task.",

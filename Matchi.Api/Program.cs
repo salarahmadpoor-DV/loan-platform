@@ -89,11 +89,15 @@ builder.Services.AddSingleton<IAuthorizationPolicyProvider,
 
 builder.Services.AddScoped<IAuthorizationHandler,
     PermissionAuthorizationHandler>();
+builder.Services.AddScoped<IAuthorizationHandler,
+    ProviderProfileAuthorizationHandler>();
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(
         "ProviderWorkspace",
-        policy => policy.RequireAuthenticatedUser().RequireRole("PROVIDER"));
+        policy => policy
+            .RequireAuthenticatedUser()
+            .AddRequirements(new ProviderProfileRequirement()));
 });
 
 const string localFrontendCorsPolicy = "LocalFrontend";

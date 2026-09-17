@@ -1,6 +1,7 @@
 import {
   canAccessWorkspace,
   defaultWorkspacePath,
+  type WorkspaceCapabilities,
 } from "../auth/workspaces";
 
 export const customerCreateRequestPath = "/customer/requests/create";
@@ -33,13 +34,14 @@ export function findServicePath(
   isAuthenticated: boolean,
   roles: readonly string[] | undefined,
   query?: string,
+  capabilities?: WorkspaceCapabilities,
 ): string {
   const destination = createRequestPathWithQuery(query);
-  if (canAccessWorkspace("customer", roles)) {
+  if (canAccessWorkspace("customer", roles, capabilities)) {
     return destination;
   }
   if (isAuthenticated) {
-    return defaultWorkspacePath(roles);
+    return defaultWorkspacePath(roles, capabilities);
   }
   return loginPathWithNext(destination);
 }
@@ -47,8 +49,9 @@ export function findServicePath(
 export function professionalJoinPath(
   isAuthenticated: boolean,
   roles: readonly string[] | undefined,
+  capabilities?: WorkspaceCapabilities,
 ): string {
-  if (canAccessWorkspace("provider", roles)) {
+  if (canAccessWorkspace("provider", roles, capabilities)) {
     return providerWorkspacePath;
   }
   if (isAuthenticated) {

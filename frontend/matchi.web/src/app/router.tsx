@@ -25,14 +25,17 @@ import { BusinessLayout } from "../layouts/BusinessLayout";
 import { CustomerLayout } from "../layouts/CustomerLayout";
 import { ProviderLayout } from "../layouts/ProviderLayout";
 import { PublicLayout } from "../layouts/PublicLayout";
-import { useAuth } from "../shared/auth/AuthProvider";
 import { RequireAuth } from "../shared/auth/RequireAuth";
 import { RequireWorkspace } from "../shared/auth/RequireWorkspace";
-import { defaultWorkspacePath } from "../shared/auth/workspaces";
+import { useWorkspaceAccess } from "../shared/auth/useWorkspaceAccess";
+import { LoadingState } from "../shared/ui/LoadingState";
 
 function RedirectToDefaultWorkspace() {
-  const { user } = useAuth();
-  return <Navigate to={defaultWorkspacePath(user?.roles)} replace />;
+  const access = useWorkspaceAccess();
+  if (!access.isReady) {
+    return <LoadingState />;
+  }
+  return <Navigate to={access.defaultPath} replace />;
 }
 
 export function AppRouter() {

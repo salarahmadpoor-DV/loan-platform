@@ -4,11 +4,12 @@ import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { ApiError } from "../../../shared/api/errors";
 import { useAuth } from "../../../shared/auth/AuthProvider";
 import { decodeAccessToken } from "../../../shared/auth/jwt";
-import { defaultWorkspacePath, resolveWorkspaces } from "../../../shared/auth/workspaces";
+import { useWorkspaceAccess } from "../../../shared/auth/useWorkspaceAccess";
 import { safeInternalPath } from "../../../shared/marketplace/publicPaths";
 import { t } from "../../../shared/i18n";
 import { AppCard } from "../../../shared/ui/AppCard";
 import { ErrorAlert } from "../../../shared/ui/ErrorAlert";
+import { LoadingState } from "../../../shared/ui/LoadingState";
 import { PageHeader } from "../../../shared/ui/PageHeader";
 import { sendOtp, verifyOtp } from "../api/authApi";
 
@@ -28,7 +29,8 @@ function loginDisplayError(error: unknown, step: "mobile" | "otp"): unknown {
 }
 
 export function LoginPage() {
-  const { isAuthenticated, setSession, user } = useAuth();
+  const { isAuthenticated, setSession } = useAuth();
+  const access = useWorkspaceAccess();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const nextPath = safeInternalPath(searchParams.get("next"));
@@ -39,8 +41,11 @@ export function LoginPage() {
   const [error, setError] = useState<unknown>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  if (isAuthenticated && resolveWorkspaces(user?.roles).length > 0) {
-    return <Navigate to={nextPath ?? defaultWorkspacePath(user?.roles)} replace />;
+  if (isAuthenticated) {
+    if (!access.isReady) {
+      return <LoadingState />;
+    }
+    return <Navigate to={nextPath ?? access.defaultPath} replace />;
   }
 
   async function onSendOtp(event: FormEvent) {
@@ -114,14 +119,7 @@ export function LoginPage() {
         mobile: result.user.mobile || claims.mobile || mobile,
         roles: Array.isArray(result.user.roles) ? result.user.roles : [],
       });
-      navigate(
-        nextPath ??
-          defaultWorkspacePath([
-            ...(claims.roles ?? []),
-            ...(Array.isArray(result.user.roles) ? result.user.roles : []),
-          ]),
-        { replace: true },
-      );
+      navigate(nextPath ?? "/app", { replace: true });
     } catch (err) {
       setError(loginDisplayError(err, "otp"));
     } finally {

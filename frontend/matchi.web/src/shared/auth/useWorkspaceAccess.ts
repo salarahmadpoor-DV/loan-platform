@@ -22,6 +22,8 @@ async function providerProfileExists(): Promise<boolean> {
     await getMyProviderProfile();
     return true;
   } catch (error) {
+    // 404: authenticated but no Providers.UserId row (legacy PROVIDER_VIEW path).
+    // 403: ProviderWorkspace policy failed (no Provider row, or unauthenticated mapping).
     if (error instanceof ApiError && (error.status === 404 || error.status === 403)) {
       return false;
     }
@@ -46,15 +48,17 @@ export function useWorkspaceAccess() {
   const admin = isAdmin(user?.roles);
   const enabled = isAuthenticated && !admin;
 
+  const userId = user?.id;
+
   const provider = useQuery({
-    queryKey: [...queryKeys.provider.profile(), "exists"],
+    queryKey: [...queryKeys.provider.profile(), "exists", userId ?? 0],
     queryFn: providerProfileExists,
     enabled,
     retry: false,
   });
 
   const businesses = useQuery({
-    queryKey: [...queryKeys.provider.myBusinesses(), "owned"],
+    queryKey: [...queryKeys.provider.myBusinesses(), "owned", userId ?? 0],
     queryFn: userOwnsBusiness,
     enabled,
     retry: false,

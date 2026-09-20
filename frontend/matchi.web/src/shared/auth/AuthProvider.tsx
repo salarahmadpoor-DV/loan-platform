@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import {
   createContext,
   useContext,
@@ -8,6 +9,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { setUnauthorizedHandler } from "../api/httpClient";
 import { useAuthStore, type AuthUser } from "./authStore";
+import { resetWorkspaceCapabilityQueries } from "./resetWorkspaceCapabilityQueries";
 
 type AuthContextValue = {
   accessToken: string | null;
@@ -21,32 +23,38 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const accessToken = useAuthStore((s) => s.accessToken);
   const user = useAuthStore((s) => s.user);
-  const setSession = useAuthStore((s) => s.setSession);
+  const setSessionStore = useAuthStore((s) => s.setSession);
   const clearSession = useAuthStore((s) => s.clearSession);
 
   useEffect(() => {
     setUnauthorizedHandler(() => {
+      resetWorkspaceCapabilityQueries(queryClient);
       if (window.location.pathname !== "/login") {
         navigate("/login", { replace: true });
       }
     });
     return () => setUnauthorizedHandler(null);
-  }, [navigate]);
+  }, [navigate, queryClient]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       accessToken,
       user,
       isAuthenticated: Boolean(accessToken),
-      setSession,
+      setSession: (token, profile) => {
+        resetWorkspaceCapabilityQueries(queryClient);
+        setSessionStore(token, profile);
+      },
       logout: () => {
+        resetWorkspaceCapabilityQueries(queryClient);
         clearSession();
         navigate("/login", { replace: true });
       },
     }),
-    [accessToken, user, setSession, clearSession, navigate],
+    [accessToken, user, setSessionStore, clearSession, navigate, queryClient],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

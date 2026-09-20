@@ -31,7 +31,7 @@ Customer sidebar (plus dashboard home): درخواست‌ها / معاملات /
 
 ## Provider (`RequireAuth` + `RequireWorkspace(provider)` + `ProviderLayout`)
 
-JWT `USER` or `ADMIN`, plus a Provider row for this user (`GET /api/providers/me`). Marketplace APIs use policy `ProviderWorkspace` (Provider profile or ADMIN). Default post-login path is `/provider/dashboard` when a Provider profile exists.
+JWT `USER` or `ADMIN`, plus a Provider row for this user. `GET /api/providers/me` uses policy `ProviderWorkspace` (Provider profile or ADMIN), not `PROVIDER_VIEW`. `PermissionPolicyProvider` must map that name to `ProviderProfileRequirement` (not JWT permission `ProviderWorkspace`); otherwise login still 403s and the SPA treats the user as customer-only. Marketplace APIs use the same policy. Default post-login path is `/provider/dashboard` when a Provider profile exists.
 
 | Path | Page |
 |---|---|

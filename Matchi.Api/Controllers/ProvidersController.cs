@@ -30,7 +30,7 @@ public class ProvidersController : ControllerBase
     }
 
     [HttpGet("me")]
-    [Authorize(Policy = "PROVIDER_VIEW")]
+    [Authorize(Policy = "ProviderWorkspace")]
     public async Task<IActionResult> GetMine(CancellationToken cancellationToken = default)
     {
         var provider = await _mediator.Send(new GetMyProviderQuery(), cancellationToken);

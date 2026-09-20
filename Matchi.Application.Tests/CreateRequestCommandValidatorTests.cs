@@ -153,6 +153,18 @@ public sealed class CreateRequestCommandValidatorTests
     }
 
     [Fact]
+    public void Synchronous_Validate_throws_because_catalog_rules_are_async()
+    {
+        var command = new CreateRequestCommand(
+            "Service",
+            "Need plumbing",
+            Services: [new RequestServiceLineDto(10, 1m)]);
+
+        Assert.Throws<AsyncValidatorInvokedSynchronouslyException>(
+            () => Validator().Validate(command));
+    }
+
+    [Fact]
     public async Task ValidationBehavior_runs_async_rules_and_returns_validation_failures()
     {
         var command = new CreateRequestCommand(
@@ -169,5 +181,22 @@ public sealed class CreateRequestCommandValidatorTests
         Assert.Contains(
             validationException.Errors,
             error => error.ErrorMessage == "The selected service was not found or is inactive.");
+    }
+
+    [Fact]
+    public async Task ValidationBehavior_allows_valid_request_without_sync_invocation_exception()
+    {
+        var command = new CreateRequestCommand(
+            "Service",
+            "Need plumbing",
+            Services: [new RequestServiceLineDto(10, 1m)]);
+        var behavior = new ValidationBehavior<CreateRequestCommand, long>([Validator()]);
+
+        var exception = await Record.ExceptionAsync(() =>
+            behavior.Handle(command, _ => Task.FromResult(42L), CancellationToken.None));
+
+        Assert.Null(exception);
+        var id = await behavior.Handle(command, _ => Task.FromResult(42L), CancellationToken.None);
+        Assert.Equal(42L, id);
     }
 }

@@ -1,6 +1,6 @@
-# MATCHI_PROJECT_CONTEXT v2.25
+# MATCHI_PROJECT_CONTEXT v2.26
 
-**Updated:** 2026-09-16  
+**Updated:** 2026-09-20  
 **Scope:** Architectural baseline and implementation log for the Matchi .NET 8 marketplace.
 
 This file is the documented Matchi baseline and decision log. It was **not present in the repository at the start of Task 03**. Task 03 therefore treated the Task 02 Request implementation, existing Domain/EF baseline, `docs/api-endpoints-mvp.md`, and the Task 03 specification as the source of truth, then created this file as the required living context.
@@ -197,6 +197,14 @@ Customer is never accepted from the client. DTOs live in Application (Contracts 
 **Fix:** remove ASP.NET automatic FluentValidation. Validators stay registered for DI. `ValidationBehavior` already calls `ValidateAsync`. Invalid requests map through `ExceptionHttpMapper` to HTTP 400 ProblemDetails (`Validation failed`).
 
 **Verified:** `dotnet test Matchi.Application.Tests --no-restore` — 87 passed. `dotnet build MatchiSolution.sln --no-restore` — succeeded after stopping the locked `Matchi.Api` process. Runtime `POST /api/requests` on restarted `http://localhost:5262`: invalid line → **400** (includes async catalog message); valid Service (`serviceId` 3) → **201**. No `AsyncValidatorInvokedSynchronouslyException`.
+
+### POST `/api/requests` async FluentValidation pipeline (v2.26, 2026-09-20)
+
+`CreateRequestCommandValidator` still uses `RequestWriteRules` with `MustAsync` catalog lookups (service existence, service-attribute ownership, product/category/attribute). `RuleForEach` member-access for Services/Products is unchanged.
+
+ASP.NET automatic FluentValidation is not used. `FluentValidation.AspNetCore` was removed from `Matchi.Api`. Validators register in `AddApplication()` via `FluentValidation.DependencyInjectionExtensions` 12.1.1. `ValidationBehavior` calls `ValidateAsync`.
+
+**Verified:** `dotnet test Matchi.Application.Tests --no-restore` — **89** passed (including `Validate()` throws `AsyncValidatorInvokedSynchronouslyException` while `ValidateAsync` / `ValidationBehavior` do not). `dotnet build MatchiSolution.sln --no-restore` — succeeded. Runtime restarted `http://localhost:5262`: valid Service (`serviceId` 3) → **201**; invalid line / missing catalog → **400** ProblemDetails (`Validation failed`); no `AsyncValidatorInvokedSynchronouslyException`. There is no API integration-test project.
 
 ---
 
@@ -727,12 +735,12 @@ OTP login remains the existing HTTP contract (`POST /api/auth/send-otp`, `POST /
 - **Axios:** Bearer is attached automatically except on send-otp/verify-otp (so a leftover token cannot fail the login calls). Other 401s clear the session and redirect to `/login`, unless the user is already on `/login`. There is no refresh-token interceptor.
 - **Workspaces from USER + capabilities (not JWT PROVIDER / BUSINESS_OWNER identity):**
   - `USER` → Customer (`/customer`)
-  - Provider row for this user (`GET /api/providers/me`) → Provider; login opens `/provider/dashboard`
+  - Provider row for this user (`GET /api/providers/me`, policy `ProviderWorkspace`) → Provider; login opens `/provider/dashboard`
   - Owned business (`GET /api/businesses/me` non-empty, `OwnerUserId`) → Business
   - `ADMIN` → Customer + Provider + Business (no Admin UI)
-- There is no separate Business Owner registration. Ownership is `Businesses.OwnerUserId`. Membership is `BusinessProvider` and does not open the Business shell. `ProviderWorkspace` authorizes a Provider profile (or ADMIN), not `RequireRole("PROVIDER")`.
+- There is no separate Business Owner registration. Ownership is `Businesses.OwnerUserId`. Membership is `BusinessProvider` and does not open the Business shell. `GET /api/providers/me` and marketplace APIs use `ProviderWorkspace` (Provider row `Providers.UserId`, or ADMIN), not `RequireRole("PROVIDER")` and not `PROVIDER_VIEW` for self-profile detection. `PermissionPolicyProvider` resolves `ProviderWorkspace` to `ProviderProfileRequirement` so it is not treated as JWT permission `ProviderWorkspace` (that mismatch was 403 after login). `PROVIDER_VIEW` remains on other provider catalog GETs.
 - **JWT role claim:** `JwtTokenService` writes `ClaimTypes.Role`. OTP still assigns `USER` only (plus seeded `ADMIN` for the demo user). Permission claims (`permission`) still gate many APIs. Workspace shells no longer treat `PROVIDER` / `BUSINESS_OWNER` JWT codes as identity.
-- **Session source of truth:** login unions OTP `user.roles` with decoded JWT roles, then persists only the access token. Reload re-decodes the JWT. After login, the SPA loads provider-profile and owned-business existence to resolve workspaces.
+- **Session source of truth:** login unions OTP `user.roles` with decoded JWT roles, then persists only the access token. Reload re-decodes the JWT. After login, the SPA loads provider-profile and owned-business existence to resolve workspaces. Logout/login remove those React Query entries so a previous `GET /api/providers/me` 403/404 (`exists: false`) is not reused. Logout/login remove those React Query entries so a previous `GET /api/providers/me` 403/404 (`exists: false`) is not reused.
 - Route protection: `/` and `/login` are public. `/customer/*`, `/provider/*`, and `/business/*` require a session; workspace routes require USER/ADMIN plus the matching capability. Unauthorized workspace URLs redirect to the default allowed workspace (Provider first when a profile exists).
 
 ### Customer marketplace frontend decision (Task 9.4.1)
@@ -861,7 +869,7 @@ Customer matching `GET /api/requests/{id}/matches` is unchanged (request owner o
 
 ### Authorization decisions
 
-- Marketplace APIs use policy `ProviderWorkspace` (`ProviderProfileRequirement`: Provider row for the user, or ADMIN). The policy name is not a permission code because `PermissionPolicyProvider` treats unknown names as permission requirements. JWT `PROVIDER` is not identity.
+- Marketplace APIs and `GET /api/providers/me` use policy `ProviderWorkspace` (`ProviderProfileRequirement`: Provider row for the user, or ADMIN). `PermissionPolicyProvider` returns that requirement for the exact name `ProviderWorkspace`; without that, the same name is treated as JWT `permission` `ProviderWorkspace` and a USER JWT gets **403** (`PermissionAuthorizationHandler`) before `ProviderProfileAuthorizationHandler` runs. JWT `PROVIDER` is not identity.
 - Frontend workspaces: `USER` → Customer; Provider profile → Provider; owned business (`OwnerUserId`) → Business. `BusinessProvider` membership is not ownership. There is no Business Owner registration type.
 - Inbox eligibility reuses Provider matching rules (open, non-deleted requests; service/product overlap). Inactive providers get `[]`. Business match candidates are not listed in the Provider inbox.
 - Proposals: `Proposal.ProviderId == current Provider.Id` only (all statuses).

@@ -34,10 +34,10 @@ if (jwtSettings.Key.Length < 32)
 builder.Services.Configure<JwtSettings>(jwtSection);
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
-builder.Services.AddValidatorsFromAssemblyContaining<Matchi.Application.Features.Auth.Commands.SendOtp.SendOtpCommandValidator>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-// Async FluentValidation rules (catalog lookups) run via MediatR ValidationBehavior.ValidateAsync.
+// Validators are registered in AddApplication. Async catalog rules run only via
+// MediatR ValidationBehavior.ValidateAsync. FluentValidation.AspNetCore is not used:
 // ASP.NET automatic validation is synchronous and throws AsyncValidatorInvokedSynchronouslyException.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

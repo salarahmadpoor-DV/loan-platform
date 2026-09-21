@@ -41,6 +41,7 @@ Many GETs are **customer-owned** even if the URL looks generic:
 | `GET /api/provider/proposals` | Same — own proposals |
 | `GET /api/provider/deals` | Same — own proposal or Assigned executor |
 | `GET /api/provider/executions` | Same — party or Assigned |
+| `POST /api/providers` | `PROVIDER_CREATE` — body `name`, optional `description`/`lat`/`lng`. UserId from JWT. **201** `{ providerId }`. SPA: `/provider/onboard` |
 | `GET /api/providers/me` | Policy `ProviderWorkspace` resolved by `PermissionPolicyProvider` to `ProviderProfileRequirement` (not JWT permission `ProviderWorkspace`) |
 | `GET /api/providers/me/businesses` | `PROVIDER_VIEW` — BusinessProvider memberships (not ownership) |
 | `GET /api/businesses/me` | `BUSINESS_VIEW` — businesses owned by this user (`OwnerUserId`) |

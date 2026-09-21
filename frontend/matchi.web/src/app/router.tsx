@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { LoginPage } from "../features/auth/pages/LoginPage";
+import { ProviderOnboardPage } from "../features/provider/profile/pages/ProviderOnboardPage";
 import { DealDetailPage } from "../features/customer/deals/pages/DealDetailPage";
 import { DealListPage } from "../features/customer/deals/pages/DealListPage";
 import { CustomerDashboardPage } from "../features/customer/dashboard/pages/CustomerDashboardPage";
@@ -44,6 +45,9 @@ export function AppRouter() {
       <Route element={<PublicLayout />}>
         <Route path="/" element={<PublicHomePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route element={<RequireAuth />}>
+          <Route path="/provider/onboard" element={<ProviderOnboardPage />} />
+        </Route>
       </Route>
       <Route element={<RequireAuth />}>
         <Route element={<RequireWorkspace workspace="customer" />}>

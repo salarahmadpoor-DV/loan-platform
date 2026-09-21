@@ -1,4 +1,4 @@
-# MATCHI_PROJECT_CONTEXT v2.26
+# MATCHI_PROJECT_CONTEXT v2.27
 
 **Updated:** 2026-09-20  
 **Scope:** Architectural baseline and implementation log for the Matchi .NET 8 marketplace.
@@ -64,6 +64,7 @@ Review
 | Task 11.1 — Provider Workspace Foundation | COMPLETE |
 | Task 11.2 — Provider Request Inbox | COMPLETE |
 | Task 11.3 — Provider Create Proposal | COMPLETE |
+| Task 11.3.7 — Provider Onboarding | COMPLETE |
 
 ---
 
@@ -738,7 +739,7 @@ OTP login remains the existing HTTP contract (`POST /api/auth/send-otp`, `POST /
   - Provider row for this user (`GET /api/providers/me`, policy `ProviderWorkspace`) → Provider; login opens `/provider/dashboard`
   - Owned business (`GET /api/businesses/me` non-empty, `OwnerUserId`) → Business
   - `ADMIN` → Customer + Provider + Business (no Admin UI)
-- There is no separate Business Owner registration. Ownership is `Businesses.OwnerUserId`. Membership is `BusinessProvider` and does not open the Business shell. `GET /api/providers/me` and marketplace APIs use `ProviderWorkspace` (Provider row `Providers.UserId`, or ADMIN), not `RequireRole("PROVIDER")` and not `PROVIDER_VIEW` for self-profile detection. `PermissionPolicyProvider` resolves `ProviderWorkspace` to `ProviderProfileRequirement` so it is not treated as JWT permission `ProviderWorkspace` (that mismatch was 403 after login). `PROVIDER_VIEW` remains on other provider catalog GETs.
+- Homepage **Become a Professional** (`ثبت‌نام به‌عنوان متخصص`) is `POST /api/providers` at `/provider/onboard` (Task 11.3.7). UserId is never posted. After **201**, the SPA marks provider existence and opens `/provider/dashboard`. Duplicate profile is the existing API **400**. OTP still does not create a Provider.
 - **JWT role claim:** `JwtTokenService` writes `ClaimTypes.Role`. OTP still assigns `USER` only (plus seeded `ADMIN` for the demo user). Permission claims (`permission`) still gate many APIs. Workspace shells no longer treat `PROVIDER` / `BUSINESS_OWNER` JWT codes as identity.
 - **Session source of truth:** login unions OTP `user.roles` with decoded JWT roles, then persists only the access token. Reload re-decodes the JWT. After login, the SPA loads provider-profile and owned-business existence to resolve workspaces. Logout/login remove those React Query entries so a previous `GET /api/providers/me` 403/404 (`exists: false`) is not reused. Logout/login remove those React Query entries so a previous `GET /api/providers/me` 403/404 (`exists: false`) is not reused.
 - Route protection: `/` and `/login` are public. `/customer/*`, `/provider/*`, and `/business/*` require a session; workspace routes require USER/ADMIN plus the matching capability. Unauthorized workspace URLs redirect to the default allowed workspace (Provider first when a profile exists).

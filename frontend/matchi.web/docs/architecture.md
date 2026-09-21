@@ -61,9 +61,9 @@ Provider routes include inbox lists (Task 11.1–11.2) and Provider create-propo
   - Owned business (`GET /api/businesses/me` non-empty) → Business
   - `ADMIN` → Customer + Provider + Business
 - JWT `PROVIDER` / `BUSINESS_OWNER` codes are **not** used as identity. `BusinessProvider` membership does not open the Business shell.
-- There is **no** `/register/business`. OTP always ensures `USER`. `POST /api/providers` creates `Providers.UserId`. `POST /api/businesses` sets `OwnerUserId`.
+- There is **no** `/register/business`. OTP always ensures `USER`. Homepage **Become a Professional** goes to `/provider/onboard` (`POST /api/providers`; UserId from JWT). `POST /api/businesses` sets `OwnerUserId`.
 - `GET /api/providers/me` and marketplace APIs use policy `ProviderWorkspace` (`ProviderProfileRequirement`: `Providers.UserId` or ADMIN). `PermissionPolicyProvider` must resolve that name **before** the permission fallback; otherwise it becomes JWT permission `ProviderWorkspace` and a normal USER gets **403**. Other provider catalog GETs still use `PROVIDER_VIEW`.
-- Login/logout remove React Query keys under `queryKeys.provider.profile()` and `myBusinesses()` so a cached `exists: false` cannot keep a Provider in the Customer shell. There is no SPA `POST /api/providers` yet; after creating a profile outside the app, login must refetch `GET /api/providers/me`.
+- Login/logout remove React Query keys under `queryKeys.provider.profile()` and `myBusinesses()` so a cached `exists: false` cannot keep a Provider in the Customer shell. After `POST /api/providers`, the exists query is set true and the profile namespace is invalidated before navigating to `/provider/dashboard`.
 - Roles are read from the access token (`ClaimTypes.Role` URI and/or JWT `role` / `roles`) in `decodeAccessToken`. `PROVIDER_*` permission claims must **not** unlock the Provider shell. After refresh, the session is rebuilt from the persisted JWT only.
 
 OTP: `POST /api/auth/send-otp`, `POST /api/auth/verify-otp`. `refreshToken` is ignored. 401 on authenticated calls clears the session and redirects to `/login`.

@@ -46,6 +46,8 @@ export function findServicePath(
   return loginPathWithNext(destination);
 }
 
+export const providerOnboardPath = "/provider/onboard";
+
 export function professionalJoinPath(
   isAuthenticated: boolean,
   roles: readonly string[] | undefined,
@@ -55,7 +57,7 @@ export function professionalJoinPath(
     return providerWorkspacePath;
   }
   if (isAuthenticated) {
-    return "/#for-professionals";
+    return providerOnboardPath;
   }
-  return loginPathWithNext(providerWorkspacePath);
+  return loginPathWithNext(providerOnboardPath);
 }

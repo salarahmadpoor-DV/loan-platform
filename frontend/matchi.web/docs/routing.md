@@ -8,6 +8,7 @@ All routes are declared in `src/app/router.tsx`. Do not register routes inside f
 |---|---|---|
 | `/` | none | `PublicHomePage` (marketplace landing; hashes `#categories`, `#how-it-works`, `#for-professionals`) |
 | `/login` | none | `LoginPage` (OTP). Optional `?next=/internal-path` after verify (same-origin app paths only). |
+| `/provider/onboard` | `RequireAuth` (not Provider workspace) | Become a Professional. `POST /api/providers` for the JWT user. Already a Provider → `/provider/dashboard`. |
 
 ## Customer (`RequireAuth` + `RequireWorkspace(customer)` + `CustomerLayout`)
 
@@ -31,7 +32,7 @@ Customer sidebar (plus dashboard home): درخواست‌ها / معاملات /
 
 ## Provider (`RequireAuth` + `RequireWorkspace(provider)` + `ProviderLayout`)
 
-JWT `USER` or `ADMIN`, plus a Provider row for this user. `GET /api/providers/me` uses policy `ProviderWorkspace` (Provider profile or ADMIN), not `PROVIDER_VIEW`. `PermissionPolicyProvider` must map that name to `ProviderProfileRequirement` (not JWT permission `ProviderWorkspace`); otherwise login still 403s and the SPA treats the user as customer-only. Marketplace APIs use the same policy. Default post-login path is `/provider/dashboard` when a Provider profile exists.
+JWT `USER` or `ADMIN`, plus a Provider row for this user. `GET /api/providers/me` uses policy `ProviderWorkspace` (Provider profile or ADMIN), not `PROVIDER_VIEW`. `PermissionPolicyProvider` must map that name to `ProviderProfileRequirement` (not JWT permission `ProviderWorkspace`); otherwise login still 403s and the SPA treats the user as customer-only. Marketplace APIs use the same policy. Default post-login path is `/provider/dashboard` when a Provider profile exists. Creating a profile is `/provider/onboard` (`RequireAuth` only, not this workspace guard).
 
 | Path | Page |
 |---|---|

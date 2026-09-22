@@ -1,11 +1,13 @@
 using Matchi.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Matchi.Infrastructure.Persistence.Seed;
 
 public static class DatabaseSeeder
 {
-    public static async Task SeedAsync(MatchiDbContext context)
+    public static async Task SeedAsync(MatchiDbContext context, ILogger? logger = null)
     {
         var userRole = await EnsureRoleAsync(context, "USER", "کاربر", "Authenticated marketplace user");
         var adminRole = await EnsureRoleAsync(context, "ADMIN", "مدیر سیستم", "مدیر سیستم با دسترسی کامل");
@@ -71,18 +73,23 @@ public static class DatabaseSeeder
             await context.SaveChangesAsync();
         }
 
-        if (await context.ServiceCategories.AnyAsync())
+        await CatalogSeeder.SeedAsync(
+            context,
+            logger ?? NullLogger.Instance);
+
+        await LocationSeeder.SeedAsync(
+            context,
+            logger ?? NullLogger.Instance);
+
+        if (await context.Providers.AnyAsync())
             return;
 
-        var plumbing = new ServiceCategory("لوله‌کشی", "plumbing");
+        var plumbingService =
+            await context.Services.FirstOrDefaultAsync(s => s.Slug == "plumbing-repair" && !s.IsDeleted)
+            ?? await context.Services.FirstOrDefaultAsync(s => s.Slug == "repair-water-leak" && !s.IsDeleted);
 
-        await context.ServiceCategories.AddAsync(plumbing);
-        await context.SaveChangesAsync();
-
-        var plumbingService = new Service("رفع نشتی و لوله‌کشی", plumbing.Id, "plumbing-repair");
-
-        await context.Services.AddAsync(plumbingService);
-        await context.SaveChangesAsync();
+        if (plumbingService is null)
+            return;
 
         var providerSpecs = new (string Name, string Mobile, decimal Lat, decimal Lng)[]
         {

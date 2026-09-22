@@ -4,6 +4,7 @@ using Matchi.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Matchi.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(MatchiDbContext))]
-    partial class MatchiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260922114021_AddLocationModule")]
+    partial class AddLocationModule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1973,42 +1976,30 @@ namespace Matchi.Infrastructure.Persistence.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<long?>("CityId")
-                        .HasColumnType("bigint");
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("CreateDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("SYSUTCDATETIME()");
 
-                    b.Property<long?>("DistrictId")
-                        .HasColumnType("bigint");
+                    b.Property<string>("District")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<decimal?>("Lat")
                         .HasPrecision(9, 6)
                         .HasColumnType("decimal(9,6)");
 
-                    b.Property<string>("LegacyCity")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("City");
-
-                    b.Property<string>("LegacyDistrict")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("District");
-
-                    b.Property<string>("LegacyProvince")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("Province");
-
                     b.Property<decimal?>("Lng")
                         .HasPrecision(9, 6)
                         .HasColumnType("decimal(9,6)");
 
-                    b.Property<long?>("ProvinceId")
-                        .HasColumnType("bigint");
+                    b.Property<string>("Province")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<long>("RequestId")
                         .HasColumnType("bigint");
@@ -2018,15 +2009,6 @@ namespace Matchi.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id")
                         .HasName("PK_RequestLocations");
-
-                    b.HasIndex("CityId")
-                        .HasDatabaseName("IX_RequestLocations_CityId");
-
-                    b.HasIndex("DistrictId")
-                        .HasDatabaseName("IX_RequestLocations_DistrictId");
-
-                    b.HasIndex("ProvinceId")
-                        .HasDatabaseName("IX_RequestLocations_ProvinceId");
 
                     b.HasIndex("RequestId")
                         .HasDatabaseName("IX_RequestLocations_RequestId");
@@ -2923,19 +2905,6 @@ namespace Matchi.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<decimal?>("CenterLat")
-                        .HasPrecision(9, 6)
-                        .HasColumnType("decimal(9,6)");
-
-                    b.Property<decimal?>("CenterLng")
-                        .HasPrecision(9, 6)
-                        .HasColumnType("decimal(9,6)");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<DateTime>("CreateDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -2954,17 +2923,8 @@ namespace Matchi.Infrastructure.Persistence.Migrations
                     b.Property<long>("ProvinceId")
                         .HasColumnType("bigint");
 
-                    b.Property<decimal?>("RadiusKm")
-                        .HasPrecision(8, 2)
-                        .HasColumnType("decimal(8,2)");
-
                     b.HasKey("Id")
                         .HasName("PK_LocationCities");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("UX_LocationCities_Code")
-                        .HasFilter("([Code]<>N'')");
 
                     b.HasIndex("ProvinceId")
                         .HasDatabaseName("IX_LocationCities_ProvinceId");
@@ -2980,21 +2940,8 @@ namespace Matchi.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<decimal?>("CenterLat")
-                        .HasPrecision(9, 6)
-                        .HasColumnType("decimal(9,6)");
-
-                    b.Property<decimal?>("CenterLng")
-                        .HasPrecision(9, 6)
-                        .HasColumnType("decimal(9,6)");
-
                     b.Property<long>("CityId")
                         .HasColumnType("bigint");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("CreateDate")
                         .ValueGeneratedOnAdd()
@@ -3011,20 +2958,11 @@ namespace Matchi.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<decimal?>("RadiusKm")
-                        .HasPrecision(8, 2)
-                        .HasColumnType("decimal(8,2)");
-
                     b.HasKey("Id")
                         .HasName("PK_LocationDistricts");
 
                     b.HasIndex("CityId")
                         .HasDatabaseName("IX_LocationDistricts_CityId");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("UX_LocationDistricts_Code")
-                        .HasFilter("([Code]<>N'')");
 
                     b.ToTable("LocationDistricts", "dbo");
                 });
@@ -3059,11 +2997,6 @@ namespace Matchi.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id")
                         .HasName("PK_LocationProvinces");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("UX_LocationProvinces_Code")
-                        .HasFilter("([Code]<>N'')");
 
                     b.ToTable("LocationProvinces", "dbo");
                 });
@@ -3698,36 +3631,12 @@ namespace Matchi.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Matchi.Domain.Entities.RequestLocation", b =>
                 {
-                    b.HasOne("Matchi.Domain.Locations.LocationCity", "City")
-                        .WithMany()
-                        .HasForeignKey("CityId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .HasConstraintName("FK_RequestLocations_LocationCities_CityId");
-
-                    b.HasOne("Matchi.Domain.Locations.LocationDistrict", "District")
-                        .WithMany()
-                        .HasForeignKey("DistrictId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .HasConstraintName("FK_RequestLocations_LocationDistricts_DistrictId");
-
-                    b.HasOne("Matchi.Domain.Locations.LocationProvince", "Province")
-                        .WithMany()
-                        .HasForeignKey("ProvinceId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .HasConstraintName("FK_RequestLocations_LocationProvinces_ProvinceId");
-
                     b.HasOne("Matchi.Domain.Entities.Request", "Request")
                         .WithMany("Locations")
                         .HasForeignKey("RequestId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("FK_RequestLocations_Requests");
-
-                    b.Navigation("City");
-
-                    b.Navigation("District");
-
-                    b.Navigation("Province");
 
                     b.Navigation("Request");
                 });

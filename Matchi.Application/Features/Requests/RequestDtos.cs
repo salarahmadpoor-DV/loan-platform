@@ -23,12 +23,15 @@ public sealed record RequestProductLineDto(
     IReadOnlyList<RequestProductAttributeDto>? Attributes = null);
 
 public sealed record RequestLocationDto(
-    string? Province,
-    string? City,
-    string? District,
+    long ProvinceId,
+    long CityId,
+    long DistrictId,
     string? Address,
     double? Lat,
-    double? Lng);
+    double? Lng,
+    string? Province = null,
+    string? City = null,
+    string? District = null);
 
 public sealed record RequestScheduleDto(
     DateOnly Date,
@@ -118,12 +121,15 @@ internal static class RequestDtoMapper
             location is null
                 ? null
                 : new RequestLocationDto(
-                    location.Province,
-                    location.City,
-                    location.District,
+                    location.ProvinceId ?? 0,
+                    location.CityId ?? 0,
+                    location.DistrictId ?? 0,
                     location.Address,
                     location.Lat is null ? null : (double)location.Lat.Value,
-                    location.Lng is null ? null : (double)location.Lng.Value),
+                    location.Lng is null ? null : (double)location.Lng.Value,
+                    location.Province?.Name,
+                    location.City?.Name,
+                    location.District?.Name),
             schedule is null
                 ? null
                 : new RequestScheduleDto(

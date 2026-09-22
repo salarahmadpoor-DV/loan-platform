@@ -59,7 +59,7 @@ public sealed class RequestRepository : IRequestRepository
     public Task<bool> ProductCategoryExistsAsync(long productCategoryId, CancellationToken cancellationToken = default)
     {
         return _context.ProductCategories
-            .AnyAsync(c => c.Id == productCategoryId && !c.IsDeleted, cancellationToken);
+            .AnyAsync(c => c.Id == productCategoryId && !c.IsDeleted && c.IsActive, cancellationToken);
     }
 
     public Task<ProductAttribute?> GetProductAttributeAsync(
@@ -130,6 +130,11 @@ public sealed class RequestRepository : IRequestRepository
         return _context.Requests
             .Include(r => r.Customer)
             .Include(r => r.Locations)
+                .ThenInclude(l => l.Province)
+            .Include(r => r.Locations)
+                .ThenInclude(l => l.City)
+            .Include(r => r.Locations)
+                .ThenInclude(l => l.District)
             .Include(r => r.Schedules)
             .Include(r => r.Services.Where(s => !s.IsDeleted))
                 .ThenInclude(s => s.Attributes.Where(a => !a.IsDeleted))

@@ -105,9 +105,9 @@ internal static class RequestAggregateApplier
         {
             request.AddLocation(new RequestLocation(
                 request.Id,
-                location.Province,
-                location.City,
-                location.District,
+                location.ProvinceId,
+                location.CityId,
+                location.DistrictId,
                 location.Address,
                 ToCoordinate(location.Lat),
                 ToCoordinate(location.Lng)));

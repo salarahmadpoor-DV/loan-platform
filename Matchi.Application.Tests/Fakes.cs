@@ -3,6 +3,7 @@ using Matchi.Application.Features.Matching;
 using Matchi.Application.Features.Providers;
 using Matchi.Domain.Entities;
 using Matchi.Domain.Interfaces;
+using Matchi.Domain.Locations;
 
 namespace Matchi.Application.Tests;
 
@@ -259,9 +260,6 @@ internal sealed class FakeRequestRepository : IRequestRepository
     public Request? Owned { get; set; }
     public int UpdateCount { get; private set; }
 
-    public Task<Customer> GetOrCreateCustomerAsync(long userId, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
-
     public Task<bool> ServiceExistsAsync(long serviceId, CancellationToken cancellationToken = default) =>
         Task.FromResult(ExistingServiceIds.Contains(serviceId));
 
@@ -270,27 +268,68 @@ internal sealed class FakeRequestRepository : IRequestRepository
     public Task<ServiceAttribute?> GetServiceAttributeAsync(
         long serviceId,
         long serviceAttributeId,
-        CancellationToken cancellationToken = default) =>
-        Task.FromResult<ServiceAttribute?>(null);
+        CancellationToken cancellationToken = default)
+    {
+        if (!ServiceAttributes.TryGetValue((serviceId, serviceAttributeId), out var attribute))
+            return Task.FromResult<ServiceAttribute?>(null);
+
+        if (attribute.IsDeleted || !attribute.IsActive)
+            return Task.FromResult<ServiceAttribute?>(null);
+
+        return Task.FromResult<ServiceAttribute?>(attribute);
+    }
+
+    public Dictionary<(long ServiceId, long AttributeId), ServiceAttribute> ServiceAttributes { get; } = [];
 
     public Dictionary<long, Product> ProductsById { get; } = [];
 
-    public Task<Product?> GetProductAsync(long productId, CancellationToken cancellationToken = default) =>
-        Task.FromResult(ProductsById.TryGetValue(productId, out var product) ? product : null);
+    public Task<Product?> GetProductAsync(long productId, CancellationToken cancellationToken = default)
+    {
+        if (!ProductsById.TryGetValue(productId, out var product))
+            return Task.FromResult<Product?>(null);
+
+        if (product.IsDeleted || !product.IsActive)
+            return Task.FromResult<Product?>(null);
+
+        return Task.FromResult<Product?>(product);
+    }
 
     public HashSet<long> ExistingCategoryIds { get; } = [];
 
     public Task<bool> ProductCategoryExistsAsync(long productCategoryId, CancellationToken cancellationToken = default) =>
         Task.FromResult(ExistingCategoryIds.Contains(productCategoryId));
 
+    public Dictionary<(long CategoryId, long AttributeId), ProductAttribute> ProductAttributes { get; } = [];
+
     public Task<ProductAttribute?> GetProductAttributeAsync(
         long productCategoryId,
         long productAttributeId,
-        CancellationToken cancellationToken = default) =>
-        Task.FromResult<ProductAttribute?>(null);
+        CancellationToken cancellationToken = default)
+    {
+        if (!ProductAttributes.TryGetValue((productCategoryId, productAttributeId), out var attribute))
+            return Task.FromResult<ProductAttribute?>(null);
 
-    public Task AddAsync(Request request, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        if (attribute.IsDeleted || !attribute.IsActive)
+            return Task.FromResult<ProductAttribute?>(null);
+
+        return Task.FromResult<ProductAttribute?>(attribute);
+    }
+
+    public Customer Customer { get; set; } = new Customer(1).WithId(1);
+
+    public List<Request> Added { get; } = [];
+
+    public Task<Customer> GetOrCreateCustomerAsync(long userId, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Customer);
+
+    public Task AddAsync(Request request, CancellationToken cancellationToken = default)
+    {
+        if (request.Id == 0)
+            request.WithId(Added.Count + 1);
+
+        Added.Add(request);
+        return Task.CompletedTask;
+    }
 
     public Task UpdateAsync(Request request, CancellationToken cancellationToken = default)
     {
@@ -315,6 +354,68 @@ internal sealed class FakeRequestRepository : IRequestRepository
         long userId,
         CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();
+}
+
+internal sealed class FakeLocationReadRepository : ILocationReadRepository
+{
+    public List<LocationProvince> Provinces { get; } = [];
+    public List<LocationCity> Cities { get; } = [];
+    public List<LocationDistrict> Districts { get; } = [];
+
+    public Task<IReadOnlyList<LocationProvince>> GetActiveProvincesAsync(
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<LocationProvince>>(Provinces.Where(x => x.IsActive).ToList());
+
+        public Task<IReadOnlyList<LocationCity>> GetActiveCitiesByProvinceIdAsync(
+        long provinceId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<LocationCity>>(
+            Cities.Where(x => x.IsActive && x.ProvinceId == provinceId).ToList());
+
+    public Task<IReadOnlyList<LocationCity>> GetActiveCitiesAsync(
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<LocationCity>>(Cities.Where(x => x.IsActive).ToList());
+
+    public Task<IReadOnlyList<LocationDistrict>> GetActiveDistrictsByCityIdAsync(
+        long cityId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<LocationDistrict>>(
+            Districts.Where(x => x.IsActive && x.CityId == cityId).ToList());
+
+    public Task<LocationProvince?> FindProvinceByIdAsync(
+        long provinceId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(Provinces.FirstOrDefault(x => x.Id == provinceId));
+
+    public Task<LocationCity?> FindCityByIdAsync(
+        long cityId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(Cities.FirstOrDefault(x => x.Id == cityId));
+
+    public Task<LocationDistrict?> FindDistrictByIdAsync(
+        long districtId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(Districts.FirstOrDefault(x => x.Id == districtId));
+
+    public Task<IReadOnlyList<LocationCity>> GetActiveCoveredCitiesAsync(
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<LocationCity>>(
+            Cities.Where(x =>
+                x.IsActive
+                && x.CenterLat != null
+                && x.CenterLng != null
+                && x.RadiusKm != null).ToList());
+
+    public Task<IReadOnlyList<LocationDistrict>> GetActiveCoveredDistrictsByCityIdAsync(
+        long cityId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<LocationDistrict>>(
+            Districts.Where(x =>
+                x.IsActive
+                && x.CityId == cityId
+                && x.CenterLat != null
+                && x.CenterLng != null
+                && x.RadiusKm != null).ToList());
 }
 
 internal sealed class FakeProposalRepository : IProposalRepository
@@ -393,16 +494,31 @@ internal sealed class FakeMatchingReadRepository : IMatchingReadRepository
 {
     public long EligibleForProviderId { get; set; } = MarketplaceGraph.ProviderEntityId;
     public List<Request> Eligible { get; } = [];
+    public List<MatchingCandidateRow> ProviderMatches { get; } = [];
+    public List<MatchingCandidateRow> BusinessMatches { get; } = [];
+    public bool ThrowIfMatchQueried { get; set; }
+    public int ProviderMatchQueryCount { get; private set; }
 
     public Task<IReadOnlyList<MatchingCandidateRow>> FindProviderMatchesAsync(
         MatchingCriteria criteria,
-        CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        CancellationToken cancellationToken = default)
+    {
+        if (ThrowIfMatchQueried)
+            throw new InvalidOperationException("Matching must not run for a cancelled request.");
+
+        ProviderMatchQueryCount++;
+        return Task.FromResult<IReadOnlyList<MatchingCandidateRow>>(ProviderMatches);
+    }
 
     public Task<IReadOnlyList<MatchingCandidateRow>> FindBusinessMatchesAsync(
         MatchingCriteria criteria,
-        CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        CancellationToken cancellationToken = default)
+    {
+        if (ThrowIfMatchQueried)
+            throw new InvalidOperationException("Matching must not run for a cancelled request.");
+
+        return Task.FromResult<IReadOnlyList<MatchingCandidateRow>>(BusinessMatches);
+    }
 
     public Task<IReadOnlyList<Request>> ListOpenEligibleRequestsForProviderAsync(
         long providerId,
@@ -414,6 +530,11 @@ internal sealed class FakeMatchingReadRepository : IMatchingReadRepository
 internal sealed class FakeProviderRepository : IProviderRepository
 {
     public Provider? Mine { get; set; }
+    public HashSet<long> ActiveCatalogServiceIds { get; } = [];
+    public HashSet<long> ActiveCatalogProductIds { get; } = [];
+    public List<ProviderService> ServiceLinks { get; } = [];
+    public List<ProviderProduct> ProductLinks { get; } = [];
+    public int UpdateCount { get; private set; }
 
     public Task<Provider?> GetByIdAsync(long providerId, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();
@@ -424,8 +545,11 @@ internal sealed class FakeProviderRepository : IProviderRepository
     public Task AddAsync(Provider provider, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();
 
-    public Task UpdateAsync(CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+    public Task UpdateAsync(CancellationToken cancellationToken = default)
+    {
+        UpdateCount++;
+        return Task.CompletedTask;
+    }
 
     public Task<IEnumerable<Provider>> GetProvidersByServiceIdAsync(
         long serviceId,
@@ -435,10 +559,10 @@ internal sealed class FakeProviderRepository : IProviderRepository
         throw new NotSupportedException();
 
     public Task<bool> ServiceExistsActiveAsync(long serviceId, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        Task.FromResult(ActiveCatalogServiceIds.Contains(serviceId));
 
     public Task<bool> ProductExistsActiveAsync(long productId, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        Task.FromResult(ActiveCatalogProductIds.Contains(productId));
 
     public Task<ServiceAttribute?> GetServiceAttributeAsync(
         long serviceAttributeId,
@@ -446,37 +570,56 @@ internal sealed class FakeProviderRepository : IProviderRepository
         throw new NotSupportedException();
 
     public Task<bool> OffersServiceAsync(long providerId, long serviceId, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        Task.FromResult(ServiceLinks.Any(x =>
+            x.ProviderId == providerId && x.ServiceId == serviceId && !x.IsDeleted && x.IsActive));
 
     public Task<ProviderService?> GetServiceLinkAsync(
         long providerId,
         long serviceId,
         bool includeDeleted,
         CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        Task.FromResult(ServiceLinks.FirstOrDefault(x =>
+            x.ProviderId == providerId
+            && x.ServiceId == serviceId
+            && (includeDeleted || !x.IsDeleted)));
 
     public Task<IReadOnlyList<ProviderService>> ListServicesAsync(
         long providerId,
         CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        Task.FromResult<IReadOnlyList<ProviderService>>(
+            ServiceLinks.Where(x => x.ProviderId == providerId && !x.IsDeleted).ToList());
 
-    public Task AddServiceAsync(ProviderService link, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+    public Task AddServiceAsync(ProviderService link, CancellationToken cancellationToken = default)
+    {
+        if (link.Id == 0)
+            link.WithId(ServiceLinks.Count + 1);
+        ServiceLinks.Add(link);
+        return Task.CompletedTask;
+    }
 
     public Task<ProviderProduct?> GetProductLinkAsync(
         long providerId,
         long productId,
         bool includeDeleted,
         CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        Task.FromResult(ProductLinks.FirstOrDefault(x =>
+            x.ProviderId == providerId
+            && x.ProductId == productId
+            && (includeDeleted || !x.IsDeleted)));
 
     public Task<IReadOnlyList<ProviderProduct>> ListProductsAsync(
         long providerId,
         CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        Task.FromResult<IReadOnlyList<ProviderProduct>>(
+            ProductLinks.Where(x => x.ProviderId == providerId && !x.IsDeleted).ToList());
 
-    public Task AddProductAsync(ProviderProduct link, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+    public Task AddProductAsync(ProviderProduct link, CancellationToken cancellationToken = default)
+    {
+        if (link.Id == 0)
+            link.WithId(ProductLinks.Count + 1);
+        ProductLinks.Add(link);
+        return Task.CompletedTask;
+    }
 
     public Task<ProviderCapability?> GetCapabilityAsync(
         long providerId,
@@ -533,5 +676,5 @@ internal sealed class FakeProviderRepository : IProviderRepository
     public Task<IReadOnlyList<BusinessProvider>> ListMembershipsAsync(
         long providerId,
         CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        Task.FromResult<IReadOnlyList<BusinessProvider>>([]);
 }

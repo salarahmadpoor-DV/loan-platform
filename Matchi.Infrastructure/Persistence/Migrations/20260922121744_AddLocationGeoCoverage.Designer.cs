@@ -4,6 +4,7 @@ using Matchi.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Matchi.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(MatchiDbContext))]
-    partial class MatchiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260922121744_AddLocationGeoCoverage")]
+    partial class AddLocationGeoCoverage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2931,11 +2934,6 @@ namespace Matchi.Infrastructure.Persistence.Migrations
                         .HasPrecision(9, 6)
                         .HasColumnType("decimal(9,6)");
 
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<DateTime>("CreateDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -2960,11 +2958,6 @@ namespace Matchi.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id")
                         .HasName("PK_LocationCities");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("UX_LocationCities_Code")
-                        .HasFilter("([Code]<>N'')");
 
                     b.HasIndex("ProvinceId")
                         .HasDatabaseName("IX_LocationCities_ProvinceId");
@@ -2991,11 +2984,6 @@ namespace Matchi.Infrastructure.Persistence.Migrations
                     b.Property<long>("CityId")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<DateTime>("CreateDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -3020,11 +3008,6 @@ namespace Matchi.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CityId")
                         .HasDatabaseName("IX_LocationDistricts_CityId");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("UX_LocationDistricts_Code")
-                        .HasFilter("([Code]<>N'')");
 
                     b.ToTable("LocationDistricts", "dbo");
                 });
@@ -3059,11 +3042,6 @@ namespace Matchi.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id")
                         .HasName("PK_LocationProvinces");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("UX_LocationProvinces_Code")
-                        .HasFilter("([Code]<>N'')");
 
                     b.ToTable("LocationProvinces", "dbo");
                 });

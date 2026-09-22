@@ -4,6 +4,7 @@ using Matchi.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Matchi.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(MatchiDbContext))]
-    partial class MatchiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260922115217_AddRequestLocationForeignKeys")]
+    partial class AddRequestLocationForeignKeys
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2923,19 +2926,6 @@ namespace Matchi.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<decimal?>("CenterLat")
-                        .HasPrecision(9, 6)
-                        .HasColumnType("decimal(9,6)");
-
-                    b.Property<decimal?>("CenterLng")
-                        .HasPrecision(9, 6)
-                        .HasColumnType("decimal(9,6)");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<DateTime>("CreateDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -2954,17 +2944,8 @@ namespace Matchi.Infrastructure.Persistence.Migrations
                     b.Property<long>("ProvinceId")
                         .HasColumnType("bigint");
 
-                    b.Property<decimal?>("RadiusKm")
-                        .HasPrecision(8, 2)
-                        .HasColumnType("decimal(8,2)");
-
                     b.HasKey("Id")
                         .HasName("PK_LocationCities");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("UX_LocationCities_Code")
-                        .HasFilter("([Code]<>N'')");
 
                     b.HasIndex("ProvinceId")
                         .HasDatabaseName("IX_LocationCities_ProvinceId");
@@ -2980,21 +2961,8 @@ namespace Matchi.Infrastructure.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<decimal?>("CenterLat")
-                        .HasPrecision(9, 6)
-                        .HasColumnType("decimal(9,6)");
-
-                    b.Property<decimal?>("CenterLng")
-                        .HasPrecision(9, 6)
-                        .HasColumnType("decimal(9,6)");
-
                     b.Property<long>("CityId")
                         .HasColumnType("bigint");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<DateTime>("CreateDate")
                         .ValueGeneratedOnAdd()
@@ -3011,20 +2979,11 @@ namespace Matchi.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<decimal?>("RadiusKm")
-                        .HasPrecision(8, 2)
-                        .HasColumnType("decimal(8,2)");
-
                     b.HasKey("Id")
                         .HasName("PK_LocationDistricts");
 
                     b.HasIndex("CityId")
                         .HasDatabaseName("IX_LocationDistricts_CityId");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("UX_LocationDistricts_Code")
-                        .HasFilter("([Code]<>N'')");
 
                     b.ToTable("LocationDistricts", "dbo");
                 });
@@ -3059,11 +3018,6 @@ namespace Matchi.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id")
                         .HasName("PK_LocationProvinces");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("UX_LocationProvinces_Code")
-                        .HasFilter("([Code]<>N'')");
 
                     b.ToTable("LocationProvinces", "dbo");
                 });

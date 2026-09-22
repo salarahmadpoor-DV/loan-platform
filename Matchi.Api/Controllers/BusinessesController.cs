@@ -273,7 +273,7 @@ public class BusinessesController : ControllerBase
         CancellationToken cancellationToken = default)
     {
         var inviteId = await _mediator.Send(
-            new InviteProviderCommand(businessId, dto.ProviderId, dto.Role),
+            new InviteProviderCommand(businessId, dto.ProviderId, dto.Mobile, dto.Role),
             cancellationToken);
         return Accepted(new { inviteId, status = "Pending" });
     }
@@ -293,5 +293,20 @@ public class BusinessesController : ControllerBase
         return Ok(new { businessProviderId, status = "Active" });
     }
 
-    public sealed record InviteDto(long ProviderId, string? Role);
+    [HttpPut("business-providers/{businessProviderId:long}/reject")]
+    [Authorize(Policy = "PROVIDER_EDIT")]
+    public async Task<IActionResult> RejectMembership(
+        long businessProviderId,
+        CancellationToken cancellationToken = default)
+    {
+        var success = await _mediator.Send(
+            new RejectBusinessMembershipCommand(businessProviderId),
+            cancellationToken);
+        if (!success)
+            return NotFound();
+
+        return Ok(new { businessProviderId, status = "Rejected" });
+    }
+
+    public sealed record InviteDto(long? ProviderId, string? Mobile, string? Role);
 }

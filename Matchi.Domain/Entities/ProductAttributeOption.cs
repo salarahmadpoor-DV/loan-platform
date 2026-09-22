@@ -26,4 +26,16 @@ public class ProductAttributeOption : AuditableEntity
         Value = value;
         DisplayName = displayName;
     }
+
+    public void SetDisplayOrder(int displayOrder)
+    {
+        DisplayOrder = displayOrder;
+        SetUpdated();
+    }
+
+    public void SetActive(bool isActive)
+    {
+        IsActive = isActive;
+        SetUpdated();
+    }
 }

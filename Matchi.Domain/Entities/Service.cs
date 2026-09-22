@@ -41,4 +41,10 @@ public class Service : AuditableEntity
         DisplayOrder = displayOrder;
         IsActive = true;
     }
+
+    public void SetActive(bool isActive)
+    {
+        IsActive = isActive;
+        SetUpdated();
+    }
 }

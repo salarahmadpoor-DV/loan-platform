@@ -4,12 +4,13 @@ import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../../shared/auth/AuthProvider";
 import { useWorkspaceAccess } from "../../../../shared/auth/useWorkspaceAccess";
 import { t } from "../../../../shared/i18n";
-import { providerWorkspacePath, loginPathWithNext } from "../../../../shared/marketplace/publicPaths";
+import { loginPathWithNext, providerWorkspacePath } from "../../../../shared/marketplace/publicPaths";
 import { AppCard } from "../../../../shared/ui/AppCard";
 import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
 import { FormSplitLayout } from "../../../../shared/ui/FormSplitLayout";
 import { LoadingState } from "../../../../shared/ui/LoadingState";
 import { PageHeader } from "../../../../shared/ui/PageHeader";
+import { ServiceAreaMapPicker } from "../components/ServiceAreaMapPicker";
 import { useCreateMyProvider } from "../hooks/useCreateMyProvider";
 import {
   defaultCreateProviderValues,
@@ -51,11 +52,14 @@ export function ProviderOnboardPage() {
     if (Object.keys(nextErrors).length > 0) {
       return;
     }
-    create.mutate(toCreateProviderBody(values), {
-      onSuccess: () => {
-        navigate(providerWorkspacePath, { replace: true });
+    create.mutate(
+      { body: toCreateProviderBody(values), serviceArea: values.serviceArea },
+      {
+        onSuccess: (result) => {
+          navigate(result.areaSaved ? providerWorkspacePath : "/provider/profile", { replace: true });
+        },
       },
-    });
+    );
   }
 
   return (
@@ -94,28 +98,11 @@ export function ProviderOnboardPage() {
                 helperText={fieldError(errors, "description")}
                 inputProps={{ maxLength: 2000 }}
               />
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                <TextField
-                  label={t("provider.onboard.lat")}
-                  name="lat"
-                  value={values.lat}
-                  onChange={(event) => setValues((current) => ({ ...current, lat: event.target.value }))}
-                  fullWidth
-                  error={Boolean(errors.lat)}
-                  helperText={fieldError(errors, "lat")}
-                  inputProps={{ inputMode: "decimal" }}
-                />
-                <TextField
-                  label={t("provider.onboard.lng")}
-                  name="lng"
-                  value={values.lng}
-                  onChange={(event) => setValues((current) => ({ ...current, lng: event.target.value }))}
-                  fullWidth
-                  error={Boolean(errors.lng)}
-                  helperText={fieldError(errors, "lng")}
-                  inputProps={{ inputMode: "decimal" }}
-                />
-              </Stack>
+              <ServiceAreaMapPicker
+                value={values.serviceArea}
+                onChange={(serviceArea) => setValues((current) => ({ ...current, serviceArea }))}
+                error={fieldError(errors, "serviceArea")}
+              />
               <Button
                 type="submit"
                 variant="contained"

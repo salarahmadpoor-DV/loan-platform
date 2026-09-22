@@ -1,3 +1,4 @@
+using Matchi.Application.Features.Catalog;
 using Matchi.Domain.Interfaces;
 using MediatR;
 
@@ -20,10 +21,28 @@ public sealed class GetServiceByIdQueryHandler : IRequestHandler<GetServiceByIdQ
         if (service is null)
             return null;
 
+        var attributes = (service.Attributes ?? Array.Empty<Domain.Entities.ServiceAttribute>())
+            .OrderBy(a => a.DisplayOrder)
+            .ThenBy(a => a.Id)
+            .Select(a => new CatalogAttributeDto(
+                a.Id,
+                a.Name,
+                a.Code,
+                a.DataType,
+                a.IsRequired,
+                a.DisplayOrder,
+                a.Options
+                    .OrderBy(o => o.DisplayOrder)
+                    .ThenBy(o => o.Id)
+                    .Select(o => new CatalogAttributeOptionDto(o.Id, o.Value, o.DisplayName, o.DisplayOrder))
+                    .ToList()))
+            .ToList();
+
         return new ServiceDetailDto(
             service.Id,
             service.Name,
             service.CategoryId,
-            service.Attributes?.Count ?? 0);
+            attributes.Count,
+            attributes);
     }
 }

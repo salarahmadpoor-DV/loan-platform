@@ -1,6 +1,5 @@
 import { Button, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { useWorkspaceAccess } from "../../../../shared/auth/useWorkspaceAccess";
 import { t } from "../../../../shared/i18n";
 import { AppCard } from "../../../../shared/ui/AppCard";
 import { EmptyState } from "../../../../shared/ui/EmptyState";
@@ -9,16 +8,15 @@ import { FormSplitLayout } from "../../../../shared/ui/FormSplitLayout";
 import { LoadingState } from "../../../../shared/ui/LoadingState";
 import { PageHeader } from "../../../../shared/ui/PageHeader";
 import { StatusChip } from "../../../../shared/ui/StatusChip";
+import { ProviderServiceAreaSection } from "../components/ProviderServiceAreaSection";
 import { useMyBusinesses } from "../hooks/useMyBusinesses";
 import { useMyProviderMemberships } from "../hooks/useMyProviderMemberships";
 import { useMyProviderProfile } from "../hooks/useMyProviderProfile";
 
 export function ProviderProfilePage() {
-  const { canAccess } = useWorkspaceAccess();
   const { data, isPending, isError, error, refetch, isFetching } = useMyProviderProfile();
   const owned = useMyBusinesses();
   const memberships = useMyProviderMemberships();
-  const canOpenBusiness = canAccess("business");
 
   return (
     <>
@@ -61,11 +59,6 @@ export function ProviderProfilePage() {
                 <Typography variant="body1" sx={{ whiteSpace: "pre-wrap" }}>
                   {data.description?.trim() ? data.description : t("provider.profile.noDescription")}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {data.lat != null && data.lng != null
-                    ? t("provider.profile.coordinatesValue", { lat: data.lat, lng: data.lng })
-                    : t("provider.profile.noCoordinates")}
-                </Typography>
               </Stack>
             </AppCard>
           }
@@ -86,6 +79,12 @@ export function ProviderProfilePage() {
             </AppCard>
           }
         />
+      ) : null}
+
+      {data ? (
+        <Stack spacing={1.5} sx={{ mt: 3 }}>
+          <ProviderServiceAreaSection profile={data} />
+        </Stack>
       ) : null}
 
       <Stack spacing={1.5} sx={{ mt: 3 }}>
@@ -110,7 +109,20 @@ export function ProviderProfilePage() {
           </Stack>
         ) : null}
         {owned.data && owned.data.length === 0 ? (
-          <EmptyState title={t("provider.profile.ownedEmpty")} />
+          <EmptyState
+            title={t("provider.business.emptyTitle")}
+            body={t("provider.business.emptyBody")}
+            action={
+              <Button
+                component={RouterLink}
+                to="/provider/business/create"
+                variant="contained"
+                sx={{ minHeight: 48 }}
+              >
+                {t("provider.business.create")}
+              </Button>
+            }
+          />
         ) : null}
         {owned.data && owned.data.length > 0 ? (
           <Stack spacing={1.5}>
@@ -131,20 +143,22 @@ export function ProviderProfilePage() {
             ))}
           </Stack>
         ) : null}
-        {canOpenBusiness ? (
-          <Button
-            component={RouterLink}
-            to="/business"
-            variant="outlined"
-            sx={{ alignSelf: "flex-start", minHeight: 48 }}
-          >
-            {t("provider.profile.openBusinessWorkspace")}
-          </Button>
-        ) : (
-          <Typography variant="body2" color="text.secondary">
-            {t("provider.profile.noBusinessOwnership")}
-          </Typography>
-        )}
+        <Button
+          component={RouterLink}
+          to="/provider/offerings"
+          variant="contained"
+          sx={{ alignSelf: "flex-start", minHeight: 48 }}
+        >
+          {t("nav.offerings")}
+        </Button>
+        <Button
+          component={RouterLink}
+          to="/provider/business"
+          variant="outlined"
+          sx={{ alignSelf: "flex-start", minHeight: 48 }}
+        >
+          {t("provider.business.navSection")}
+        </Button>
       </Stack>
 
       <Stack spacing={1.5} sx={{ mt: 3 }}>

@@ -75,3 +75,36 @@ public sealed class GetMyProviderBusinessesQueryHandler
             .ToList();
     }
 }
+
+public sealed record GetMyProviderInvitationsQuery : IRequest<IReadOnlyList<ProviderInvitationDto>>;
+
+public sealed class GetMyProviderInvitationsQueryHandler
+    : IRequestHandler<GetMyProviderInvitationsQuery, IReadOnlyList<ProviderInvitationDto>>
+{
+    private readonly ICurrentUserService _currentUserService;
+    private readonly IProviderRepository _providers;
+
+    public GetMyProviderInvitationsQueryHandler(
+        ICurrentUserService currentUserService,
+        IProviderRepository providers)
+    {
+        _currentUserService = currentUserService;
+        _providers = providers;
+    }
+
+    public async Task<IReadOnlyList<ProviderInvitationDto>> Handle(
+        GetMyProviderInvitationsQuery query,
+        CancellationToken cancellationToken)
+    {
+        var provider = await ProviderAccess.RequireMine(_currentUserService, _providers, cancellationToken);
+        var memberships = await _providers.ListMembershipsAsync(provider.Id, cancellationToken);
+        return memberships
+            .Where(m => string.Equals(m.Status, "Pending", StringComparison.OrdinalIgnoreCase))
+            .Select(m => new ProviderInvitationDto(
+                m.Id,
+                m.Business.Name,
+                m.Status,
+                m.CreateDate))
+            .ToList();
+    }
+}

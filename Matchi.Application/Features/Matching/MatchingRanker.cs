@@ -18,8 +18,13 @@ public static class MatchingRanker
     {
         return candidates
             .GroupBy(c => (c.CandidateType, c.CandidateId))
-            .Select(g => g.First())
-            .OrderByDescending(c => c.Score)
+            .Select(g => g
+                .OrderBy(c => c.DistanceKm ?? double.MaxValue)
+                .ThenByDescending(c => c.Score)
+                .First())
+            .OrderBy(c => c.DistanceKm.HasValue ? 0 : 1)
+            .ThenBy(c => c.DistanceKm)
+            .ThenByDescending(c => c.Score)
             .ThenBy(c => c.CandidateType)
             .ThenBy(c => c.CandidateId)
             .Take(MatchingScores.MaxResults)
@@ -28,7 +33,8 @@ public static class MatchingRanker
                 c.CandidateId,
                 c.DisplayName,
                 c.Score,
-                index + 1))
+                index + 1,
+                c.DistanceKm))
             .ToList();
     }
 
@@ -59,4 +65,5 @@ public sealed record MatchResultDto(
     long CandidateId,
     string DisplayName,
     int Score,
-    int Rank);
+    int Rank,
+    double? DistanceKm = null);

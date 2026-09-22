@@ -15,7 +15,12 @@ public class ServiceRepository : IServiceRepository
 
     public async Task<IEnumerable<ServiceCategory>> GetCategoriesAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.ServiceCategories.AsNoTracking().ToListAsync(cancellationToken);
+        return await _context.ServiceCategories
+            .AsNoTracking()
+            .Where(c => !c.IsDeleted && c.IsActive)
+            .OrderBy(c => c.DisplayOrder)
+            .ThenBy(c => c.Id)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<IEnumerable<Service>> GetServicesAsync(
@@ -25,7 +30,7 @@ public class ServiceRepository : IServiceRepository
         int take,
         CancellationToken cancellationToken = default)
     {
-        var q = _context.Services.AsNoTracking().AsQueryable();
+        var q = _context.Services.AsNoTracking().Where(s => !s.IsDeleted && s.IsActive);
         if (categoryId.HasValue)
             q = q.Where(s => s.CategoryId == categoryId.Value);
 
@@ -46,8 +51,9 @@ public class ServiceRepository : IServiceRepository
     public async Task<Service?> GetServiceByIdAsync(long serviceId, CancellationToken cancellationToken = default)
     {
         return await _context.Services
-            .Include(s => s.Attributes)
+            .Include(s => s.Attributes.Where(a => !a.IsDeleted && a.IsActive))
+                .ThenInclude(a => a.Options.Where(o => !o.IsDeleted && o.IsActive))
             .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.Id == serviceId, cancellationToken);
+            .FirstOrDefaultAsync(s => s.Id == serviceId && !s.IsDeleted && s.IsActive, cancellationToken);
     }
 }

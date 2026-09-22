@@ -17,6 +17,8 @@ public sealed class MatchingCriteria
     public string? Province { get; init; }
     public string? City { get; init; }
     public string? District { get; init; }
+    public double? Latitude { get; init; }
+    public double? Longitude { get; init; }
     public byte? DayOfWeek { get; init; }
     public TimeSpan? TimeFrom { get; init; }
     public TimeSpan? TimeTo { get; init; }
@@ -29,7 +31,9 @@ public sealed record MatchingCandidateRow(
     MatchCandidateType CandidateType,
     long CandidateId,
     string DisplayName,
-    int Score);
+    int Score,
+    bool AreaMatch = false,
+    double? DistanceKm = null);
 
 public interface IMatchingReadRepository
 {

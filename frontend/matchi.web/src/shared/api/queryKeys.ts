@@ -8,10 +8,21 @@ export const queryKeys = {
   },
   catalog: {
     services: ["catalog", "services"] as const,
+    serviceCategories: ["catalog", "service-categories"] as const,
+    serviceDetail: (serviceId: number) => ["catalog", "services", serviceId] as const,
+    productCategories: ["catalog", "product-categories"] as const,
+    products: (categoryId?: number) => ["catalog", "products", categoryId ?? "all"] as const,
+    productAttributes: (categoryId: number) =>
+      ["catalog", "product-attributes", categoryId] as const,
     categories: ["catalog", "categories"] as const,
-    products: ["catalog", "products"] as const,
+    productsRoot: ["catalog", "products"] as const,
     businesses: ["catalog", "businesses"] as const,
     providers: ["catalog", "providers"] as const,
+  },
+  locations: {
+    provinces: ["locations", "provinces"] as const,
+    cities: (provinceId: number) => ["locations", "provinces", provinceId, "cities"] as const,
+    districts: (cityId: number) => ["locations", "cities", cityId, "districts"] as const,
   },
   requests: {
     all: ["requests"] as const,
@@ -57,9 +68,17 @@ export const queryKeys = {
     proposals: () => [...queryKeys.provider.all, "proposals"] as const,
     deals: () => [...queryKeys.provider.all, "deals"] as const,
     executions: () => [...queryKeys.provider.all, "executions"] as const,
+    myAreas: () => [...queryKeys.provider.all, "me", "areas"] as const,
     myServices: () => [...queryKeys.provider.all, "me", "services"] as const,
     myProducts: () => [...queryKeys.provider.all, "me", "products"] as const,
     myBusinesses: () => [...queryKeys.provider.all, "me", "businesses"] as const,
     memberships: () => [...queryKeys.provider.all, "me", "memberships"] as const,
+    invitations: () => [...queryKeys.provider.all, "me", "invitations"] as const,
+    ownedTeam: (businessId: number) =>
+      [...queryKeys.provider.all, "owned", businessId, "providers"] as const,
+    ownedServices: (businessId: number) =>
+      [...queryKeys.provider.all, "owned", businessId, "services"] as const,
+    ownedProducts: (businessId: number) =>
+      [...queryKeys.provider.all, "owned", businessId, "products"] as const,
   },
 } as const;

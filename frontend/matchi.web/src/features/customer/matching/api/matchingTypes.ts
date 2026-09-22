@@ -8,6 +8,7 @@ export type MatchResult = {
   displayName: string;
   score: number;
   rank: number;
+  distanceKm?: number | null;
 };
 
 export type MatchCandidateType = ProposerType;

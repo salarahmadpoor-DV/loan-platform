@@ -1,3 +1,4 @@
+import { formatIsoDateForLocale } from "../../../../shared/datetime/LocaleDateField";
 import { getLocale, t } from "../../../../shared/i18n";
 
 export function isPendingProposal(status: string): boolean {
@@ -42,7 +43,9 @@ export function formatDateTime(iso: string | null | undefined): string {
   if (Number.isNaN(date.getTime())) {
     return iso;
   }
-  return date.toLocaleString(getLocale());
+  return date.toLocaleString(getLocale(), {
+    calendar: getLocale() === "fa-IR" ? "persian" : "gregory",
+  });
 }
 
 export function proposalStatusTone(status: string): "pending" | "success" | "danger" | "neutral" {
@@ -71,7 +74,10 @@ export function formatProposalSchedule(input: {
     input.proposedTimeFrom || input.proposedTimeTo
       ? `${input.proposedTimeFrom ?? "—"} – ${input.proposedTimeTo ?? "—"}`
       : null;
-  return [input.proposedDate, time].filter(Boolean).join(" · ");
+  const date = input.proposedDate
+    ? formatIsoDateForLocale(input.proposedDate, getLocale())
+    : null;
+  return [date, time].filter(Boolean).join(" · ");
 }
 
 export function proposalItemsSubtotal(items: { totalPrice: number }[]): number {

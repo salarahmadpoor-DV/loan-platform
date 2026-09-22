@@ -83,6 +83,24 @@ public sealed class LocationCoverageSeedTests
         Assert.Equal(districts.Count, districts.Select(d => d.Name).Distinct(StringComparer.Ordinal).Count());
     }
 
+    [Fact]
+    public async Task Alborz_seed_includes_karaj_without_invented_neighborhoods()
+    {
+        var locations = SeededLocationRepository.Create();
+        var provinces = (await new GetActiveProvincesQueryHandler(locations)
+            .Handle(new GetActiveProvincesQuery(), CancellationToken.None)).ToList();
+        var alborz = Assert.Single(provinces, p => p.Code == "ALB");
+        Assert.Equal("البرز", alborz.Name);
+
+        var cities = (await new GetCitiesByProvinceQueryHandler(locations)
+            .Handle(new GetCitiesByProvinceQuery(alborz.Id), CancellationToken.None)).ToList();
+        var karaj = Assert.Single(cities, c => c.Name == "کرج");
+
+        var districts = await new GetDistrictsByCityQueryHandler(locations)
+            .Handle(new GetDistrictsByCityQuery(karaj.Id), CancellationToken.None);
+        Assert.Empty(districts);
+    }
+
     private sealed class DisabledExternalResolver : IExternalLocationResolver
     {
         public Task<LocationResolveResult?> ResolveAsync(

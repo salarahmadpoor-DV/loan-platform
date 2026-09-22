@@ -43,6 +43,9 @@ internal static class LocationBlueprint
             D("tehran-d3", "منطقه 3", 35.7570m, 51.4350m, 4.5m),
             D("tehran-d5", "منطقه 5", 35.7600m, 51.3100m, 6.0m),
             D("tehran-d22", "منطقه 22", 35.7400m, 51.2100m, 8.0m)),
+        // Alborz province + Karaj city are seeded. Districts are omitted because
+        // this repository has no authoritative neighborhood/locality list for Karaj
+        // (municipal "منطقه N" names are not used as neighborhoods).
         City("karaj", "کرج", "ALB", 35.8400m, 50.9391m, 18m),
         City("isfahan", "اصفهان", "ESF", 32.6546m, 51.6680m, 22m),
         City("shiraz", "شیراز", "FRS", 29.5918m, 52.5836m, 20m),

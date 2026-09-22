@@ -10,8 +10,9 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { formatMoney } from "../../../../customer/proposals/model/proposalDisplay";
-import { t } from "../../../../../shared/i18n";
+import { formatDateTime, formatMoney } from "../../../../customer/proposals/model/proposalDisplay";
+import { formatIsoDateForLocale, LocaleDateField, LocaleDateTimeField } from "../../../../../shared/datetime/LocaleDateField";
+import { getLocale, t } from "../../../../../shared/i18n";
 import { AppCard } from "../../../../../shared/ui/AppCard";
 import { FormSplitLayout } from "../../../../../shared/ui/FormSplitLayout";
 import type { ProviderCatalogProduct, ProviderCatalogService } from "../api/providerCatalogTypes";
@@ -262,12 +263,14 @@ export function CreateProposalForm({
           <Stack spacing={0.5}>
             {values.proposedDate ? (
               <Typography variant="caption" color="text.secondary">
-                {t("provider.proposalCreate.proposedDate")}: {values.proposedDate}
+                {t("provider.proposalCreate.proposedDate")}:{" "}
+                {formatIsoDateForLocale(values.proposedDate, getLocale())}
               </Typography>
             ) : null}
             {values.expireAt ? (
               <Typography variant="caption" color="text.secondary">
-                {t("provider.proposalCreate.expireAt")}: {values.expireAt}
+                {t("provider.proposalCreate.expireAt")}:{" "}
+                {formatDateTime(new Date(values.expireAt).toISOString())}
               </Typography>
             ) : null}
           </Stack>
@@ -465,25 +468,19 @@ export function CreateProposalForm({
                     minWidth: 0,
                   }}
                 >
-                  <TextField
+                  <LocaleDateField
                     label={t("provider.proposalCreate.proposedDate")}
-                    type="date"
                     value={values.proposedDate}
-                    onChange={(event) => patch({ proposedDate: event.target.value })}
+                    onChange={(isoDate) => patch({ proposedDate: isoDate })}
                     disabled={locked}
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
                   />
-                  <TextField
+                  <LocaleDateTimeField
                     label={t("provider.proposalCreate.expireAt")}
-                    type="datetime-local"
                     value={values.expireAt}
-                    onChange={(event) => patch({ expireAt: event.target.value })}
+                    onChange={(isoDateTime) => patch({ expireAt: isoDateTime })}
                     error={Boolean(shownErrors.expireAt)}
                     helperText={shownErrors.expireAt}
                     disabled={locked}
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
                   />
                   <TextField
                     label={t("provider.proposalCreate.timeFrom")}

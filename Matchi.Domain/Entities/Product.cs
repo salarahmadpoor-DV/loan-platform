@@ -41,4 +41,17 @@ public class Product : AuditableEntity
         CategoryId = categoryId;
         Name = name;
     }
+
+    public void SetCatalogDetails(string? slug, string? description)
+    {
+        Slug = slug;
+        Description = description;
+        SetUpdated();
+    }
+
+    public void SetActive(bool isActive)
+    {
+        IsActive = isActive;
+        SetUpdated();
+    }
 }

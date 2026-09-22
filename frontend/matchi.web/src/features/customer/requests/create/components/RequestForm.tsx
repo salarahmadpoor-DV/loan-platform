@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Stack, TextField, Typography } from "@mui/material";
+import { Box, Button, Stack, TextField, Typography } from "@mui/material";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { t, type MessageKey } from "../../../../../shared/i18n";
@@ -7,7 +7,12 @@ import { AppCard } from "../../../../../shared/ui/AppCard";
 import { FormSplitLayout } from "../../../../../shared/ui/FormSplitLayout";
 import { MarketplaceStepper } from "../../../../../shared/ui/MarketplaceStepper";
 import type { CreateRequestBody } from "../api/createRequestTypes";
-import { useCatalogServices } from "../hooks/useCatalogServices";
+import {
+  useCatalogProducts,
+  useCatalogServices,
+  useProductCategories,
+  useServiceCategories,
+} from "../hooks/useCatalogServices";
 import {
   defaultCreateRequestValues,
   firstRequestErrorStep,
@@ -18,7 +23,9 @@ import {
   type CreateRequestFormValues,
 } from "../model/createRequestForm";
 import { RequestKindSelector } from "./RequestKindSelector";
-import { ServiceSelect } from "./ServiceSelect";
+import { RequestLocationMapPicker, RequestPlaceFields } from "./RequestLocationMapPicker";
+import { ProductCatalogSection } from "./ProductCatalogSection";
+import { ServiceCatalogSection } from "./ServiceSelect";
 
 const STEP_KEYS: MessageKey[] = [
   "request.create.step.need",
@@ -81,14 +88,28 @@ export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormP
   const [errors, setErrors] = useState<CreateRequestFieldErrors>({});
   const [step, setStep] = useState(0);
   const [unlocked, setUnlocked] = useState(0);
-  const catalog = useCatalogServices();
+  const catalog = useCatalogServices(
+    values.serviceCategoryId ? Number.parseInt(values.serviceCategoryId, 10) : undefined,
+  );
+  const serviceCategories = useServiceCategories();
+  const productCategories = useProductCategories();
+  const products = useCatalogProducts(
+    values.productCategoryId ? Number.parseInt(values.productCategoryId, 10) : undefined,
+  );
 
   const showService = values.requestType === "Service" || values.requestType === "Hybrid";
   const showProduct = values.requestType === "Product" || values.requestType === "Hybrid";
   const lastStep = STEP_KEYS.length - 1;
   const serviceName =
     catalog.data?.items.find((item) => String(item.id) === values.serviceId)?.name ??
+    serviceCategories.data?.find((item) => String(item.id) === values.serviceCategoryId)?.name ??
     values.serviceId;
+  const productName =
+    products.data?.items.find((item) => String(item.id) === values.productId)?.name ??
+    values.productId;
+  const productCategoryName =
+    productCategories.data?.find((item) => String(item.id) === values.productCategoryId)?.name ??
+    values.productCategoryId;
 
   function patch(update: Partial<CreateRequestFormValues>) {
     setValues((current) => ({ ...current, ...update }));
@@ -146,13 +167,21 @@ export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormP
         ) : null}
         {showProduct ? (
           <>
-            <SummaryRow label={t("request.create.productId")} value={dash(values.productId)} />
             <SummaryRow
-              label={t("request.create.productCategoryId")}
-              value={dash(values.productCategoryId)}
+              label={t("request.create.productCategory")}
+              value={dash(productCategoryName)}
             />
+            <SummaryRow label={t("request.create.productSelect")} value={dash(productName)} />
           </>
         ) : null}
+        <SummaryRow
+          label={t("request.create.mapTitle")}
+          value={
+            values.mapPoint
+              ? t("request.create.mapSelected")
+              : t("request.create.mapNotSelected")
+          }
+        />
         <Typography variant="caption" color="text.secondary">
           {t("request.create.stepProgress", { current: step + 1, total: STEP_KEYS.length })}
         </Typography>
@@ -233,13 +262,31 @@ export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormP
                       <Typography variant="body2" color="text.secondary">
                         {t("request.create.serviceHint")}
                       </Typography>
-                      <ServiceSelect
-                        value={values.serviceId}
-                        onChange={(serviceId) => patch({ serviceId })}
-                        error={errors.serviceId}
+                      <ServiceCatalogSection
+                        categoryId={values.serviceCategoryId}
+                        serviceId={values.serviceId}
+                        attributes={values.serviceAttributes}
+                        onCategoryChange={(serviceCategoryId) =>
+                          patch({
+                            serviceCategoryId,
+                            serviceId: "",
+                            serviceAttributes: {},
+                          })
+                        }
+                        onServiceChange={(serviceId) =>
+                          patch({ serviceId, serviceAttributes: {} })
+                        }
+                        onAttributeChange={(attributeId, value) =>
+                          patch({
+                            serviceAttributes: {
+                              ...values.serviceAttributes,
+                              [attributeId]: value,
+                            },
+                          })
+                        }
+                        serviceError={errors.serviceId}
                         disabled={submitting}
-                        required
-                        label={fieldLabel(t("request.create.serviceSelect"), true)}
+                        fieldLabel={fieldLabel}
                       />
                     </Stack>
                   ) : null}
@@ -249,15 +296,37 @@ export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormP
                       <Typography variant="body2" color="text.secondary">
                         {t("request.create.productHint")}
                       </Typography>
-                      <TextField
-                        label={fieldLabel(t("request.create.productId"), false)}
-                        value={values.productId}
-                        onChange={(event) => patch({ productId: event.target.value })}
-                        error={Boolean(errors.productId)}
-                        helperText={errors.productId}
+                      <ProductCatalogSection
+                        categoryId={values.productCategoryId}
+                        productId={values.productId}
+                        attributes={values.productAttributes}
+                        onCategoryChange={(productCategoryId) =>
+                          patch({
+                            productCategoryId,
+                            productId: "",
+                            productAttributes: {},
+                          })
+                        }
+                        onProductChange={(productId, product) =>
+                          patch({
+                            productId,
+                            productCategoryId: product
+                              ? String(product.categoryId)
+                              : values.productCategoryId,
+                            productAttributes: {},
+                          })
+                        }
+                        onAttributeChange={(attributeId, value) =>
+                          patch({
+                            productAttributes: {
+                              ...values.productAttributes,
+                              [attributeId]: value,
+                            },
+                          })
+                        }
+                        productError={errors.productId ?? errors.productCategoryId}
                         disabled={submitting}
-                        fullWidth
-                        inputProps={{ inputMode: "numeric" }}
+                        fieldLabel={fieldLabel}
                       />
                     </Stack>
                   ) : null}
@@ -267,24 +336,28 @@ export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormP
               {step === 3 ? (
                 <>
                   <Typography variant="h6">{t("request.create.step.location")}</Typography>
-                  <Alert severity="info">{t("request.create.locationNote")}</Alert>
-                  {values.requestType === "Service" ? (
-                    <Typography variant="body2" color="text.secondary">
-                      {t("request.create.locationServiceNote")}
-                    </Typography>
-                  ) : null}
-                  {showProduct ? (
-                    <TextField
-                      label={fieldLabel(t("request.create.productCategoryId"), false)}
-                      value={values.productCategoryId}
-                      onChange={(event) => patch({ productCategoryId: event.target.value })}
-                      error={Boolean(errors.productCategoryId) || Boolean(errors.productId)}
-                      helperText={errors.productCategoryId ?? errors.productId}
-                      disabled={submitting}
-                      fullWidth
-                      inputProps={{ inputMode: "numeric" }}
-                    />
-                  ) : null}
+                  <Typography variant="body2" color="text.secondary">
+                    {t("request.create.locationNote")}
+                  </Typography>
+                  <RequestLocationMapPicker
+                    value={values.mapPoint}
+                    onChange={(mapPoint) => patch({ mapPoint })}
+                    onResolved={(location) => patch({ location })}
+                    error={errors.mapPoint}
+                  />
+                  <RequestPlaceFields
+                    location={values.location}
+                    address={values.address}
+                    errors={{
+                      provinceId: errors.provinceId,
+                      cityId: errors.cityId,
+                      districtId: errors.districtId,
+                      address: errors.address,
+                    }}
+                    disabled={submitting}
+                    onLocationChange={(location) => patch({ location })}
+                    onAddressChange={(address) => patch({ address })}
+                  />
                 </>
               ) : null}
 
@@ -382,12 +455,12 @@ export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormP
                   {showProduct ? (
                     <>
                       <SummaryRow
-                        label={t("request.create.productId")}
-                        value={dash(values.productId)}
+                        label={t("request.create.productCategory")}
+                        value={dash(productCategoryName)}
                       />
                       <SummaryRow
-                        label={t("request.create.productCategoryId")}
-                        value={dash(values.productCategoryId)}
+                        label={t("request.create.productSelect")}
+                        value={dash(productName)}
                       />
                       <SummaryRow
                         label={t("request.create.productQuantity")}
@@ -399,6 +472,27 @@ export function RequestForm({ submitting, onSubmit, initialTitle }: RequestFormP
                       />
                     </>
                   ) : null}
+                  <SummaryRow
+                    label={t("request.create.mapTitle")}
+                    value={
+                      values.mapPoint
+                        ? t("request.create.mapSelected")
+                        : t("request.create.mapNotSelected")
+                    }
+                  />
+                  <SummaryRow
+                    label={t("request.create.province")}
+                    value={dash(values.location.provinceName ?? "")}
+                  />
+                  <SummaryRow
+                    label={t("request.create.city")}
+                    value={dash(values.location.cityName ?? "")}
+                  />
+                  <SummaryRow
+                    label={t("request.create.district")}
+                    value={dash(values.location.districtName ?? "")}
+                  />
+                  <SummaryRow label={t("request.create.address")} value={dash(values.address)} />
                 </>
               ) : null}
 

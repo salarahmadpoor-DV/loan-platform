@@ -16,6 +16,8 @@ export function useAcceptProposal() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.deals.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.provider.proposals() });
       void queryClient.invalidateQueries({ queryKey: queryKeys.provider.deals() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.provider.executions() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.executions.all });
     },
   });
 }

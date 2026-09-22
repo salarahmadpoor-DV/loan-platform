@@ -5,7 +5,10 @@ import {
 } from "../auth/workspaces";
 
 export const customerCreateRequestPath = "/customer/requests/create";
+export const customerDashboardPath = "/customer/dashboard";
 export const providerWorkspacePath = "/provider/dashboard";
+export const providerJoinPath = "/join/provider";
+export const providerOnboardPath = "/provider/onboard";
 
 export function createRequestPathWithQuery(query?: string): string {
   const q = query?.trim();
@@ -46,8 +49,6 @@ export function findServicePath(
   return loginPathWithNext(destination);
 }
 
-export const providerOnboardPath = "/provider/onboard";
-
 export function professionalJoinPath(
   isAuthenticated: boolean,
   roles: readonly string[] | undefined,
@@ -59,5 +60,5 @@ export function professionalJoinPath(
   if (isAuthenticated) {
     return providerOnboardPath;
   }
-  return loginPathWithNext(providerOnboardPath);
+  return providerJoinPath;
 }

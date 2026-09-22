@@ -63,6 +63,7 @@ public sealed class GetRequestMatchesQueryHandler
         var products = request.Products.Where(p => !p.IsDeleted).ToList();
         var location = request.Locations.OrderBy(l => l.Id).FirstOrDefault();
         var schedule = request.Schedules.OrderBy(s => s.Id).FirstOrDefault();
+        var point = ReadPoint(location);
 
         return new MatchingCriteria
         {
@@ -78,9 +79,11 @@ public sealed class GetRequestMatchesQueryHandler
                 .Select(a => a.ServiceAttributeId)
                 .Distinct()
                 .ToList(),
-            Province = Normalize(location?.Province),
-            City = Normalize(location?.City),
-            District = Normalize(location?.District),
+            Province = Normalize(location?.Province?.Name),
+            City = Normalize(location?.City?.Name),
+            District = Normalize(location?.District?.Name),
+            Latitude = point.Lat,
+            Longitude = point.Lng,
             DayOfWeek = schedule is null ? null : (byte)schedule.Date.DayOfWeek,
             TimeFrom = schedule?.TimeFrom,
             TimeTo = schedule?.TimeTo,
@@ -88,6 +91,16 @@ public sealed class GetRequestMatchesQueryHandler
             RequireService = services.Count > 0,
             RequireProduct = services.Count == 0 && products.Count > 0
         };
+    }
+
+    private static (double? Lat, double? Lng) ReadPoint(RequestLocation? location)
+    {
+        if (location?.Lat is null || location.Lng is null)
+            return (null, null);
+
+        var lat = (double)location.Lat.Value;
+        var lng = (double)location.Lng.Value;
+        return GeoDistance.IsValidPoint(lat, lng) ? (lat, lng) : (null, null);
     }
 
     private static string? Normalize(string? value) =>

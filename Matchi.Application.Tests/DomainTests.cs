@@ -63,6 +63,17 @@ public sealed class ServiceExecutionDomainTests
     }
 
     [Fact]
+    public void CreateForDeal_AttachesPendingExecutionWithoutRequiringDealId()
+    {
+        var deal = Deal.Create(1, 2, 3, 10m);
+        var execution = ServiceExecution.CreateForDeal(deal, null, new DateOnly(2026, 9, 22));
+        Assert.Same(deal, execution.Deal);
+        Assert.Single(deal.ServiceExecutions);
+        Assert.Equal("Pending", execution.Status);
+        Assert.Equal(new DateOnly(2026, 9, 22), execution.ScheduledDate);
+    }
+
+    [Fact]
     public void Cancel_RejectsCompletedAndCancelled()
     {
         var pending = ServiceExecution.Create(1, null);

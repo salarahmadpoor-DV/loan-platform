@@ -25,6 +25,9 @@ public sealed class AcceptBusinessMembershipCommandHandler : IRequestHandler<Acc
         if (membership is null || membership.Provider.UserId != userId)
             return false;
 
+        if (!string.Equals(membership.Status, "Pending", StringComparison.OrdinalIgnoreCase))
+            return false;
+
         membership.UpdateMembership(membership.Role, "Active");
         await _businesses.UpdateAsync(cancellationToken);
         return true;

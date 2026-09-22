@@ -58,11 +58,14 @@ public sealed class GetProviderRequestInboxQueryHandler
 
         ProviderInboxLocationDto? locationDto = null;
         if (location is not null
-            && (!string.IsNullOrWhiteSpace(location.Province)
-                || !string.IsNullOrWhiteSpace(location.City)
-                || !string.IsNullOrWhiteSpace(location.District)))
+            && (!string.IsNullOrWhiteSpace(location.Province?.Name)
+                || !string.IsNullOrWhiteSpace(location.City?.Name)
+                || !string.IsNullOrWhiteSpace(location.District?.Name)))
         {
-            locationDto = new ProviderInboxLocationDto(location.Province, location.City, location.District);
+            locationDto = new ProviderInboxLocationDto(
+                location.Province?.Name,
+                location.City?.Name,
+                location.District?.Name);
         }
 
         return new ProviderRequestInboxItemDto(

@@ -39,7 +39,8 @@ public sealed class MatchingReadRepository : IMatchingReadRepository
         var query =
             from provider in _context.Providers.AsNoTracking()
             where !provider.IsDeleted && provider.Status == "Active"
-            let serviceMatch = serviceIds.Count != 0 && _context.ProviderServices.Any(link =>
+        /// Catalog: any requested service id on an active, non-deleted ProviderService.
+        let serviceMatch = serviceIds.Count != 0 && _context.ProviderServices.Any(link =>
                 link.ProviderId == provider.Id
                 && !link.IsDeleted
                 && link.IsActive
@@ -82,9 +83,12 @@ public sealed class MatchingReadRepository : IMatchingReadRepository
                 + (productMatch ? MatchingScores.Product : 0)
                 + (capabilityMatch ? MatchingScores.Capability : 0)
                 + (areaMatch ? MatchingScores.Area : 0)
-                + (availabilityMatch ? MatchingScores.Availability : 0));
+                + (availabilityMatch ? MatchingScores.Availability : 0),
+                areaMatch,
+                null);
 
-        return await query.ToListAsync(cancellationToken);
+        var rows = await query.ToListAsync(cancellationToken);
+        return await ApplyProviderGeoAsync(rows, criteria, cancellationToken);
     }
 
     public async Task<IReadOnlyList<MatchingCandidateRow>> FindBusinessMatchesAsync(
@@ -148,9 +152,12 @@ public sealed class MatchingReadRepository : IMatchingReadRepository
                 (serviceMatch ? MatchingScores.Service : 0)
                 + (productMatch ? MatchingScores.Product : 0)
                 + (areaMatch ? MatchingScores.Area : 0)
-                + (availabilityMatch ? MatchingScores.Availability : 0));
+                + (availabilityMatch ? MatchingScores.Availability : 0),
+                areaMatch,
+                null);
 
-        return await query.ToListAsync(cancellationToken);
+        var rows = await query.ToListAsync(cancellationToken);
+        return await ApplyBusinessGeoAsync(rows, criteria, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Request>> ListOpenEligibleRequestsForProviderAsync(
@@ -196,8 +203,62 @@ public sealed class MatchingReadRepository : IMatchingReadRepository
             .Include(request => request.Products)
                 .ThenInclude(product => product.ProductCategory)
             .Include(request => request.Locations)
+                .ThenInclude(location => location.Province)
+            .Include(request => request.Locations)
+                .ThenInclude(location => location.City)
+            .Include(request => request.Locations)
+                .ThenInclude(location => location.District)
             .OrderByDescending(request => request.CreateDate)
             .ThenByDescending(request => request.Id)
             .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Geographic overlay only. Does not join BusinessProvider; independent Providers remain eligible.
+    /// </summary>
+    private async Task<IReadOnlyList<MatchingCandidateRow>> ApplyProviderGeoAsync(
+        IReadOnlyList<MatchingCandidateRow> candidates,
+        MatchingCriteria criteria,
+        CancellationToken cancellationToken)
+    {
+        if (!GeoDistance.IsValidPoint(criteria.Latitude, criteria.Longitude) || candidates.Count == 0)
+            return candidates;
+
+        var ids = candidates.Select(c => c.CandidateId).Distinct().ToList();
+        var areas = await _context.ProviderServiceAreas.AsNoTracking()
+            .Where(area => ids.Contains(area.ProviderId) && !area.IsDeleted && area.IsActive)
+            .Select(area => new ServiceAreaGeo(
+                area.ProviderId,
+                area.Lat,
+                area.Lng,
+                area.Radius,
+                area.IsActive,
+                area.IsDeleted))
+            .ToListAsync(cancellationToken);
+
+        return MatchingGeo.Apply(candidates, areas, criteria.Latitude, criteria.Longitude);
+    }
+
+    private async Task<IReadOnlyList<MatchingCandidateRow>> ApplyBusinessGeoAsync(
+        IReadOnlyList<MatchingCandidateRow> candidates,
+        MatchingCriteria criteria,
+        CancellationToken cancellationToken)
+    {
+        if (!GeoDistance.IsValidPoint(criteria.Latitude, criteria.Longitude) || candidates.Count == 0)
+            return candidates;
+
+        var ids = candidates.Select(c => c.CandidateId).Distinct().ToList();
+        var areas = await _context.BusinessServiceAreas.AsNoTracking()
+            .Where(area => ids.Contains(area.BusinessId) && !area.IsDeleted && area.IsActive)
+            .Select(area => new ServiceAreaGeo(
+                area.BusinessId,
+                area.Lat,
+                area.Lng,
+                area.Radius,
+                area.IsActive,
+                area.IsDeleted))
+            .ToListAsync(cancellationToken);
+
+        return MatchingGeo.Apply(candidates, areas, criteria.Latitude, criteria.Longitude);
     }
 }

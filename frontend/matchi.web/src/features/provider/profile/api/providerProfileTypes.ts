@@ -12,3 +12,16 @@ export type ProviderProfile = {
   completedJobCount: number;
   status: string;
 };
+
+/** Live GET /api/providers/me/areas (`ProviderServiceAreaDto`). */
+export type ProviderServiceArea = {
+  id: number;
+  areaType: string;
+  province: string | null;
+  city: string | null;
+  district: string | null;
+  lat: number | null;
+  lng: number | null;
+  radius: number | null;
+  isActive: boolean;
+};

@@ -26,6 +26,7 @@ internal sealed class FakeServiceExecutionRepository : IServiceExecutionReposito
 {
     public Deal? DealGraph { get; set; }
     public ServiceExecution? Tracked { get; set; }
+    public long? StartCompleteUserId { get; set; }
     public bool Exists { get; set; }
     public bool DealVisible { get; set; } = true;
     public Exception? SaveException { get; set; }
@@ -85,7 +86,12 @@ internal sealed class FakeServiceExecutionRepository : IServiceExecutionReposito
         long executionId,
         long userId,
         CancellationToken cancellationToken = default) =>
-        Task.FromResult(Tracked);
+        Task.FromResult(
+            Tracked is not null
+            && Tracked.Id == executionId
+            && (StartCompleteUserId is null || StartCompleteUserId == userId)
+                ? Tracked
+                : null);
 
     public Task<ServiceExecution?> GetTrackedWithAssignmentsForPartyAsync(
         long executionId,

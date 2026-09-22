@@ -36,13 +36,35 @@ public class ServiceExecution : TimestampedEntity
         DateOnly? scheduledDate,
         TimeSpan? scheduledTimeFrom,
         TimeSpan? scheduledTimeTo)
+        : this(dealId, businessId, scheduledDate, scheduledTimeFrom, scheduledTimeTo, deal: null)
     {
-        if (dealId <= 0)
+    }
+
+    private ServiceExecution(
+        Deal deal,
+        long? businessId,
+        DateOnly? scheduledDate,
+        TimeSpan? scheduledTimeFrom,
+        TimeSpan? scheduledTimeTo)
+        : this(deal.Id, businessId, scheduledDate, scheduledTimeFrom, scheduledTimeTo, deal)
+    {
+    }
+
+    private ServiceExecution(
+        long dealId,
+        long? businessId,
+        DateOnly? scheduledDate,
+        TimeSpan? scheduledTimeFrom,
+        TimeSpan? scheduledTimeTo,
+        Deal? deal)
+    {
+        if (deal is null && dealId <= 0)
             throw new InvalidOperationException("DealId must be greater than zero.");
         if (businessId is <= 0)
             throw new InvalidOperationException("BusinessId must be greater than zero when supplied.");
         EnsureSchedule(scheduledTimeFrom, scheduledTimeTo);
 
+        Deal = deal!;
         DealId = dealId;
         BusinessId = businessId;
         ScheduledDate = scheduledDate;
@@ -59,6 +81,19 @@ public class ServiceExecution : TimestampedEntity
         TimeSpan? scheduledTimeTo = null)
     {
         return new ServiceExecution(dealId, businessId, scheduledDate, scheduledTimeFrom, scheduledTimeTo);
+    }
+
+    public static ServiceExecution CreateForDeal(
+        Deal deal,
+        long? businessId,
+        DateOnly? scheduledDate = null,
+        TimeSpan? scheduledTimeFrom = null,
+        TimeSpan? scheduledTimeTo = null)
+    {
+        ArgumentNullException.ThrowIfNull(deal);
+        var execution = new ServiceExecution(deal, businessId, scheduledDate, scheduledTimeFrom, scheduledTimeTo);
+        deal.ServiceExecutions.Add(execution);
+        return execution;
     }
 
     public void UpdateSchedule(DateOnly? scheduledDate, TimeSpan? scheduledTimeFrom, TimeSpan? scheduledTimeTo)

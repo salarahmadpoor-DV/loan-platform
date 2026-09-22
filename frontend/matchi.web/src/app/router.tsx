@@ -1,6 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { LoginPage } from "../features/auth/pages/LoginPage";
+import { ProviderJoinPage } from "../features/auth/pages/ProviderJoinPage";
 import { ProviderOnboardPage } from "../features/provider/profile/pages/ProviderOnboardPage";
+import { ProviderOfferingsPage } from "../features/provider/offerings/pages/ProviderOfferingsPage";
 import { DealDetailPage } from "../features/customer/deals/pages/DealDetailPage";
 import { DealListPage } from "../features/customer/deals/pages/DealListPage";
 import { CustomerDashboardPage } from "../features/customer/dashboard/pages/CustomerDashboardPage";
@@ -14,12 +16,19 @@ import { ReviewListPage } from "../features/customer/reviews/pages/ReviewListPag
 import { ProviderDashboardPage } from "../features/provider/dashboard/pages/ProviderDashboardPage";
 import { ProviderDealListPage } from "../features/provider/deals/pages/ProviderDealListPage";
 import { ProviderExecutionListPage } from "../features/provider/executions/pages/ProviderExecutionListPage";
+import { ProviderInvitationInboxPage } from "../features/provider/invitations/pages/ProviderInvitationInboxPage";
+import { ProviderWorkingBusinessesPage } from "../features/provider/memberships/pages/ProviderWorkingBusinessesPage";
 import { ProviderProfilePage } from "../features/provider/profile/pages/ProviderProfilePage";
+import { ProviderBusinessCreatePage } from "../features/provider/business/pages/ProviderBusinessCreatePage";
+import { ProviderBusinessDashboardPage } from "../features/provider/business/pages/ProviderBusinessDashboardPage";
+import { ProviderBusinessInfoPage } from "../features/provider/business/pages/ProviderBusinessInfoPage";
+import { ProviderBusinessInvitationsPage } from "../features/provider/business/pages/ProviderBusinessInvitationsPage";
+import { ProviderBusinessTeamPage } from "../features/provider/business/pages/ProviderBusinessTeamPage";
+import { OwnedBusinessCatalogPage } from "../features/provider/business/pages/OwnedBusinessCatalogPage";
 import { ProviderProposalListPage } from "../features/provider/proposals/pages/ProviderProposalListPage";
 import { ProviderRequestInboxPage } from "../features/provider/requests/pages/ProviderRequestInboxPage";
 import { ProviderRequestDetailPage } from "../features/provider/requests/pages/ProviderRequestDetailPage";
 import { CreateProviderProposalPage } from "../features/provider/proposals/create/pages/CreateProviderProposalPage";
-import { BusinessDashboardPage } from "../features/shell/pages/BusinessDashboardPage";
 import { PlaceholderPage } from "../features/shell/pages/PlaceholderPage";
 import { PublicHomePage } from "../features/shell/pages/PublicHomePage";
 import { BusinessLayout } from "../layouts/BusinessLayout";
@@ -45,6 +54,7 @@ export function AppRouter() {
       <Route element={<PublicLayout />}>
         <Route path="/" element={<PublicHomePage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/join/provider" element={<ProviderJoinPage />} />
         <Route element={<RequireAuth />}>
           <Route path="/provider/onboard" element={<ProviderOnboardPage />} />
         </Route>
@@ -77,29 +87,24 @@ export function AppRouter() {
             <Route path="deals" element={<ProviderDealListPage />} />
             <Route path="executions" element={<ProviderExecutionListPage />} />
             <Route path="profile" element={<ProviderProfilePage />} />
+            <Route path="offerings" element={<ProviderOfferingsPage />} />
+            <Route path="invitations" element={<ProviderInvitationInboxPage />} />
+            <Route path="businesses" element={<ProviderWorkingBusinessesPage />} />
+            <Route path="business" element={<ProviderBusinessDashboardPage />} />
+            <Route path="business/create" element={<ProviderBusinessCreatePage />} />
+            <Route path="business/info" element={<ProviderBusinessInfoPage />} />
+            <Route path="business/providers" element={<ProviderBusinessTeamPage />} />
+            <Route path="business/invitations" element={<ProviderBusinessInvitationsPage />} />
+            <Route path="business/catalog" element={<OwnedBusinessCatalogPage />} />
           </Route>
         </Route>
         <Route element={<RequireWorkspace workspace="business" />}>
           <Route path="/business" element={<BusinessLayout />}>
-            <Route index element={<BusinessDashboardPage />} />
-            <Route
-              path="catalog"
-              element={
-                <PlaceholderPage
-                  title="Catalog"
-                  description="Business services and products will be managed here later."
-                />
-              }
-            />
-            <Route
-              path="members"
-              element={
-                <PlaceholderPage
-                  title="Members"
-                  description="BusinessProvider membership UI is not implemented in this task."
-                />
-              }
-            />
+            <Route index element={<ProviderBusinessDashboardPage />} />
+            <Route path="info" element={<ProviderBusinessInfoPage />} />
+            <Route path="members" element={<ProviderBusinessTeamPage />} />
+            <Route path="invitations" element={<ProviderBusinessInvitationsPage />} />
+            <Route path="catalog" element={<OwnedBusinessCatalogPage />} />
             <Route
               path="executions"
               element={

@@ -42,6 +42,12 @@ public class BusinessProvider : AuditableEntity
         SetUpdated();
     }
 
+    public void Reject()
+    {
+        Status = "Rejected";
+        SetUpdated();
+    }
+
     public void Leave()
     {
         Status = "Inactive";

@@ -1,70 +1,91 @@
-import { Autocomplete, TextField, Typography } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 import type { ReactNode } from "react";
 import { t } from "../../../../../shared/i18n";
-import type { CatalogService } from "../api/createRequestTypes";
-import { useCatalogServices } from "../hooks/useCatalogServices";
+import { AttributeFields } from "./AttributeFields";
+import { CatalogPicker } from "./CatalogPicker";
+import {
+  useCatalogServiceDetail,
+  useCatalogServices,
+  useServiceCategories,
+} from "../hooks/useCatalogServices";
 
-type ServiceSelectProps = {
-  value: string;
-  onChange: (serviceId: string) => void;
-  error?: string;
+type ServiceCatalogSectionProps = {
+  categoryId: string;
+  serviceId: string;
+  attributes: Record<string, string>;
+  onCategoryChange: (categoryId: string) => void;
+  onServiceChange: (serviceId: string) => void;
+  onAttributeChange: (attributeId: string, value: string) => void;
+  serviceError?: string;
+  attributeErrors?: Record<string, string>;
   disabled?: boolean;
-  required?: boolean;
-  label?: ReactNode;
+  fieldLabel: (label: string, required: boolean) => ReactNode;
 };
 
-export function ServiceSelect({
-  value,
-  onChange,
-  error,
+export function ServiceCatalogSection({
+  categoryId,
+  serviceId,
+  attributes,
+  onCategoryChange,
+  onServiceChange,
+  onAttributeChange,
+  serviceError,
+  attributeErrors,
   disabled,
-  required,
-  label,
-}: ServiceSelectProps) {
-  const catalog = useCatalogServices();
-  const items = catalog.data?.items ?? [];
-  const selected = items.find((item) => String(item.id) === value) ?? null;
-  const fieldLabel = label ?? t("request.create.serviceSelect");
+  fieldLabel,
+}: ServiceCatalogSectionProps) {
+  const categories = useServiceCategories();
+  const categoryItems = categories.data ?? [];
+  const selectedCategory = Number.parseInt(categoryId, 10);
+  const services = useCatalogServices(
+    Number.isFinite(selectedCategory) && selectedCategory > 0 ? selectedCategory : undefined,
+  );
+  const serviceItems = services.data?.items ?? [];
+  const selectedService = Number.parseInt(serviceId, 10);
+  const detail = useCatalogServiceDetail(
+    Number.isFinite(selectedService) && selectedService > 0 ? selectedService : undefined,
+  );
 
-  if (catalog.isError || (!catalog.isPending && items.length === 0)) {
+  if (categories.isError || (!categories.isPending && categoryItems.length === 0)) {
     return (
-      <>
-        <Typography variant="body2" color="text.secondary">
-          {t("request.create.catalogUnavailable")}
-        </Typography>
-        <TextField
-          label={t("request.create.serviceIdFallback")}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          error={Boolean(error)}
-          helperText={error}
-          disabled={disabled}
-          required={required}
-          fullWidth
-          inputProps={{ inputMode: "numeric" }}
-        />
-      </>
+      <Typography variant="body2" color="text.secondary">
+        {t("request.create.catalogUnavailable")}
+      </Typography>
     );
   }
 
   return (
-    <Autocomplete<CatalogService>
-      options={items}
-      loading={catalog.isPending}
-      value={selected}
-      disabled={disabled}
-      getOptionLabel={(option) => option.name}
-      isOptionEqualToValue={(option, optionValue) => option.id === optionValue.id}
-      onChange={(_event, next) => onChange(next ? String(next.id) : "")}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label={fieldLabel}
-          required={required}
-          error={Boolean(error)}
-          helperText={error}
-        />
-      )}
-    />
+    <Stack spacing={1.5}>
+      <CatalogPicker
+        options={categoryItems}
+        valueId={categoryId}
+        getId={(item) => item.id}
+        getLabel={(item) => item.name}
+        onChange={onCategoryChange}
+        label={fieldLabel(t("request.create.serviceCategory"), true)}
+        disabled={disabled}
+        required
+        loading={categories.isPending}
+      />
+      <CatalogPicker
+        options={serviceItems}
+        valueId={serviceId}
+        getId={(item) => item.id}
+        getLabel={(item) => item.name}
+        onChange={onServiceChange}
+        label={fieldLabel(t("request.create.serviceSelect"), true)}
+        error={serviceError}
+        disabled={disabled || !categoryId}
+        required
+        loading={services.isPending}
+      />
+      <AttributeFields
+        attributes={detail.data?.attributes ?? []}
+        values={attributes}
+        onChange={onAttributeChange}
+        errors={attributeErrors}
+        disabled={disabled}
+      />
+    </Stack>
   );
 }

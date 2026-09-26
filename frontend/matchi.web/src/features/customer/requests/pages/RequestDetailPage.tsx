@@ -17,6 +17,7 @@ import {
   type RequestServiceLine,
 } from "../api/requestTypes";
 import { RequestStatusChip } from "../components/RequestStatusChip";
+import { RequestLocationMapView } from "../components/RequestLocationMapView";
 import { useRequest } from "../hooks/useRequest";
 import { useRequestProposals } from "../../proposals/hooks/useRequestProposals";
 import {
@@ -41,6 +42,17 @@ function locationLines(request: RequestDto): string[] {
     location.address,
     [location.district, location.city, location.province].filter(Boolean).join(", "),
   ].filter((line): line is string => Boolean(line && line.trim()));
+}
+
+function hasRequestLocation(request: RequestDto): boolean {
+  const location = request.location;
+  if (!location) {
+    return false;
+  }
+  return (
+    locationLines(request).length > 0 ||
+    (location.lat != null && location.lng != null)
+  );
 }
 
 export function RequestDetailPage() {
@@ -154,7 +166,7 @@ function RequestDetailBody({ request }: { request: RequestDto }) {
           <Typography variant="subtitle2" gutterBottom>
             {t("request.detail.location")}
           </Typography>
-          {places.length === 0 ? (
+          {places.length === 0 && !hasRequestLocation(request) ? (
             <Typography variant="body2" color="text.secondary">
               {t("request.detail.noLocation")}
             </Typography>
@@ -165,6 +177,7 @@ function RequestDetailBody({ request }: { request: RequestDto }) {
               </Typography>
             ))
           )}
+          {request.location ? <RequestLocationMapView location={request.location} /> : null}
         </AppCard>
         <AppCard>
           <Typography variant="subtitle2" gutterBottom>

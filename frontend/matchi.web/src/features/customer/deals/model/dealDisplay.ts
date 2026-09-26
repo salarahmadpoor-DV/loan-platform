@@ -1,4 +1,5 @@
-import { t } from "../../../../shared/i18n";
+import { formatIsoDateForLocale } from "../../../../shared/datetime/LocaleDateField";
+import { getLocale, t } from "../../../../shared/i18n";
 import type { StatusTone } from "../../../../shared/ui/StatusChip";
 
 export function dealStatusLabel(status: string): string {
@@ -58,7 +59,11 @@ export function assignmentStatusLabel(status: string): string {
 }
 
 export function formatExecutionSchedule(parts: Array<string | null | undefined>): string | null {
-  const values = parts.filter((part): part is string => Boolean(part));
+  const values = parts
+    .filter((part): part is string => Boolean(part))
+    .map((part) =>
+      /^\d{4}-\d{2}-\d{2}$/.test(part) ? formatIsoDateForLocale(part, getLocale()) || part : part,
+    );
   return values.length > 0 ? values.join(" — ") : null;
 }
 

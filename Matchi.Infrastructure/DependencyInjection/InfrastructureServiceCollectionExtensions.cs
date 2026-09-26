@@ -1,6 +1,9 @@
 using Matchi.Application.Common.Interfaces;
 using Matchi.Application.Common.Models;
+using Matchi.Application.Features.Locations;
+using Matchi.Application.Features.Locations.Resolvers;
 using Matchi.Domain.Interfaces;
+using Matchi.Infrastructure.Locations;
 using Matchi.Infrastructure.Persistence;
 using Matchi.Infrastructure.Persistence.Repositories;
 using Matchi.Infrastructure.Services;
@@ -36,6 +39,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IUserRoleRepository, UserRoleRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IServiceRepository, ServiceRepository>();
+        services.AddScoped<IProductCatalogRepository, ProductCatalogRepository>();
         services.AddScoped<IProviderRepository, ProviderRepository>();
         services.AddScoped<IBusinessRepository, BusinessRepository>();
         services.AddScoped<IRequestRepository, RequestRepository>();
@@ -45,6 +49,14 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IExecutionAssignmentRepository, ExecutionAssignmentRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
         services.AddScoped<IMatchingReadRepository, MatchingReadRepository>();
+        services.AddScoped<ILocationReadRepository, LocationReadRepository>();
+
+        var locationResolverOptions = ReadLocationResolverOptions(configuration);
+        services.AddSingleton(locationResolverOptions);
+        services.AddSingleton<IExternalGeocodingClient, HttpExternalGeocodingClient>();
+        services.AddScoped<IExternalLocationResolver, ExternalLocationResolver>();
+        services.AddScoped<IInternalLocationResolver, InternalLocationResolver>();
+        services.AddScoped<ILocationResolver, HybridLocationResolver>();
 
         return services;
     }
@@ -52,5 +64,25 @@ public static class InfrastructureServiceCollectionExtensions
     private static int ParsePositiveInt(string? value, int fallback)
     {
         return int.TryParse(value, out var parsed) && parsed > 0 ? parsed : fallback;
+    }
+
+    private static LocationResolverOptions ReadLocationResolverOptions(IConfiguration configuration)
+    {
+        var section = configuration.GetSection(LocationResolverOptions.SectionName);
+        return new LocationResolverOptions
+        {
+            Mode = section["Mode"] ?? "Auto",
+            ExternalEnabled = !string.Equals(section["ExternalEnabled"], "false", StringComparison.OrdinalIgnoreCase),
+            TimeoutMs = ParsePositiveInt(section["TimeoutMs"], 1500),
+            FallbackToInternal = !string.Equals(section["FallbackToInternal"], "false", StringComparison.OrdinalIgnoreCase),
+            External = new ExternalGeocodingOptions
+            {
+                BaseUrl = section["External:BaseUrl"] ?? string.Empty,
+                UserAgent = string.IsNullOrWhiteSpace(section["External:UserAgent"])
+                    ? "Matchi/1.0 (location-resolver)"
+                    : section["External:UserAgent"]!,
+                ApiKey = section["External:ApiKey"]
+            }
+        };
     }
 }

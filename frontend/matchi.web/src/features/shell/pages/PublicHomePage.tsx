@@ -1,10 +1,12 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { usePublicEntry } from "../../auth/PublicEntryContext";
 import { useAuth } from "../../../shared/auth/AuthProvider";
 import { useWorkspaceAccess } from "../../../shared/auth/useWorkspaceAccess";
 import { t } from "../../../shared/i18n";
 import {
+  createRequestPathWithQuery,
   findServicePath,
   professionalJoinPath,
 } from "../../../shared/marketplace/publicPaths";
@@ -43,6 +45,7 @@ export function PublicHomePage() {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const { capabilities } = useWorkspaceAccess();
+  const { openCustomerLogin } = usePublicEntry();
   const [query, setQuery] = useState("");
   const [searchError, setSearchError] = useState<string | undefined>();
   const categories = useServiceCategories();
@@ -52,7 +55,11 @@ export function PublicHomePage() {
   const suggestions = catalog.data?.items.map((item) => item.name) ?? [];
 
   function goFind(search?: string) {
-    navigate(findServicePath(isAuthenticated, user?.roles, search, capabilities));
+    if (!isAuthenticated) {
+      openCustomerLogin(createRequestPathWithQuery(search));
+      return;
+    }
+    navigate(findServicePath(true, user?.roles, search, capabilities));
   }
 
   function goJoin() {
@@ -136,14 +143,24 @@ export function PublicHomePage() {
               <Typography variant="body2" color="text.secondary">
                 {t("public.hero.trustLine")}
               </Typography>
-              <Button
-                variant="text"
-                size="large"
-                onClick={goJoin}
-                sx={{ alignSelf: { xs: "stretch", sm: "flex-start" }, px: 0 }}
-              >
-                {t("public.hero.becomeProfessional")}
-              </Button>
+              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ pt: 0.5 }}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={() => goFind()}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
+                >
+                  {t("public.hero.requestService")}
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  onClick={goJoin}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
+                >
+                  {t("public.hero.becomeProfessional")}
+                </Button>
+              </Stack>
             </Stack>
             <HeroVisual label={t("public.hero.visualLabel")} />
           </Box>

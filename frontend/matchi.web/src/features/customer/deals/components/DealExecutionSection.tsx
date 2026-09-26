@@ -51,6 +51,9 @@ export function DealExecutionSection({ dealId, requestType }: DealExecutionSecti
       ) : null}
       {data && data.length > 0 ? (
         <Stack spacing={1.5}>
+          {data.some((item) => item.status.toLowerCase() === "pending") ? (
+            <Alert severity="info">{t("deal.execution.waitingProvider")}</Alert>
+          ) : null}
           {data.map((execution) => (
             <ExecutionCard key={execution.id} execution={execution} />
           ))}

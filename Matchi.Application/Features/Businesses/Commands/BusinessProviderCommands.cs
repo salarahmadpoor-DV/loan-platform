@@ -46,13 +46,23 @@ public sealed class AddBusinessProviderCommandHandler : IRequestHandler<AddBusin
         var role = string.IsNullOrWhiteSpace(command.Role) ? "Member" : command.Role.Trim();
         var status = string.IsNullOrWhiteSpace(command.Status) ? "Active" : command.Status.Trim();
         if (!CatalogRules.MembershipStatuses.Contains(status, StringComparer.OrdinalIgnoreCase))
-            throw Fail.Validation("status", "Status must be Active, Inactive, or Pending.");
+            throw Fail.Validation("status", "Status must be Active, Inactive, Pending, or Rejected.");
 
         var existing = await _businesses.GetMembershipAsync(
             business.Id, command.ProviderId, includeDeleted: true, cancellationToken);
 
         if (existing is not null && !existing.IsDeleted)
-            throw Fail.Validation("providerId", "This provider is already a member of the business.");
+        {
+            if (string.Equals(existing.Status, "Active", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(existing.Status, "Pending", StringComparison.OrdinalIgnoreCase))
+            {
+                throw Fail.Validation("providerId", "This provider is already a member of the business.");
+            }
+
+            existing.UpdateMembership(role, status);
+            await _businesses.UpdateAsync(cancellationToken);
+            return existing.Id;
+        }
 
         if (existing is not null)
         {
@@ -102,7 +112,7 @@ public sealed class UpdateBusinessProviderCommandHandler : IRequestHandler<Updat
             _currentUserService, _businesses, command.BusinessId, cancellationToken);
 
         if (!CatalogRules.MembershipStatuses.Contains(command.Status, StringComparer.OrdinalIgnoreCase))
-            throw Fail.Validation("status", "Status must be Active, Inactive, or Pending.");
+            throw Fail.Validation("status", "Status must be Active, Inactive, Pending, or Rejected.");
 
         var membership = await _businesses.GetMembershipAsync(
             business.Id, command.ProviderId, includeDeleted: false, cancellationToken)

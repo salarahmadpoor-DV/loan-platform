@@ -37,7 +37,9 @@ export function formatRequestDateTime(iso: string | null | undefined): string {
   if (Number.isNaN(date.getTime())) {
     return iso;
   }
-  return date.toLocaleString(getLocale());
+  return date.toLocaleString(getLocale(), {
+    calendar: getLocale() === "fa-IR" ? "persian" : "gregory",
+  });
 }
 
 export function formatRequestDate(iso: string): string {
@@ -45,7 +47,9 @@ export function formatRequestDate(iso: string): string {
   if (Number.isNaN(date.getTime())) {
     return iso;
   }
-  return date.toLocaleDateString(getLocale());
+  return date.toLocaleDateString(getLocale(), {
+    calendar: getLocale() === "fa-IR" ? "persian" : "gregory",
+  });
 }
 
 export function compareMyRequests(

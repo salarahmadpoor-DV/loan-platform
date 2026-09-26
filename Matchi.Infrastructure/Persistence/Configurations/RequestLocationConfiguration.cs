@@ -18,16 +18,26 @@ public class RequestLocationConfiguration : IEntityTypeConfiguration<RequestLoca
         builder.Property(x => x.RequestId)
             .IsRequired();
 
+        builder.Property(x => x.ProvinceId);
+
+        builder.Property(x => x.CityId);
+
+        builder.Property(x => x.DistrictId);
+
         builder.Property(x => x.Address)
             .HasMaxLength(1000);
 
-        builder.Property(x => x.Province)
+        // Legacy text columns retained until a data-migration strategy is confirmed.
+        builder.Property<string?>("LegacyProvince")
+            .HasColumnName("Province")
             .HasMaxLength(100);
 
-        builder.Property(x => x.City)
+        builder.Property<string?>("LegacyCity")
+            .HasColumnName("City")
             .HasMaxLength(100);
 
-        builder.Property(x => x.District)
+        builder.Property<string?>("LegacyDistrict")
+            .HasColumnName("District")
             .HasMaxLength(100);
 
         builder.Property(x => x.Lat)
@@ -42,7 +52,37 @@ public class RequestLocationConfiguration : IEntityTypeConfiguration<RequestLoca
             .HasConstraintName("FK_RequestLocations_Requests")
             .OnDelete(DeleteBehavior.NoAction);
 
+        builder.HasOne(x => x.Province)
+            .WithMany()
+            .HasForeignKey(x => x.ProvinceId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.NoAction)
+            .HasConstraintName("FK_RequestLocations_LocationProvinces_ProvinceId");
+
+        builder.HasOne(x => x.City)
+            .WithMany()
+            .HasForeignKey(x => x.CityId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.NoAction)
+            .HasConstraintName("FK_RequestLocations_LocationCities_CityId");
+
+        builder.HasOne(x => x.District)
+            .WithMany()
+            .HasForeignKey(x => x.DistrictId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.NoAction)
+            .HasConstraintName("FK_RequestLocations_LocationDistricts_DistrictId");
+
         builder.HasIndex(x => x.RequestId)
             .HasDatabaseName("IX_RequestLocations_RequestId");
+
+        builder.HasIndex(x => x.ProvinceId)
+            .HasDatabaseName("IX_RequestLocations_ProvinceId");
+
+        builder.HasIndex(x => x.CityId)
+            .HasDatabaseName("IX_RequestLocations_CityId");
+
+        builder.HasIndex(x => x.DistrictId)
+            .HasDatabaseName("IX_RequestLocations_DistrictId");
     }
 }

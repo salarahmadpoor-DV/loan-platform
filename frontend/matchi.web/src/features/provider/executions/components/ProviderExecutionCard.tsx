@@ -1,10 +1,12 @@
-import { Stack, Typography } from "@mui/material";
+import { Button, Stack, Typography } from "@mui/material";
 import { formatDateTime } from "../../../customer/proposals/model/proposalDisplay";
 import { formatExecutionSchedule } from "../../../customer/deals/model/dealDisplay";
+import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
 import { t } from "../../../../shared/i18n";
 import { AppCard } from "../../../../shared/ui/AppCard";
 import { StatusChip, type StatusTone } from "../../../../shared/ui/StatusChip";
 import type { ProviderExecution } from "../api/providerExecutionTypes";
+import { useCompleteProviderExecution, useStartProviderExecution } from "../hooks/useProviderExecutionActions";
 import { providerExecutionStatusLabel } from "../model/providerExecutionDisplay";
 
 function executionTone(status: string): StatusTone {
@@ -31,6 +33,11 @@ export function ProviderExecutionCard({ execution }: ProviderExecutionCardProps)
     execution.scheduledTimeFrom,
     execution.scheduledTimeTo,
   ]);
+  const status = execution.status.toLowerCase();
+  const start = useStartProviderExecution(execution.dealId);
+  const complete = useCompleteProviderExecution(execution.dealId);
+  const pending = start.isPending || complete.isPending;
+  const actionError = start.error ?? complete.error;
 
   return (
     <AppCard>
@@ -74,6 +81,35 @@ export function ProviderExecutionCard({ execution }: ProviderExecutionCardProps)
               : t("common.notSpecified"),
           })}
         </Typography>
+        {actionError ? <ErrorAlert error={actionError} /> : null}
+        {status === "pending" ? (
+          <Button
+            variant="contained"
+            disabled={pending}
+            onClick={() => {
+              start.reset();
+              complete.reset();
+              start.mutate(execution.id);
+            }}
+            sx={{ alignSelf: "flex-start", minHeight: 44 }}
+          >
+            {start.isPending ? t("provider.executions.starting") : t("provider.executions.start")}
+          </Button>
+        ) : null}
+        {status === "inprogress" ? (
+          <Button
+            variant="contained"
+            disabled={pending}
+            onClick={() => {
+              start.reset();
+              complete.reset();
+              complete.mutate(execution.id);
+            }}
+            sx={{ alignSelf: "flex-start", minHeight: 44 }}
+          >
+            {complete.isPending ? t("provider.executions.completing") : t("provider.executions.complete")}
+          </Button>
+        ) : null}
       </Stack>
     </AppCard>
   );

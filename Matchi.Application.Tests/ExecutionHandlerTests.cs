@@ -137,6 +137,35 @@ public sealed class ServiceExecutionLifecycleHandlerTests
     }
 
     [Fact]
+    public async Task Start_RejectsUnauthorizedUser()
+    {
+        var execution = ServiceExecution.Create(1, null).WithId(1);
+        var executions = new FakeServiceExecutionRepository
+        {
+            Tracked = execution,
+            StartCompleteUserId = MarketplaceGraph.ProviderUserId
+        };
+        var handler = new StartServiceExecutionCommandHandler(
+            new FakeCurrentUser(MarketplaceGraph.CustomerUserId),
+            executions);
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            handler.Handle(new StartServiceExecutionCommand(1), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Complete_RejectsWhenStillPending()
+    {
+        var execution = ServiceExecution.Create(1, null).WithId(1);
+        var handler = new CompleteServiceExecutionCommandHandler(
+            new FakeCurrentUser(MarketplaceGraph.ProviderUserId),
+            new FakeServiceExecutionRepository { Tracked = execution });
+
+        await Assert.ThrowsAsync<ValidationException>(() =>
+            handler.Handle(new CompleteServiceExecutionCommand(1), CancellationToken.None));
+    }
+
+    [Fact]
     public async Task Start_ConcurrentUpdate_IsConflict()
     {
         var execution = ServiceExecution.Create(1, null).WithId(1);

@@ -8,20 +8,28 @@ import {
   List,
   ListItemButton,
   ListItemText,
+  Menu,
+  MenuItem,
   Stack,
   Toolbar,
   Typography,
   useMediaQuery,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, type MouseEvent } from "react";
 import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { matchiShadows } from "../../../../app/designTokens";
 import { useAuth } from "../../../../shared/auth/AuthProvider";
 import { useWorkspaceAccess } from "../../../../shared/auth/useWorkspaceAccess";
 import { getLocale, t } from "../../../../shared/i18n";
 import { changeAppLocale } from "../../../../shared/i18n/LocaleProvider";
-import { findServicePath } from "../../../../shared/marketplace/publicPaths";
+import {
+  customerCreateRequestPath,
+  customerDashboardPath,
+  findServicePath,
+  providerJoinPath,
+} from "../../../../shared/marketplace/publicPaths";
+import { usePublicEntry } from "../../../auth/PublicEntryContext";
 
 const NAV_LINKS = [
   { hash: "categories", labelKey: "public.nav.findServices" as const },
@@ -42,9 +50,12 @@ export function PublicHeader() {
   const location = useLocation();
   const { isAuthenticated, user } = useAuth();
   const { defaultPath, capabilities } = useWorkspaceAccess();
+  const { openCustomerLogin } = usePublicEntry();
   const findPath = findServicePath(isAuthenticated, user?.roles, undefined, capabilities);
   const drawerAnchor = theme.direction === "rtl" ? "right" : "left";
   const menuId = useId();
+  const authMenuId = useId();
+  const [authMenuEl, setAuthMenuEl] = useState<HTMLElement | null>(null);
   const primaryPath = isAuthenticated ? (defaultPath === "/" ? findPath : defaultPath) : findPath;
   const locale = getLocale();
 
@@ -57,6 +68,7 @@ export function PublicHeader() {
 
   function go(path: string) {
     setOpen(false);
+    setAuthMenuEl(null);
     navigate(path);
   }
 
@@ -67,6 +79,30 @@ export function PublicHeader() {
       return;
     }
     scrollToSection(hash);
+  }
+
+  function openAuthMenu(event: MouseEvent<HTMLElement>) {
+    setAuthMenuEl(event.currentTarget);
+  }
+
+  function closeAuthMenu() {
+    setAuthMenuEl(null);
+  }
+
+  function chooseCustomer() {
+    setOpen(false);
+    closeAuthMenu();
+    openCustomerLogin(customerDashboardPath);
+  }
+
+  function chooseRequestService() {
+    setOpen(false);
+    closeAuthMenu();
+    openCustomerLogin(customerCreateRequestPath);
+  }
+
+  function chooseProvider() {
+    go(providerJoinPath);
   }
 
   useEffect(() => {
@@ -169,12 +205,54 @@ export function PublicHeader() {
           <Stack direction="row" spacing={1} sx={{ alignItems: "center", justifyContent: "flex-end" }}>
             {localeToggle}
             {!isAuthenticated && !compactNav ? (
-              <Button color="inherit" onClick={() => go("/login")}>
-                {t("auth.signIn")}
-              </Button>
+              <>
+                <Button
+                  color="inherit"
+                  aria-haspopup="menu"
+                  aria-expanded={Boolean(authMenuEl)}
+                  aria-controls={authMenuEl ? authMenuId : undefined}
+                  onClick={openAuthMenu}
+                >
+                  {t("auth.chooseRole")}
+                </Button>
+                <Menu
+                  id={authMenuId}
+                  anchorEl={authMenuEl}
+                  open={Boolean(authMenuEl)}
+                  onClose={closeAuthMenu}
+                  MenuListProps={{ "aria-label": t("auth.chooseRole") }}
+                  slotProps={{
+                    paper: {
+                      sx: { minWidth: 280, maxWidth: 360 },
+                    },
+                  }}
+                >
+                  <MenuItem onClick={chooseCustomer} sx={{ whiteSpace: "normal", alignItems: "flex-start" }}>
+                    <ListItemText
+                      primary={t("auth.customer.title")}
+                      secondary={t("auth.customer.description")}
+                    />
+                  </MenuItem>
+                  <MenuItem onClick={chooseProvider} sx={{ whiteSpace: "normal", alignItems: "flex-start" }}>
+                    <ListItemText
+                      primary={t("auth.provider.title")}
+                      secondary={t("auth.provider.description")}
+                    />
+                  </MenuItem>
+                </Menu>
+              </>
             ) : null}
-            <Button variant="contained" onClick={() => go(primaryPath)}>
-              {isAuthenticated ? t("public.nav.workspace") : t("public.nav.getStarted")}
+            <Button
+              variant="contained"
+              onClick={() => {
+                if (isAuthenticated) {
+                  go(primaryPath);
+                  return;
+                }
+                chooseRequestService();
+              }}
+            >
+              {isAuthenticated ? t("public.nav.workspace") : t("public.hero.requestService")}
             </Button>
           </Stack>
         </Toolbar>
@@ -200,13 +278,32 @@ export function PublicHeader() {
               <ListItemText primary={t("public.nav.forProfessionals")} />
             </ListItemButton>
             {!isAuthenticated ? (
-              <ListItemButton onClick={() => go("/login")}>
-                <ListItemText primary={t("auth.signIn")} />
-              </ListItemButton>
+              <>
+                <ListItemButton onClick={chooseCustomer}>
+                  <ListItemText
+                    primary={t("auth.customer.title")}
+                    secondary={t("auth.customer.description")}
+                  />
+                </ListItemButton>
+                <ListItemButton onClick={chooseProvider}>
+                  <ListItemText
+                    primary={t("auth.provider.title")}
+                    secondary={t("auth.provider.description")}
+                  />
+                </ListItemButton>
+              </>
             ) : null}
-            <ListItemButton onClick={() => go(primaryPath)}>
+            <ListItemButton
+              onClick={() => {
+                if (isAuthenticated) {
+                  go(primaryPath);
+                  return;
+                }
+                chooseRequestService();
+              }}
+            >
               <ListItemText
-                primary={isAuthenticated ? t("public.nav.workspace") : t("public.nav.getStarted")}
+                primary={isAuthenticated ? t("public.nav.workspace") : t("public.hero.requestService")}
               />
             </ListItemButton>
             <ListItemButton

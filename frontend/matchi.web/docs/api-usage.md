@@ -33,7 +33,7 @@ Many GETs are **customer-owned** even if the URL looks generic:
 | Call | Actual visibility |
 |---|---|
 | `GET /api/requests/me` | current customer |
-| `GET /api/requests/{id}` | request owner only |
+| `GET /api/requests/{id}/matches` | request owner — scored Provider and Business candidates; optional `distanceKm` when geo containment applies |
 | `GET /api/requests/{id}/proposals` | request owner only |
 | `GET /api/proposals/{id}` | request owner only |
 | `GET /api/deals` / `GET /api/deals/{id}` | **customer** (`Request.Customer.UserId`) only |
@@ -41,8 +41,12 @@ Many GETs are **customer-owned** even if the URL looks generic:
 | `GET /api/provider/proposals` | Same — own proposals |
 | `GET /api/provider/deals` | Same — own proposal or Assigned executor |
 | `GET /api/provider/executions` | Same — party or Assigned |
-| `POST /api/providers` | `PROVIDER_CREATE` — body `name`, optional `description`/`lat`/`lng`. UserId from JWT. **201** `{ providerId }`. SPA: `/provider/onboard` |
+| `POST /api/requests` | Authenticated customer — optional `location`. Catalog lines must use ids from `GET /api/services*` and `GET /api/products*` (see repo `docs/catalog.md`). |
 | `GET /api/providers/me` | Policy `ProviderWorkspace` resolved by `PermissionPolicyProvider` to `ProviderProfileRequirement` (not JWT permission `ProviderWorkspace`) |
+| `GET /api/providers/me/areas` | `PROVIDER_VIEW` — current Provider service areas |
+| `POST /api/providers/me/areas` | `PROVIDER_EDIT` — `areaType`, optional city fields, `lat`/`lng`/`radius`/`isActive` |
+| `PUT /api/providers/me/areas/{areaId}` | `PROVIDER_EDIT` — same body as POST |
+| `PUT /api/providers/me` | `PROVIDER_EDIT` — `name`, optional `description`/`mobile`/`lat`/`lng` |
 | `GET /api/providers/me/businesses` | `PROVIDER_VIEW` — BusinessProvider memberships (not ownership) |
 | `GET /api/businesses/me` | `BUSINESS_VIEW` — businesses owned by this user (`OwnerUserId`) |
 | `GET /api/deals/{id}/executions` | customer, proposal party, or assigned provider |

@@ -10,7 +10,8 @@ internal static class RequestWriteRules
 
     public static void Apply(
         AbstractValidator<CreateRequestCommand> validator,
-        IRequestRepository requests)
+        IRequestRepository requests,
+        ILocationReadRepository locations)
     {
         validator.RuleFor(x => x.RequestType)
             .NotEmpty().WithMessage("Request type is required.")
@@ -54,10 +55,9 @@ internal static class RequestWriteRules
 
         validator.When(x => x.Location is not null, () =>
         {
-            validator.RuleFor(x => x.Location!.Province).MaximumLength(100);
-            validator.RuleFor(x => x.Location!.City).MaximumLength(100);
-            validator.RuleFor(x => x.Location!.District).MaximumLength(100);
             validator.RuleFor(x => x.Location!.Address).MaximumLength(1000);
+            validator.RuleFor(x => x.Location!)
+                .SetValidator(new RequestLocationDtoValidator(locations));
         });
 
         validator.When(x => x.Schedule is not null, () =>
@@ -66,6 +66,54 @@ internal static class RequestWriteRules
                 .Must(s => s.TimeFrom is null || s.TimeTo is null || s.TimeFrom < s.TimeTo)
                 .WithMessage("Schedule timeFrom must be earlier than timeTo.");
         });
+    }
+}
+
+internal sealed class RequestLocationDtoValidator : AbstractValidator<RequestLocationDto>
+{
+    public RequestLocationDtoValidator(ILocationReadRepository locations)
+    {
+        RuleFor(x => x.ProvinceId)
+            .GreaterThan(0).WithMessage("استان انتخاب شده معتبر نیست");
+
+        RuleFor(x => x.CityId)
+            .GreaterThan(0).WithMessage("شهر انتخاب شده متعلق به این استان نیست");
+
+        RuleFor(x => x.DistrictId)
+            .GreaterThan(0).WithMessage("محله انتخاب شده متعلق به این شهر نیست");
+
+        RuleFor(x => x)
+            .MustAsync(async (location, cancellationToken) =>
+            {
+                if (location.ProvinceId <= 0)
+                    return true;
+
+                var province = await locations.FindProvinceByIdAsync(location.ProvinceId, cancellationToken);
+                return province is { IsActive: true };
+            })
+            .WithMessage("استان انتخاب شده معتبر نیست");
+
+        RuleFor(x => x)
+            .MustAsync(async (location, cancellationToken) =>
+            {
+                if (location.CityId <= 0)
+                    return true;
+
+                var city = await locations.FindCityByIdAsync(location.CityId, cancellationToken);
+                return city is { IsActive: true } && city.ProvinceId == location.ProvinceId;
+            })
+            .WithMessage("شهر انتخاب شده متعلق به این استان نیست");
+
+        RuleFor(x => x)
+            .MustAsync(async (location, cancellationToken) =>
+            {
+                if (location.DistrictId <= 0)
+                    return true;
+
+                var district = await locations.FindDistrictByIdAsync(location.DistrictId, cancellationToken);
+                return district is { IsActive: true } && district.CityId == location.CityId;
+            })
+            .WithMessage("محله انتخاب شده متعلق به این شهر نیست");
     }
 }
 
@@ -170,6 +218,40 @@ internal sealed class RequestProductLineValidator : AbstractValidator<RequestPro
                 });
         });
 
+        RuleFor(x => x.ProductId)
+            .MustAsync(async (line, productId, cancellationToken) =>
+            {
+                if (productId is not > 0)
+                    return true;
+
+                return await requests.GetProductAsync(productId.Value, cancellationToken) is not null;
+            })
+            .WithMessage("The selected product was not found or is inactive.");
+
+        RuleFor(x => x)
+            .MustAsync(async (line, cancellationToken) =>
+            {
+                if (line.ProductId is not > 0 || line.ProductCategoryId is not > 0)
+                    return true;
+
+                var product = await requests.GetProductAsync(line.ProductId.Value, cancellationToken);
+                if (product is null)
+                    return true;
+
+                return product.CategoryId == line.ProductCategoryId.Value;
+            })
+            .WithMessage("The selected product does not belong to the specified product category.");
+
+        RuleFor(x => x.ProductCategoryId)
+            .MustAsync(async (line, categoryId, cancellationToken) =>
+            {
+                if (categoryId is not > 0)
+                    return true;
+
+                return await requests.ProductCategoryExistsAsync(categoryId.Value, cancellationToken);
+            })
+            .WithMessage("The selected product category was not found or is inactive.");
+
         RuleFor(x => x)
             .MustAsync(async (line, cancellationToken) =>
             {
@@ -179,17 +261,9 @@ internal sealed class RequestProductLineValidator : AbstractValidator<RequestPro
                 {
                     var product = await requests.GetProductAsync(line.ProductId.Value, cancellationToken);
                     if (product is null)
-                        return false;
-
-                    if (categoryId is not null && categoryId.Value != product.CategoryId)
-                        return false;
+                        return true;
 
                     categoryId = product.CategoryId;
-                }
-                else if (categoryId is not null)
-                {
-                    if (!await requests.ProductCategoryExistsAsync(categoryId.Value, cancellationToken))
-                        return false;
                 }
 
                 foreach (var attribute in line.Attributes ?? Array.Empty<RequestProductAttributeDto>())
@@ -208,6 +282,6 @@ internal sealed class RequestProductLineValidator : AbstractValidator<RequestPro
 
                 return true;
             })
-            .WithMessage("Product, product category, or product attribute is invalid for this line.");
+            .WithMessage("Product attribute does not belong to the product category for this line.");
     }
 }

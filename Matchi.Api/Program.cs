@@ -122,7 +122,9 @@ if (seedEnabled && app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<MatchiDbContext>();
-    await DatabaseSeeder.SeedAsync(dbContext);
+    await DatabaseSeeder.SeedAsync(
+        dbContext,
+        scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DatabaseSeeder"));
 }
 else if (seedEnabled)
 {

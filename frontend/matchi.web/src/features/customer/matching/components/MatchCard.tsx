@@ -9,6 +9,10 @@ type MatchCardProps = {
   match: MatchResult;
 };
 
+function formatDistanceKm(km: number): string {
+  return km.toLocaleString(undefined, { maximumFractionDigits: 1, minimumFractionDigits: 0 });
+}
+
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) {
@@ -50,6 +54,11 @@ export function MatchCard({ match }: MatchCardProps) {
           <Typography variant="caption" color="text.secondary">
             {t("matching.candidateId", { id: match.candidateId })}
           </Typography>
+          {match.distanceKm != null ? (
+            <Typography variant="body2" color="text.secondary">
+              {t("matching.distanceKm", { km: formatDistanceKm(match.distanceKm) })}
+            </Typography>
+          ) : null}
         </Stack>
       </Stack>
     </AppCard>

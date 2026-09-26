@@ -1,4 +1,5 @@
 using Matchi.Domain.Common;
+using Matchi.Domain.Locations;
 
 namespace Matchi.Domain.Entities;
 
@@ -6,13 +7,13 @@ public class RequestLocation : TimestampedEntity
 {
     public long RequestId { get; private set; }
 
+    public long? ProvinceId { get; private set; }
+
+    public long? CityId { get; private set; }
+
+    public long? DistrictId { get; private set; }
+
     public string? Address { get; private set; }
-
-    public string? Province { get; private set; }
-
-    public string? City { get; private set; }
-
-    public string? District { get; private set; }
 
     public decimal? Lat { get; private set; }
 
@@ -20,23 +21,29 @@ public class RequestLocation : TimestampedEntity
 
     public Request Request { get; private set; } = null!;
 
+    public LocationProvince Province { get; private set; } = null!;
+
+    public LocationCity City { get; private set; } = null!;
+
+    public LocationDistrict District { get; private set; } = null!;
+
     private RequestLocation()
     {
     }
 
     public RequestLocation(
         long requestId,
-        string? province = null,
-        string? city = null,
-        string? district = null,
+        long provinceId,
+        long cityId,
+        long districtId,
         string? address = null,
         decimal? lat = null,
         decimal? lng = null)
     {
         RequestId = requestId;
-        Province = province;
-        City = city;
-        District = district;
+        ProvinceId = provinceId;
+        CityId = cityId;
+        DistrictId = districtId;
         Address = address;
         Lat = lat;
         Lng = lng;

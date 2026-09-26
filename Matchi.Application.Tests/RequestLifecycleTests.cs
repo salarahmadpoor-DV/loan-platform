@@ -176,8 +176,27 @@ public sealed class AcceptProposalLifecycleTests
         Assert.Equal("Open", request.Status);
         Assert.Equal(2, deals.Added.Count);
         Assert.All(deals.Added, d => Assert.Equal("Active", d.Status));
+        Assert.All(deals.Added, d => Assert.Single(d.ServiceExecutions));
+        Assert.All(deals.Added, d => Assert.Equal("Pending", d.ServiceExecutions.Single().Status));
         Assert.Equal(1, firstResult.DealId);
         Assert.Equal(2, secondResult.DealId);
         Assert.NotEqual(firstResult.DealId, secondResult.DealId);
+    }
+
+    [Fact]
+    public async Task Accept_DoesNotCreateExecution_ForProductRequest()
+    {
+        var request = new Request(1, "Product", "Need item").WithId(1);
+        request.Set(nameof(Request.Customer), new Customer(MarketplaceGraph.CustomerUserId).WithId(1));
+        var proposal = PendingProviderProposal(11, request);
+        var deals = new FakeDealRepository();
+        var handler = new AcceptProposalCommandHandler(
+            new FakeCurrentUser(MarketplaceGraph.CustomerUserId),
+            new FakeProposalRepository { Tracked = proposal },
+            deals);
+
+        await handler.Handle(new AcceptProposalCommand(11), CancellationToken.None);
+
+        Assert.Empty(Assert.Single(deals.Added).ServiceExecutions);
     }
 }

@@ -8,7 +8,8 @@ import {
   userMessageForStatus,
   type ApiProblem,
 } from "./errors";
-
+console.log("VITE_API_BASE_URL =", import.meta.env.VITE_API_BASE_URL);
+console.log("getApiBaseUrl() =", getApiBaseUrl());
 export const httpClient = axios.create({
   baseURL: getApiBaseUrl(),
   headers: {

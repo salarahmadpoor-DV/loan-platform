@@ -1,32 +1,24 @@
 import type { MessageKey } from "../../../../shared/i18n";
+import {
+  isValidServiceArea,
+  type ServiceAreaSelection,
+} from "./serviceArea";
 
 export type CreateProviderFormValues = {
   name: string;
   description: string;
-  lat: string;
-  lng: string;
+  serviceArea: ServiceAreaSelection | null;
 };
 
-export type CreateProviderFieldErrors = Partial<Record<keyof CreateProviderFormValues, MessageKey>>;
+export type CreateProviderFieldErrors = Partial<
+  Record<"name" | "description" | "serviceArea", MessageKey>
+>;
 
 export const defaultCreateProviderValues: CreateProviderFormValues = {
   name: "",
   description: "",
-  lat: "",
-  lng: "",
+  serviceArea: null,
 };
-
-function parseOptionalNumber(raw: string): number | undefined | "invalid" {
-  const trimmed = raw.trim();
-  if (!trimmed) {
-    return undefined;
-  }
-  const value = Number(trimmed);
-  if (!Number.isFinite(value)) {
-    return "invalid";
-  }
-  return value;
-}
 
 export function validateCreateProviderForm(
   values: CreateProviderFormValues,
@@ -43,13 +35,8 @@ export function validateCreateProviderForm(
     errors.description = "provider.onboard.descriptionTooLong";
   }
 
-  const lat = parseOptionalNumber(values.lat);
-  const lng = parseOptionalNumber(values.lng);
-  if (lat === "invalid") {
-    errors.lat = "provider.onboard.invalidCoordinate";
-  }
-  if (lng === "invalid") {
-    errors.lng = "provider.onboard.invalidCoordinate";
+  if (values.serviceArea != null && !isValidServiceArea(values.serviceArea)) {
+    errors.serviceArea = "provider.serviceArea.required";
   }
 
   return errors;
@@ -62,12 +49,10 @@ export function toCreateProviderBody(values: CreateProviderFormValues): {
   lng?: number;
 } {
   const description = values.description.trim();
-  const lat = parseOptionalNumber(values.lat);
-  const lng = parseOptionalNumber(values.lng);
+  const area = values.serviceArea;
   return {
     name: values.name.trim(),
     ...(description ? { description } : {}),
-    ...(typeof lat === "number" ? { lat } : {}),
-    ...(typeof lng === "number" ? { lng } : {}),
+    ...(isValidServiceArea(area) ? { lat: area.lat, lng: area.lng } : {}),
   };
 }

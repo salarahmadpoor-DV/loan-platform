@@ -37,4 +37,17 @@ public class ProductAttribute : AuditableEntity
         Code = code;
         DataType = dataType;
     }
+
+    public void Configure(bool isRequired, int displayOrder)
+    {
+        IsRequired = isRequired;
+        DisplayOrder = displayOrder;
+        SetUpdated();
+    }
+
+    public void SetActive(bool isActive)
+    {
+        IsActive = isActive;
+        SetUpdated();
+    }
 }

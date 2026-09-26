@@ -47,6 +47,7 @@ Create nested folders only when needed (`requests/create/`). Do not add empty `p
 | `shared/i18n/` | `keys.ts` + `locales/fa-IR.ts` + `locales/en-US.ts` + `t()` |
 | `shared/navigation/navModel.ts` | Sidebar items per workspace |
 | `shared/ui/` | Design-system wrappers (`PageContainer`, `FormSplitLayout`, `MarketplaceStepper`, `JourneyTimeline`, `PriceSummary`, `ResponsiveCardGrid`, `SectionHeader`) |
+| `shared/map/` | Leaflet map frame (OSM). Used by Provider service area and Customer Request location. |
 | `shared/mocks/` | Temporary homepage mock lists (`homeMocks.ts`). TODO comments mark API replacements. |
 | `shared/types/marketplace.ts` | `RequestKind`, `ProposerType` |
 | `shared/marketplace/` | Journey helpers + `publicPaths.ts` (find-service / join / safe `next`) |

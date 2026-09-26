@@ -23,6 +23,8 @@ import {
   workspaceHome,
   workspaceLabelKey,
   workspaceNav,
+  providerOwnedBusinessNav,
+  providerBusinessHomeNav,
   type AppWorkspace,
 } from "../shared/navigation/navModel";
 import { PageContainer } from "../shared/ui/PageContainer";
@@ -40,8 +42,14 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const { workspaces: availableWorkspaces } = useWorkspaceAccess();
-  const items = workspaceNav[workspace];
+  const { workspaces: availableWorkspaces, canAccess } = useWorkspaceAccess();
+  const items =
+    workspace === "provider"
+      ? [
+          ...workspaceNav.provider,
+          ...(canAccess("business") ? providerOwnedBusinessNav : providerBusinessHomeNav),
+        ]
+      : workspaceNav[workspace];
   const menuId = "workspace-nav";
   const locale = getLocale();
 
@@ -56,29 +64,35 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
       </Typography>
       <List disablePadding>
         {items.map((item) => (
-          <ListItemButton
-            key={item.to}
-            component={NavLink}
-            to={item.to}
-            end={item.to === workspaceHome[workspace]}
-            sx={{
-              mx: 1,
-              borderRadius: 1,
-              minHeight: 48,
-              "&.active": {
-                bgcolor: "action.selected",
-                color: "primary.main",
-                fontWeight: 700,
-                borderInlineStart: 3,
-                borderColor: "primary.main",
-              },
-            }}
-          >
-            <ListItemText
-              primary={t(item.labelKey)}
-              primaryTypographyProps={{ variant: "body2", fontWeight: 600 }}
-            />
-          </ListItemButton>
+          <Box key={item.to}>
+            {item.to === "/provider/business" ? (
+              <Typography variant="overline" color="text.secondary" sx={{ px: 2, pt: 2, display: "block" }}>
+                {t("provider.business.navSection")}
+              </Typography>
+            ) : null}
+            <ListItemButton
+              component={NavLink}
+              to={item.to}
+              end={item.end ?? item.to === workspaceHome[workspace]}
+              sx={{
+                mx: 1,
+                borderRadius: 1,
+                minHeight: 48,
+                "&.active": {
+                  bgcolor: "action.selected",
+                  color: "primary.main",
+                  fontWeight: 700,
+                  borderInlineStart: 3,
+                  borderColor: "primary.main",
+                },
+              }}
+            >
+              <ListItemText
+                primary={t(item.labelKey)}
+                primaryTypographyProps={{ variant: "body2", fontWeight: 600 }}
+              />
+            </ListItemButton>
+          </Box>
         ))}
       </List>
     </Box>
@@ -182,7 +196,7 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
         <Drawer
           variant="temporary"
           open={mobileOpen}
-          anchor="left"
+          anchor={theme.direction === "rtl" ? "right" : "left"}
           onClose={() => setMobileOpen(false)}
           ModalProps={{ keepMounted: true }}
           sx={{
@@ -271,7 +285,7 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
                       key={item.to}
                       component={NavLink}
                       to={item.to}
-                      end={item.to === workspaceHome[workspace]}
+                      end={item.end ?? item.to === workspaceHome[workspace]}
                       size="small"
                       variant="outlined"
                       sx={{

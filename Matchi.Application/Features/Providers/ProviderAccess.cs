@@ -24,7 +24,7 @@ internal static class Fail
 internal static class CatalogRules
 {
     public static readonly string[] AreaTypes = ["City", "District", "Province", "Radius"];
-    public static readonly string[] MembershipStatuses = ["Active", "Inactive", "Pending"];
+    public static readonly string[] MembershipStatuses = ["Active", "Inactive", "Pending", "Rejected"];
 
     public static bool IsAreaType(string? areaType) =>
         !string.IsNullOrWhiteSpace(areaType)

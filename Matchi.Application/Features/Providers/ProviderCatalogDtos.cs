@@ -47,6 +47,12 @@ public sealed record ProviderAvailabilityDto(
     TimeSpan TimeTo,
     bool IsAvailable);
 
+public sealed record ProviderInvitationDto(
+    long Id,
+    string? BusinessName,
+    string Status,
+    DateTime CreatedAt);
+
 public sealed record ProviderMembershipDto(
     long BusinessId,
     string? BusinessName,

@@ -250,6 +250,13 @@ public class ProvidersController : ControllerBase
         return Ok(await _mediator.Send(new GetMyProviderBusinessesQuery(), cancellationToken));
     }
 
+    [HttpGet("me/invitations")]
+    [Authorize(Policy = "ProviderWorkspace")]
+    public async Task<IActionResult> GetMyInvitations(CancellationToken cancellationToken = default)
+    {
+        return Ok(await _mediator.Send(new GetMyProviderInvitationsQuery(), cancellationToken));
+    }
+
     [HttpGet("{providerId:long}")]
     public async Task<IActionResult> Get(long providerId, CancellationToken cancellationToken = default)
     {

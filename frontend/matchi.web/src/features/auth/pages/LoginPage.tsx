@@ -1,45 +1,18 @@
-import { Button, Stack, TextField, Typography } from "@mui/material";
-import { useState, type FormEvent } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { ApiError } from "../../../shared/api/errors";
 import { useAuth } from "../../../shared/auth/AuthProvider";
-import { decodeAccessToken } from "../../../shared/auth/jwt";
 import { useWorkspaceAccess } from "../../../shared/auth/useWorkspaceAccess";
-import { safeInternalPath } from "../../../shared/marketplace/publicPaths";
 import { t } from "../../../shared/i18n";
+import { safeInternalPath } from "../../../shared/marketplace/publicPaths";
 import { AppCard } from "../../../shared/ui/AppCard";
-import { ErrorAlert } from "../../../shared/ui/ErrorAlert";
 import { LoadingState } from "../../../shared/ui/LoadingState";
-import { PageHeader } from "../../../shared/ui/PageHeader";
-import { sendOtp, verifyOtp } from "../api/authApi";
-
-const MOBILE_PATTERN = /^\+?\d{8,15}$/;
-const OTP_PATTERN = /^\d{4,8}$/;
-
-function loginDisplayError(error: unknown, step: "mobile" | "otp"): unknown {
-  if (error instanceof ApiError && error.status === 401 && step === "otp") {
-    return new ApiError({
-      status: 401,
-      userMessage: t("auth.otpExpired"),
-      traceId: error.traceId,
-      cause: error,
-    });
-  }
-  return error;
-}
+import { OtpLoginForm } from "../components/OtpLoginForm";
 
 export function LoginPage() {
-  const { isAuthenticated, setSession } = useAuth();
+  const { isAuthenticated } = useAuth();
   const access = useWorkspaceAccess();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const nextPath = safeInternalPath(searchParams.get("next"));
-  const [step, setStep] = useState<"mobile" | "otp">("mobile");
-  const [mobile, setMobile] = useState("");
-  const [otp, setOtp] = useState("");
-  const [requestId, setRequestId] = useState<string | null>(null);
-  const [error, setError] = useState<unknown>(null);
-  const [submitting, setSubmitting] = useState(false);
 
   if (isAuthenticated) {
     if (!access.isReady) {
@@ -48,154 +21,13 @@ export function LoginPage() {
     return <Navigate to={nextPath ?? access.defaultPath} replace />;
   }
 
-  async function onSendOtp(event: FormEvent) {
-    event.preventDefault();
-    const trimmed = mobile.trim();
-    if (!MOBILE_PATTERN.test(trimmed)) {
-      setError(
-        new ApiError({
-          status: 400,
-          userMessage: t("auth.invalidMobile"),
-        }),
-      );
-      return;
-    }
-
-    setSubmitting(true);
-    setError(null);
-    try {
-      const result = await sendOtp({ mobile: trimmed });
-      setMobile(trimmed);
-      setRequestId(result.requestId);
-      setOtp("");
-      setStep("otp");
-    } catch (err) {
-      setError(loginDisplayError(err, "mobile"));
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  async function onVerifyOtp(event: FormEvent) {
-    event.preventDefault();
-    if (!requestId) {
-      setError(
-        new ApiError({
-          userMessage: t("auth.requestCodeFirst"),
-        }),
-      );
-      return;
-    }
-    const code = otp.trim();
-    if (!OTP_PATTERN.test(code)) {
-      setError(
-        new ApiError({
-          status: 400,
-          userMessage: t("auth.invalidOtp"),
-        }),
-      );
-      return;
-    }
-
-    setSubmitting(true);
-    setError(null);
-    try {
-      const result = await verifyOtp({
-        mobile,
-        otp: code,
-        requestId,
-      });
-      const claims = decodeAccessToken(result.accessToken);
-      if (!claims) {
-        setError(
-          new ApiError({
-            userMessage: t("common.unknownError"),
-          }),
-        );
-        return;
-      }
-      setSession(result.accessToken, {
-        id: result.user.id,
-        mobile: result.user.mobile || claims.mobile || mobile,
-        roles: Array.isArray(result.user.roles) ? result.user.roles : [],
-      });
-      navigate(nextPath ?? "/app", { replace: true });
-    } catch (err) {
-      setError(loginDisplayError(err, "otp"));
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
   return (
     <AppCard>
-      <PageHeader
+      <OtpLoginForm
         title={t("auth.loginTitle")}
         description={t("auth.loginDescription")}
+        onLoggedIn={() => navigate(nextPath ?? "/app", { replace: true })}
       />
-      {error ? <ErrorAlert error={error} /> : null}
-
-      {step === "mobile" ? (
-        <Stack component="form" spacing={2} sx={{ mt: 2 }} onSubmit={onSendOtp} noValidate>
-          <TextField
-            label={t("auth.mobile")}
-            name="mobile"
-            type="tel"
-            autoComplete="tel"
-            value={mobile}
-            onChange={(e) => setMobile(e.target.value)}
-            required
-            fullWidth
-            inputProps={{ inputMode: "tel" }}
-            helperText={t("auth.mobileHelper")}
-          />
-          <Button type="submit" variant="contained" size="large" disabled={submitting} fullWidth>
-            {submitting ? t("auth.sending") : t("auth.continue")}
-          </Button>
-        </Stack>
-      ) : (
-        <Stack component="form" spacing={2} sx={{ mt: 2 }} onSubmit={onVerifyOtp} noValidate>
-          <Typography variant="body2" color="text.secondary">
-            {t("auth.otpHint", { mobile })}
-          </Typography>
-          <TextField
-            label={t("auth.otp")}
-            name="otp"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            required
-            fullWidth
-            autoComplete="one-time-code"
-            inputProps={{ inputMode: "numeric", pattern: "[0-9]*", maxLength: 8 }}
-          />
-          <Button type="submit" variant="contained" size="large" disabled={submitting} fullWidth>
-            {submitting ? t("auth.verifying") : t("auth.verify")}
-          </Button>
-          <Button
-            type="button"
-            variant="text"
-            disabled={submitting}
-            onClick={() => {
-              setStep("mobile");
-              setRequestId(null);
-              setOtp("");
-              setError(null);
-            }}
-          >
-            {t("auth.changeNumber")}
-          </Button>
-          <Button
-            type="button"
-            variant="text"
-            disabled={submitting}
-            onClick={(event) => {
-              void onSendOtp(event);
-            }}
-          >
-            {t("auth.resend")}
-          </Button>
-        </Stack>
-      )}
     </AppCard>
   );
 }

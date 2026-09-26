@@ -45,21 +45,30 @@ JWT `USER` or `ADMIN`, plus a Provider row for this user. `GET /api/providers/me
 | `/provider/proposals` | my proposals (`GET /api/provider/proposals`) |
 | `/provider/deals` | my deals (`GET /api/provider/deals`) |
 | `/provider/executions` | my executions (`GET /api/provider/executions`) |
+| `/provider/invitations` | Provider invitation inbox (`GET /api/providers/me/invitations`, accept/reject) |
+| `/provider/businesses` | Active memberships (`GET /api/providers/me/businesses`); not owned businesses |
 | `/provider/profile` | profile (`GET /api/providers/me`), owned businesses (`GET /api/businesses/me`), memberships (`GET /api/providers/me/businesses`) |
+| `/provider/business` | owned business overview, or empty state + create CTA (`GET /api/businesses/me`) |
+| `/provider/business/create` | create owned business (`POST /api/businesses`; `OwnerUserId` from JWT) |
+| `/provider/business/info` | edit owned business (`PUT /api/businesses/me`) |
+| `/provider/business/providers` | team (`GET/DELETE /api/businesses/me/providers`, invite `POST /api/businesses/{id}/invite-provider`) |
+| `/provider/business/invitations` | pending `BusinessProvider` rows |
 
-Nav: داشبورد / بازار / پیشنهادهای من / معاملات / اجراها / پروفایل.
+Nav: داشبورد / بازار / پیشنهادهای من / معاملات / اجراها / پروفایل / دعوت‌ها / کسب‌وکارها (عضویت فعال) / کسب‌وکار من (مالکیت؛ info/team/outgoing invites after the user owns a business).
 
 Marketplace cards open `/provider/requests/:requestId` (inbox DTO only). Open requests can continue to `/provider/requests/:requestId/proposal` (`POST /api/requests/{id}/proposals`). Do not call owner `GET /api/requests/{id}`.
 
 ## Business (`RequireWorkspace(business)` + `BusinessLayout`)
 
-Requires JWT `ADMIN` or at least one owned business (`GET /api/businesses/me`). Membership is not enough.
+Requires JWT `ADMIN` or at least one owned business (`GET /api/businesses/me`). Membership is not enough. There is no Business Owner login. Primary create/manage UX for Providers is `/provider/business`.
 
 | Path | Status |
 |---|---|
-| `/business` | placeholder dashboard |
+| `/business` | same overview as `/provider/business` |
+| `/business/info` | same as `/provider/business/info` |
+| `/business/members` | same as `/provider/business/providers` |
+| `/business/invitations` | pending memberships |
 | `/business/catalog` | placeholder |
-| `/business/members` | placeholder |
 | `/business/executions` | placeholder |
 
 ## Other

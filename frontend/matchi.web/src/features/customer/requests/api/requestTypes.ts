@@ -32,6 +32,9 @@ export type RequestProductLine = {
 };
 
 export type RequestLocation = {
+  provinceId?: number | null;
+  cityId?: number | null;
+  districtId?: number | null;
   province: string | null;
   city: string | null;
   district: string | null;

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES, type Locale } from "./keys";
 import type { MessageKey } from "./keys";
 import { enUS } from "./locales/en-US";
@@ -64,6 +65,13 @@ export function subscribeLocale(listener: (locale: Locale) => void): () => void 
   return () => {
     localeListeners.delete(listener);
   };
+}
+
+/** React subscription to the same locale store used by `t()` and the document dir. */
+export function useAppLocale(): Locale {
+  const [locale, setLocaleState] = useState(getLocale);
+  useEffect(() => subscribeLocale(setLocaleState), []);
+  return locale;
 }
 
 export function t(key: MessageKey, vars?: Record<string, string | number>): string {

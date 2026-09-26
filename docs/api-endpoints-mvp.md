@@ -131,9 +131,19 @@ Services list: `{ "page", "pageSize", "items": [ { "id", "name", "categoryId" } 
 
 `q` filters by service name (`Contains`). Results are ordered by `DisplayOrder`, then `Id`. `page` defaults to 1; `pageSize` defaults to 20 and is capped at 100. Filtering is applied before skip/take.
 
-Service detail: `{ "id", "name", "categoryId", "attributeCount" }`
+Service detail: `{ "id", "name", "categoryId", "attributeCount", "attributes": [ { "id", "name", "code", "dataType", "isRequired", "displayOrder", "options": [ { "id", "value", "displayName", "displayOrder" } ] } ] }`
 
-Attributes themselves are not returned yet.
+Public product catalog (no auth):
+
+```http
+GET /api/products/categories
+GET /api/products?categoryId=&q=&page=&pageSize=
+GET /api/products/{productId}
+GET /api/products/categories/{categoryId}/attributes
+```
+
+Category list: `{ "id", "name", "parentId", "displayOrder" }`. Product list uses the same `{ page, pageSize, items }` wrapper as services. Product attributes use the same shape as service `attributes`. See [catalog.md](./catalog.md).
+
 
 ---
 

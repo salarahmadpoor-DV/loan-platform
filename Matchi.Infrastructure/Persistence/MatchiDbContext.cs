@@ -1,4 +1,5 @@
 using Matchi.Domain.Entities;
+using Matchi.Domain.Locations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 
@@ -26,6 +27,10 @@ public sealed class MatchiDbContext : DbContext
     public DbSet<Service> Services => Set<Service>();
     public DbSet<ServiceAttribute> ServiceAttributes => Set<ServiceAttribute>();
     public DbSet<ServiceAttributeOption> ServiceAttributeOptions => Set<ServiceAttributeOption>();
+
+    public DbSet<LocationProvince> LocationProvinces => Set<LocationProvince>();
+    public DbSet<LocationCity> LocationCities => Set<LocationCity>();
+    public DbSet<LocationDistrict> LocationDistricts => Set<LocationDistrict>();
 
     public DbSet<ProductCategory> ProductCategories => Set<ProductCategory>();
     public DbSet<Product> Products => Set<Product>();

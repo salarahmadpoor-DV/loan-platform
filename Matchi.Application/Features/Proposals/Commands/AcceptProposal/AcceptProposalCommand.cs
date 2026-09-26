@@ -65,6 +65,16 @@ public sealed class AcceptProposalCommandHandler : IRequestHandler<AcceptProposa
             proposal.Request.CustomerId,
             proposal.TotalPrice);
 
+        if (proposal.Request.RequestType is "Service" or "Hybrid")
+        {
+            ServiceExecution.CreateForDeal(
+                deal,
+                proposal.BusinessId,
+                proposal.ProposedDate,
+                proposal.ProposedTimeFrom,
+                proposal.ProposedTimeTo);
+        }
+
         _dealRepository.Add(deal);
         await _dealRepository.SaveChangesAsync(cancellationToken);
 

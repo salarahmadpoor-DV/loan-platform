@@ -35,4 +35,23 @@ public class ProductCategory : AuditableEntity
         Name = name;
         Slug = slug;
     }
+
+    public void SetHierarchy(long? parentId, int displayOrder)
+    {
+        ParentId = parentId;
+        DisplayOrder = displayOrder;
+        SetUpdated();
+    }
+
+    public void SetDescription(string? description)
+    {
+        Description = description;
+        SetUpdated();
+    }
+
+    public void SetActive(bool isActive)
+    {
+        IsActive = isActive;
+        SetUpdated();
+    }
 }

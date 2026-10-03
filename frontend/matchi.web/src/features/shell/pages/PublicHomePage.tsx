@@ -180,7 +180,7 @@ export function PublicHomePage() {
               <ErrorAlert error={categories.error} />
             ) : null}
             {!categories.isPending && categories.items.length === 0 ? (
-              <EmptyState title={t("public.categories.empty")} />
+              <EmptyState title={t("public.categories.empty")} illustration="search" />
             ) : null}
             {categories.items.length > 0 ? (
               <CategoryGrid categories={categories.items} onSelect={selectCategory} />

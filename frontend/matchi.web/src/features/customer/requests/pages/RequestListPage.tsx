@@ -6,6 +6,7 @@ import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
 import { LoadingState } from "../../../../shared/ui/LoadingState";
 import { PageHeader } from "../../../../shared/ui/PageHeader";
 import { ResponsiveCardGrid } from "../../../../shared/ui/ResponsiveCardGrid";
+import { Add } from "../../../../shared/ui/icons";
 import { RequestCard } from "../components/RequestCard";
 import { useMyRequests } from "../hooks/useMyRequests";
 import { compareMyRequests } from "../model/requestPresentation";
@@ -24,6 +25,7 @@ export function RequestListPage() {
             component={RouterLink}
             to="/customer/requests/create"
             variant="contained"
+            startIcon={<Add />}
             sx={{ minHeight: 48 }}
           >
             {t("request.list.create")}
@@ -36,8 +38,9 @@ export function RequestListPage() {
         <EmptyState
           title={t("request.list.emptyTitle")}
           body={t("request.list.emptyBody")}
+          illustration="requests"
           action={
-            <Button component={RouterLink} to="/customer/requests/create" variant="contained">
+            <Button component={RouterLink} to="/customer/requests/create" variant="contained" startIcon={<Add />}>
               {t("request.list.create")}
             </Button>
           }

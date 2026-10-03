@@ -28,7 +28,7 @@ Static segments **before** `:id`.
 | `/customer/deals/:id` | `DealDetailPage` (execution + review) |
 | `/customer/reviews` | `ReviewListPage` (deal hub) |
 
-Customer sidebar (plus dashboard home): درخواست‌ها / معاملات / بازخوردها.
+Customer sidebar (plus dashboard home): درخواست‌ها / معاملات / بازخوردها. On mobile, bottom nav is داشبورد / درخواست‌ها / معاملات, with بازخوردها and workspace switching in the Drawer (`More`). Create request (`/customer/requests/create`) uses a focused shell (no bottom nav).
 
 ## Provider (`RequireAuth` + `RequireWorkspace(provider)` + `ProviderLayout`)
 
@@ -54,7 +54,7 @@ JWT `USER` or `ADMIN`, plus a Provider row for this user. `GET /api/providers/me
 | `/provider/business/providers` | team (`GET/DELETE /api/businesses/me/providers`, invite `POST /api/businesses/{id}/invite-provider`) |
 | `/provider/business/invitations` | pending `BusinessProvider` rows |
 
-Nav: داشبورد / بازار / پیشنهادهای من / معاملات / اجراها / پروفایل / دعوت‌ها / کسب‌وکارها (عضویت فعال) / کسب‌وکار من (مالکیت؛ info/team/outgoing invites after the user owns a business).
+Nav: داشبورد / بازار / پیشنهادهای من / معاملات / اجراها / پروفایل / دعوت‌ها / کسب‌وکارها (عضویت فعال) / کسب‌وکار من (مالکیت؛ info/team/outgoing invites after the user owns a business). Mobile bottom nav is داشبورد / بازار / معاملات plus More (remaining items in the Drawer).
 
 Marketplace cards open `/provider/requests/:requestId` (inbox DTO only). Open requests can continue to `/provider/requests/:requestId/proposal` (`POST /api/requests/{id}/proposals`). Do not call owner `GET /api/requests/{id}`.
 

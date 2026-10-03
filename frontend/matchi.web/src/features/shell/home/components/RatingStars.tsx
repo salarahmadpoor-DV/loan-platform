@@ -1,3 +1,5 @@
+import Star from "@mui/icons-material/Star";
+import StarBorder from "@mui/icons-material/StarBorder";
 import { Stack, Typography } from "@mui/material";
 
 type RatingStarsProps = {
@@ -9,19 +11,24 @@ type RatingStarsProps = {
 export function RatingStars({ value, reviewCount, reviewLabel }: RatingStarsProps) {
   const rounded = Math.round(value * 10) / 10;
   const filled = Math.max(0, Math.min(5, Math.round(rounded)));
-  const stars = "★".repeat(filled) + "☆".repeat(5 - filled);
 
   return (
     <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-      <Typography
-        variant="subtitle2"
+      <Stack
+        direction="row"
+        spacing={0.15}
         component="span"
-        color="primary.main"
         aria-label={`${rounded} (${reviewCount})`}
-        sx={{ letterSpacing: "0.06em" }}
+        sx={{ color: "primary.main" }}
       >
-        {stars}
-      </Typography>
+        {Array.from({ length: 5 }, (_, index) =>
+          index < filled ? (
+            <Star key={index} sx={{ fontSize: 18 }} aria-hidden />
+          ) : (
+            <StarBorder key={index} sx={{ fontSize: 18 }} aria-hidden />
+          ),
+        )}
+      </Stack>
       <Typography variant="caption" color="text.secondary">
         {rounded.toFixed(1)} · {reviewLabel}
       </Typography>

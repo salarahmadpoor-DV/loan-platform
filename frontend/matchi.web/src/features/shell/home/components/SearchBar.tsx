@@ -1,10 +1,12 @@
 import Autocomplete from "@mui/material/Autocomplete";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
+import InputAdornment from "@mui/material/InputAdornment";
 import TextField from "@mui/material/TextField";
 import type { FormEvent, ReactNode } from "react";
 import { matchiRadius, matchiShadows } from "../../../../app/designTokens";
 import { t } from "../../../../shared/i18n";
+import { SearchOutlined } from "../../../../shared/ui/icons";
 
 type SearchBarProps = {
   id: string;
@@ -96,6 +98,14 @@ export function SearchBar({
             }}
             InputProps={{
               ...params.InputProps,
+              startAdornment: (
+                <>
+                  <InputAdornment position="start">
+                    <SearchOutlined sx={{ fontSize: 22 }} aria-hidden />
+                  </InputAdornment>
+                  {params.InputProps.startAdornment}
+                </>
+              ),
               endAdornment: (
                 <>
                   {loading ? <CircularProgress color="inherit" size={18} aria-hidden /> : null}

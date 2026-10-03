@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Box } from "@mui/material";
+import { Box, useMediaQuery } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { useSearchParams } from "react-router-dom";
 import { ErrorAlert } from "../../../../../shared/ui/ErrorAlert";
 import { PageHeader } from "../../../../../shared/ui/PageHeader";
@@ -9,6 +10,8 @@ import { RequestForm } from "../components/RequestForm";
 import { useCreateRequest } from "../hooks/useCreateRequest";
 
 export function CreateRequestPage() {
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
   const [searchParams] = useSearchParams();
   const initialTitle = searchParams.get("q")?.trim() ?? "";
   const create = useCreateRequest();
@@ -32,10 +35,12 @@ export function CreateRequestPage() {
 
   return (
     <Box sx={{ maxWidth: 960, mx: "auto" }}>
-      <PageHeader
-        title={t("request.create.pageTitle")}
-        description={t("request.create.pageDescription")}
-      />
+      {isDesktop ? (
+        <PageHeader
+          title={t("request.create.pageTitle")}
+          description={t("request.create.pageDescription")}
+        />
+      ) : null}
       {create.isError ? <ErrorAlert error={create.error} /> : null}
       <RequestForm
         key={formKey}

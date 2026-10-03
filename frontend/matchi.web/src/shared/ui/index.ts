@@ -1,5 +1,6 @@
 export { PageHeader } from "./PageHeader";
 export { EmptyState } from "./EmptyState";
+export { EmptyIllustration } from "./EmptyIllustration";
 export { AppCard } from "./AppCard";
 export { StatusChip } from "./StatusChip";
 export { ErrorAlert } from "./ErrorAlert";

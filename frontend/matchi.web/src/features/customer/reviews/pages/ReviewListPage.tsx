@@ -30,7 +30,7 @@ export function ReviewListPage() {
         </Stack>
       ) : null}
       {!isPending && !isError && data?.length === 0 ? (
-        <EmptyState title={t("review.page.emptyTitle")} body={t("review.page.emptyBody")} />
+        <EmptyState title={t("review.page.emptyTitle")} body={t("review.page.emptyBody")} illustration="reviews" />
       ) : null}
       {data && data.length > 0 ? (
         <Stack spacing={2}>

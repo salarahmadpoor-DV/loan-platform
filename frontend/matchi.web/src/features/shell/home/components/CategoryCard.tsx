@@ -2,6 +2,7 @@ import { Box, CardActionArea, Stack, Typography } from "@mui/material";
 import { matchiShadows } from "../../../../app/designTokens";
 import type { HomeCategoryView } from "../../../../shared/mocks/homeMocks";
 import { AppCard } from "../../../../shared/ui/AppCard";
+import { categoryGlyph } from "./categoryGlyph";
 
 type CategoryCardProps = {
   category: HomeCategoryView;
@@ -9,7 +10,7 @@ type CategoryCardProps = {
 };
 
 export function CategoryCard({ category, onSelect }: CategoryCardProps) {
-  const initial = category.title.trim().charAt(0) || "•";
+  const Glyph = categoryGlyph(category.id, category.title);
 
   return (
     <AppCard
@@ -51,10 +52,9 @@ export function CategoryCard({ category, onSelect }: CategoryCardProps) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              typography: "subtitle1",
             }}
           >
-            {initial}
+            <Glyph sx={{ fontSize: 22 }} aria-hidden />
           </Box>
           <Typography variant="subtitle1" component="h3">
             {category.title}

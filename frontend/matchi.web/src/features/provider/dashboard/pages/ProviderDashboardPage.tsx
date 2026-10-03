@@ -1,40 +1,29 @@
-import type { ReactNode } from "react";
-import { Box, Button, Stack, Typography } from "@mui/material";
+import { Box, Button, Divider, List, ListItemButton, ListItemText, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { DealStatusChip } from "../../../customer/deals/components/DealStatusChip";
-import { ProposalStatusChip } from "../../../customer/proposals/components/ProposalStatusChip";
-import { proposalStatusLabel } from "../../../customer/proposals/model/proposalDisplay";
+import { formatDateTime, isPendingProposal } from "../../../customer/proposals/model/proposalDisplay";
+import { RequestStatusChip } from "../../../customer/requests/components/RequestStatusChip";
 import { t } from "../../../../shared/i18n";
-import { groupByStatus } from "../../../../shared/marketplace/groupByStatus";
-import { AppCard } from "../../../../shared/ui/AppCard";
 import { EmptyState } from "../../../../shared/ui/EmptyState";
 import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
 import { LoadingState } from "../../../../shared/ui/LoadingState";
-import { PageHeader } from "../../../../shared/ui/PageHeader";
-import { ResponsiveCardGrid } from "../../../../shared/ui/ResponsiveCardGrid";
-import { StatusChip } from "../../../../shared/ui/StatusChip";
+import { ForwardIcon, NavIcon } from "../../../../shared/ui/icons";
+import { rtlSafeFlexRow } from "../../../../shared/ui/noflipFlex";
 import { useMyProviderDeals } from "../../deals/hooks/useMyProviderDeals";
 import { useMyProviderExecutions } from "../../executions/hooks/useMyProviderExecutions";
-import { providerExecutionStatusLabel } from "../../executions/model/providerExecutionDisplay";
+import { useMyProviderInvitations } from "../../invitations/hooks/useMyProviderInvitations";
 import { useMyProviderProfile } from "../../profile/hooks/useMyProviderProfile";
-import type { ProviderProfile } from "../../profile/api/providerProfileTypes";
 import { useMyProviderProposals } from "../../proposals/hooks/useMyProviderProposals";
-import { RequestCard } from "../../requests/components/RequestCard";
 import { useProviderRequestInbox } from "../../requests/hooks/useProviderRequestInbox";
+import {
+  buildProviderActions,
+  buildRecentActivity,
+  isCompletedExecution,
+  isInProgressExecution,
+  requestRowMeta,
+  requestRowTitle,
+} from "../model/dashboardPresentation";
 
-const PREVIEW = 4;
-
-function profileChecks(profile: ProviderProfile) {
-  return [
-    { ok: Boolean(profile.name.trim()), label: t("provider.profile.name") },
-    { ok: Boolean(profile.mobile.trim()), label: t("provider.profile.mobile") },
-    { ok: Boolean(profile.description?.trim()), label: t("provider.profile.descriptionField") },
-    {
-      ok: profile.lat != null && profile.lng != null,
-      label: t("provider.profile.coordinates"),
-    },
-  ];
-}
+const RECENT = 5;
 
 export function ProviderDashboardPage() {
   const profile = useMyProviderProfile();
@@ -42,116 +31,64 @@ export function ProviderDashboardPage() {
   const proposals = useMyProviderProposals();
   const deals = useMyProviderDeals();
   const executions = useMyProviderExecutions();
+  const invitations = useMyProviderInvitations();
 
   const isPending =
     requests.isPending || proposals.isPending || deals.isPending || executions.isPending;
   const firstError = requests.error ?? proposals.error ?? deals.error ?? executions.error;
   const isError = requests.isError || proposals.isError || deals.isError || executions.isError;
 
-  const nameSuffix = profile.data?.name ? `، ${profile.data.name}` : "";
-  const proposalGroups = groupByStatus(proposals.data ?? [], (item) => item.status, [
-    "Pending",
-    "Accepted",
-    "Rejected",
-  ]);
-  const inboxPreview = (requests.data ?? []).slice(0, PREVIEW);
-  const dealPreview = (deals.data ?? []).slice(0, PREVIEW);
-  const executionPreview = (executions.data ?? []).slice(0, PREVIEW);
+  const inbox = requests.data ?? [];
+  const pendingProposals = (proposals.data ?? []).filter((item) => isPendingProposal(item.status));
+  const attentionExecutions = (executions.data ?? []).filter((item) => isInProgressExecution(item.status));
+  const completedCount = (executions.data ?? []).filter((item) => isCompletedExecution(item.status)).length;
+  const displayName = profile.data?.name?.trim() ?? "";
+
+  const actions = buildProviderActions({
+    inbox,
+    pendingProposals,
+    invitations: invitations.data ?? [],
+    attentionExecutions,
+    labels: {
+      requestTitle: t("provider.dashboard.actionRequestTitle"),
+      requestBody: (count) => t("provider.dashboard.actionRequestBody", { count }),
+      proposalTitle: t("provider.dashboard.actionProposalTitle"),
+      proposalBody: (count) => t("provider.dashboard.actionProposalBody", { count }),
+      inviteTitle: t("provider.dashboard.actionInviteTitle"),
+      inviteBody: (count) => t("provider.dashboard.actionInviteBody", { count }),
+      executionTitle: t("provider.dashboard.actionExecutionTitle"),
+      executionBody: (count) => t("provider.dashboard.actionExecutionBody", { count }),
+    },
+  });
+
+  const recentRequests = (requests.data ?? []).slice(0, RECENT);
+  const activity = buildRecentActivity({
+    proposals: proposals.data ?? [],
+    deals: deals.data ?? [],
+    executions: executions.data ?? [],
+    labels: {
+      proposal: (id) => t("provider.dashboard.activityProposal", { id }),
+      deal: (id) => t("provider.dashboard.activityDeal", { id }),
+      execution: (id) => t("provider.dashboard.activityExecution", { id }),
+    },
+  });
 
   return (
-    <>
-      <PageHeader
-        title={t("provider.dashboard.title")}
-        description={t("provider.dashboard.intro")}
-      />
-
-      <AppCard>
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          justifyContent="space-between"
-          spacing={1.5}
-          alignItems={{ xs: "stretch", sm: "center" }}
-        >
-          <Stack spacing={0.5}>
-            <Typography variant="h6">
-              {t("provider.dashboard.welcome", { name: nameSuffix })}
-            </Typography>
-            {profile.data ? (
-              <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} useFlexGap>
-                <StatusChip label={profile.data.status} tone="info" />
-              </Stack>
-            ) : null}
-          </Stack>
-          <Button
-            component={RouterLink}
-            to="/provider/profile"
-            variant="outlined"
-            sx={{ minHeight: 44 }}
-          >
-            {t("nav.profile")}
-          </Button>
-        </Stack>
-      </AppCard>
-
-      <Typography variant="h6" sx={{ mt: 3, mb: 1.5 }}>
-        {t("provider.dashboard.workspace")}
-      </Typography>
-      <ResponsiveCardGrid>
-        <ActionCard
-          title={t("provider.dashboard.inbox")}
-          body={t("provider.dashboard.inboxHint")}
-          to="/provider/requests"
-        />
-        <ActionCard
-          title={t("provider.dashboard.proposals")}
-          body={t("provider.dashboard.proposalsHint")}
-          to="/provider/proposals"
-        />
-        <ActionCard
-          title={t("provider.dashboard.deals")}
-          body={t("provider.dashboard.dealsHint")}
-          to="/provider/deals"
-        />
-        <ActionCard
-          title={t("provider.dashboard.executions")}
-          body={t("provider.dashboard.executionsHint")}
-          to="/provider/executions"
-        />
-      </ResponsiveCardGrid>
-
-      {profile.data ? (
-        <Stack sx={{ mt: 3 }} spacing={1.5}>
-          <Typography variant="h6">{t("provider.dashboard.profileCompleteness")}</Typography>
-          <AppCard>
-            <Stack spacing={1}>
-              {profileChecks(profile.data).map((check) => (
-                <Typography
-                  key={check.label}
-                  variant="body2"
-                  color={check.ok ? "text.primary" : "text.secondary"}
-                >
-                  {check.ok
-                    ? t("provider.dashboard.fieldPresent", { field: check.label })
-                    : t("provider.dashboard.fieldMissing", { field: check.label })}
-                </Typography>
-              ))}
-              <Typography variant="body2">
-                {t("provider.profile.rating", { rating: profile.data.rating })}
-              </Typography>
-              <Typography variant="body2">
-                {t("provider.profile.reviewCount", { count: profile.data.reviewCount })}
-              </Typography>
-              <Typography variant="body2">
-                {t("provider.profile.completedJobs", { count: profile.data.completedJobCount })}
-              </Typography>
-            </Stack>
-          </AppCard>
-        </Stack>
-      ) : null}
+    <Stack spacing={{ xs: 2.5, md: 3 }}>
+      <Stack spacing={0.75}>
+        <Typography variant="h4" component="h1">
+          {displayName
+            ? t("provider.dashboard.hello", { name: displayName })
+            : t("provider.dashboard.helloGeneric")}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          {t("provider.dashboard.readyHint")}
+        </Typography>
+      </Stack>
 
       {isPending ? <LoadingState label={t("provider.dashboard.loading")} /> : null}
       {isError ? (
-        <Stack spacing={2} sx={{ mt: 2 }}>
+        <Stack spacing={2}>
           <ErrorAlert error={firstError} />
           <Button
             variant="outlined"
@@ -161,6 +98,7 @@ export function ProviderDashboardPage() {
               void proposals.refetch();
               void deals.refetch();
               void executions.refetch();
+              void invitations.refetch();
             }}
             sx={{ minHeight: 44, alignSelf: "flex-start" }}
           >
@@ -170,147 +108,168 @@ export function ProviderDashboardPage() {
       ) : null}
 
       {!isPending && !isError ? (
-        <Stack spacing={3} sx={{ mt: 3 }}>
-          <DashboardSection
-            title={t("provider.dashboard.incoming")}
-            to="/provider/requests"
-            empty={!inboxPreview.length}
-            emptyTitle={t("provider.requests.emptyTitle")}
-            emptyBody={t("provider.requests.emptyBody")}
-          >
-            <ResponsiveCardGrid>
-              {inboxPreview.map((item) => (
-                <RequestCard key={item.requestId} item={item} />
-              ))}
-            </ResponsiveCardGrid>
-          </DashboardSection>
-
-          <DashboardSection
-            title={t("provider.dashboard.proposalStatus")}
-            to="/provider/proposals"
-            empty={proposalGroups.length === 0}
-            emptyTitle={t("provider.proposals.emptyTitle")}
-            emptyBody={t("provider.proposals.emptyBody")}
-          >
-            <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} useFlexGap>
-              {proposalGroups.map((group) => (
-                <Box key={group.status}>
-                  <ProposalStatusChip status={group.status} />
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-                    {proposalStatusLabel(group.status)} · {group.items.length}
-                  </Typography>
-                </Box>
-              ))}
-            </Stack>
-          </DashboardSection>
-
-          <DashboardSection
-            title={t("provider.dashboard.activeDeals")}
-            to="/provider/deals"
-            empty={!dealPreview.length}
-            emptyTitle={t("provider.deals.emptyTitle")}
-            emptyBody={t("provider.deals.emptyBody")}
-          >
-            <Stack spacing={1}>
-              {dealPreview.map((deal) => (
-                <AppCard key={deal.id}>
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    justifyContent="space-between"
-                    spacing={1}
-                  >
-                    <Typography variant="subtitle1">
-                      {t("provider.deals.dealId", { id: deal.id })}
-                    </Typography>
-                    <DealStatusChip status={deal.status} />
-                  </Stack>
-                </AppCard>
-              ))}
-            </Stack>
-          </DashboardSection>
-
-          <DashboardSection
-            title={t("provider.dashboard.executionState")}
-            to="/provider/executions"
-            empty={!executionPreview.length}
-            emptyTitle={t("provider.executions.emptyTitle")}
-            emptyBody={t("provider.executions.emptyBody")}
-          >
-            <Stack spacing={1}>
-              {executionPreview.map((execution) => (
-                <AppCard key={execution.id}>
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    justifyContent="space-between"
-                    spacing={1}
-                  >
-                    <Typography variant="subtitle1">
-                      {t("deal.execution.id", { id: execution.id })}
-                    </Typography>
-                    <Typography variant="body2">
-                      {providerExecutionStatusLabel(execution.status)}
-                    </Typography>
-                  </Stack>
-                </AppCard>
-              ))}
-            </Stack>
-          </DashboardSection>
-        </Stack>
-      ) : null}
-    </>
-  );
-}
-
-function ActionCard({ title, body, to }: { title: string; body: string; to: string }) {
-  return (
-    <AppCard>
-      <Stack spacing={1.5} sx={{ height: "100%" }}>
-        <Typography variant="subtitle1">{title}</Typography>
-        <Typography variant="body2" color="text.secondary">
-          {body}
-        </Typography>
-        <Button
-          component={RouterLink}
-          to={to}
-          variant="contained"
-          sx={{ mt: "auto", minHeight: 44, width: { xs: "100%", sm: "auto" }, alignSelf: { sm: "flex-start" } }}
+        <Box
+          sx={{
+            display: "grid",
+            gap: { xs: 2.5, md: 3 },
+            gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 1.6fr) minmax(0, 0.9fr)" },
+            alignItems: "start",
+          }}
         >
-          {title}
-        </Button>
-      </Stack>
-    </AppCard>
+          <Stack spacing={{ xs: 2.5, md: 3 }}>
+            <Stack spacing={1.25}>
+              <Typography variant="subtitle1" component="h2">
+                {t("provider.dashboard.actionRequired")}
+              </Typography>
+              {actions.length === 0 ? (
+                <Stack spacing={1.5} alignItems="flex-start">
+                  <Typography variant="body2" color="text.secondary">
+                    {t("provider.dashboard.noAction")}
+                  </Typography>
+                  <Button component={RouterLink} to="/provider/requests" variant="contained">
+                    {t("provider.dashboard.viewInbox")}
+                  </Button>
+                </Stack>
+              ) : (
+                <List
+                  disablePadding
+                  sx={{
+                    bgcolor: "rgba(37, 99, 235, 0.05)",
+                    border: 1,
+                    borderColor: "rgba(37, 99, 235, 0.16)",
+                    borderRadius: 1,
+                  }}
+                >
+                  {actions.map((row, index) => (
+                    <Box key={row.id}>
+                      {index > 0 ? <Divider /> : null}
+                      <ListItemButton
+                        component={RouterLink}
+                        to={row.to}
+                        style={{ ...rtlSafeFlexRow, alignItems: "flex-start", gap: 12 }}
+                        sx={{ mx: 0, py: 1.25 }}
+                      >
+                        <NavIcon name={row.icon} sx={{ mt: 0.25, color: "primary.main" }} aria-hidden />
+                        <ListItemText
+                          primary={row.title}
+                          secondary={row.body}
+                          primaryTypographyProps={{ variant: "body2", fontWeight: 600 }}
+                          secondaryTypographyProps={{ variant: "caption" }}
+                        />
+                        <ForwardIcon sx={{ color: "text.secondary", mt: 0.5 }} aria-hidden />
+                      </ListItemButton>
+                    </Box>
+                  ))}
+                </List>
+              )}
+            </Stack>
+
+            <Stack spacing={1.25}>
+              <Typography variant="subtitle1" component="h2">
+                {t("provider.dashboard.recentRequests")}
+              </Typography>
+              {recentRequests.length === 0 ? (
+                <EmptyState
+                  title={t("provider.requests.emptyTitle")}
+                  body={t("provider.requests.emptyBody")}
+                  illustration="requests"
+                />
+              ) : (
+                <List disablePadding sx={{ bgcolor: "background.paper", border: 1, borderColor: "divider", borderRadius: 1 }}>
+                  {recentRequests.map((item, index) => (
+                    <Box key={item.requestId}>
+                      {index > 0 ? <Divider /> : null}
+                      <ListItemButton
+                        component={RouterLink}
+                        to={`/provider/requests/${item.requestId}`}
+                        sx={{ mx: 0, marginInline: 0, borderRadius: 0, py: 1.25, alignItems: "flex-start", gap: 1 }}
+                      >
+                        <ListItemText
+                          primary={requestRowTitle(item)}
+                          secondary={requestRowMeta(item) || formatDateTime(item.createdDate)}
+                          primaryTypographyProps={{ variant: "body2", fontWeight: 600 }}
+                          secondaryTypographyProps={{ variant: "caption" }}
+                        />
+                        <RequestStatusChip status={item.status} />
+                        <ForwardIcon sx={{ color: "text.secondary", mt: 0.35 }} aria-hidden />
+                      </ListItemButton>
+                    </Box>
+                  ))}
+                </List>
+              )}
+            </Stack>
+          </Stack>
+
+          <Stack spacing={{ xs: 2.5, md: 3 }}>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                columnGap: 1.5,
+                py: { xs: 0.5, md: 1 },
+              }}
+            >
+              <QuietStat value={inbox.length} label={t("provider.dashboard.statsNew")} color="primary.main" />
+              <QuietStat
+                value={attentionExecutions.length}
+                label={t("provider.dashboard.statsActive")}
+                color="secondary.main"
+              />
+              <QuietStat value={completedCount} label={t("provider.dashboard.statsDone")} color="success.main" />
+            </Box>
+
+            <Stack spacing={1.25}>
+              <Typography variant="subtitle1" component="h2">
+                {t("provider.dashboard.recentActivity")}
+              </Typography>
+              {activity.length === 0 ? (
+                <Typography variant="body2" color="text.secondary">
+                  {t("provider.dashboard.emptyBody")}
+                </Typography>
+              ) : (
+                <List disablePadding>
+                  {activity.map((row) => (
+                    <ListItemButton
+                      key={row.id}
+                      component={RouterLink}
+                      to={row.to}
+                      sx={{ mx: 0, marginInline: 0, px: 0, borderRadius: 1, minHeight: 44 }}
+                    >
+                      <ListItemText
+                        primary={row.title}
+                        secondary={formatDateTime(row.when)}
+                        primaryTypographyProps={{ variant: "body2" }}
+                        secondaryTypographyProps={{ variant: "caption" }}
+                      />
+                    </ListItemButton>
+                  ))}
+                </List>
+              )}
+            </Stack>
+          </Stack>
+        </Box>
+      ) : null}
+    </Stack>
   );
 }
 
-function DashboardSection({
-  title,
-  to,
-  empty,
-  emptyTitle,
-  emptyBody,
-  children,
+function QuietStat({
+  value,
+  label,
+  color,
 }: {
-  title: string;
-  to: string;
-  empty: boolean;
-  emptyTitle: string;
-  emptyBody: string;
-  children: ReactNode;
+  value: number;
+  label: string;
+  color: "primary.main" | "secondary.main" | "success.main";
 }) {
   return (
-    <Stack spacing={1.5}>
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        justifyContent="space-between"
-        alignItems={{ xs: "stretch", sm: "center" }}
-        spacing={1}
-      >
-        <Typography variant="h6">{title}</Typography>
-        <Button component={RouterLink} to={to} variant="text" sx={{ alignSelf: { sm: "flex-end" } }}>
-          {t("provider.dashboard.viewAll")}
-        </Button>
-      </Stack>
-      {empty ? <EmptyState title={emptyTitle} body={emptyBody} /> : children}
-    </Stack>
+    <Box sx={{ minWidth: 0, textAlign: "center" }}>
+      <Typography variant="h4" component="p" sx={{ fontWeight: 700, lineHeight: 1.2, color }}>
+        {value}
+      </Typography>
+      <Typography variant="caption" color="text.secondary">
+        {label}
+      </Typography>
+    </Box>
   );
 }

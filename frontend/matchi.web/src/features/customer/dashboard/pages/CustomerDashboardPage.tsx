@@ -9,6 +9,7 @@ import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
 import { LoadingState } from "../../../../shared/ui/LoadingState";
 import { PageHeader } from "../../../../shared/ui/PageHeader";
 import { StatusChip } from "../../../../shared/ui/StatusChip";
+import { Add } from "../../../../shared/ui/icons";
 import { isRequestKind, requestKindLabel } from "../../requests/api/requestTypes";
 import { useMyRequests } from "../../requests/hooks/useMyRequests";
 import { isRequestOpen } from "../../requests/model/requestPresentation";
@@ -32,19 +33,23 @@ export function CustomerDashboardPage() {
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
           {t("dashboard.intro")}
         </Typography>
+        <Stack spacing={2} sx={{ mt: 1 }}>
+          <Button
+            component={RouterLink}
+            to="/customer/requests/create"
+            variant="contained"
+            size="large"
+            startIcon={<Add />}
+            sx={{ minHeight: 52, width: "100%", fontWeight: 700 }}
+          >
+            {t("request.create.new")}
+          </Button>
+        </Stack>
         <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: "wrap" }} useFlexGap>
           {REQUEST_KINDS.map((kind) => (
             <StatusChip key={kind} label={requestKindLabel(kind)} />
           ))}
         </Stack>
-        <Button
-          component={RouterLink}
-          to="/customer/requests/create"
-          variant="contained"
-          sx={{ mt: 2, width: { xs: "100%", sm: "auto" } }}
-        >
-          {t("request.list.create")}
-        </Button>
       </AppCard>
 
       <Typography variant="subtitle1" sx={{ mt: 3, mb: 1 }}>
@@ -58,11 +63,7 @@ export function CustomerDashboardPage() {
         <EmptyState
           title={t("dashboard.emptyTitle")}
           body={t("dashboard.emptyBody")}
-          action={
-            <Button component={RouterLink} to="/customer/requests/create" variant="outlined">
-              {t("request.list.create")}
-            </Button>
-          }
+          illustration="requests"
         />
       ) : null}
 
@@ -117,16 +118,7 @@ export function CustomerDashboardPage() {
                 {t("dashboard.nextProposals")}
               </Button>
             </>
-          ) : (
-            <Button
-              component={RouterLink}
-              to="/customer/requests/create"
-              variant="contained"
-              sx={{ minHeight: 48 }}
-            >
-              {t("request.list.create")}
-            </Button>
-          )}
+          ) : null}
           <Button
             component={RouterLink}
             to="/customer/deals"

@@ -138,6 +138,7 @@ export function RequestMatchesPage() {
         <EmptyState
           title={t("matching.emptyTitle")}
           body={t("matching.emptyBody")}
+          illustration="search"
           action={backToRequest}
         />
       ) : null}

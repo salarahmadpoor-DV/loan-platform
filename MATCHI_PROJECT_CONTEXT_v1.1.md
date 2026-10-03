@@ -725,7 +725,7 @@ Authenticated UI is split by **marketplace workspace**, not by a Seller role (th
 - `ProviderLayout` — `/provider` (dashboard, inbox, proposals, deals, executions, profile)
 - `BusinessLayout` — `/business` (catalog, members, executions placeholders)
 
-JWT `USER` may use more than one workspace (customer plus optional Provider profile and/or owned Business). `BusinessProvider` membership is not a fourth shell. Workspace routes require a session (`RequireAuth`); they do not invent extra JWT roles. Theme is mobile-first (temporary nav drawer below `md`).
+JWT `USER` may use more than one workspace (customer plus optional Provider profile and/or owned Business). `BusinessProvider` membership is not a fourth shell. Workspace routes require a session (`RequireAuth`); they do not invent extra JWT roles. Theme is mobile-first: compact header + bottom nav (3 destinations + More) below `md`; workspace switcher lives in the Drawer; create-request uses a focused shell.
 
 OTP login remains the existing HTTP contract (`POST /api/auth/send-otp`, `POST /api/auth/verify-otp`). The frontend does not deliver SMS and does not implement a refresh-token flow. Local browser calls from `http://localhost:5173` to `http://localhost:5262` use the Development CORS policy; production origins remain a deployment concern.
 
@@ -1064,7 +1064,7 @@ Deal detail uses a wide form + sticky price summary. Execution shows status, sch
 
 **Status:** COMPLETE (frontend only). No backend, DB, API contract, or Task 11.4 work.
 
-Provider shell still uses the Customer Matchi theme. Routes unchanged: `/provider/dashboard`, `/provider/requests`, `/provider/proposals`, `/provider/deals`, `/provider/executions`, `/provider/profile` (plus existing create-proposal). Desktop keeps the sidebar; phone/tablet get compact horizontal workspace nav plus 2-column cards from `sm`.
+Provider shell still uses the Customer Matchi theme. Routes unchanged: `/provider/dashboard`, `/provider/requests`, `/provider/proposals`, `/provider/deals`, `/provider/executions`, `/provider/profile` (plus existing create-proposal). Desktop keeps the sidebar; phone/tablet use bottom nav (dashboard / marketplace / deals / More) plus 2-column cards from `sm`.
 
 Dashboard uses live `GET /api/provider/requests|proposals|deals|executions` and `GET /api/providers/me`. It shows navigation cards, a preview of inbox items, proposal statuses that actually appear in the list, deal/execution previews, and which profile fields are present (name, mobile, description, lat/lng). No invented conversion rates or completeness percentages. Inbox cards use only inbox DTO fields (no customer identity). Proposal cards emphasize status, price, request id, dates, and a nav CTA. Deals are grouped by **status values present in the response** (preferred order Active / Completed / Cancelled; empty groups are not shown). Executions group Pending / InProgress / Completed / Cancelled; InProgress is labeled Started. No execution start/complete UI.
 

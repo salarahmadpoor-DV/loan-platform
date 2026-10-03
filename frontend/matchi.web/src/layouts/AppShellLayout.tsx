@@ -29,9 +29,10 @@ import {
   type AppWorkspace,
 } from "../shared/navigation/navModel";
 import { PageContainer } from "../shared/ui/PageContainer";
-import { BackIcon, Menu, NavIcon, NotificationsNoneOutlined, PersonOutline } from "../shared/ui/icons";
+import { BackIcon, Menu, NavIcon, PersonOutline } from "../shared/ui/icons";
 import { mobileDrawerAnchor, mobileDrawerPaperSx } from "./mobileDrawerPlacement";
 import { WorkspaceDrawerNav } from "./WorkspaceDrawerNav";
+import { NotificationBell } from "../features/notifications/components/NotificationBell";
 
 const DRAWER_WIDTH = 260;
 const APP_BAR_HEIGHT = 56;
@@ -163,9 +164,7 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
               style={{ flexDirection: "row" }}
               sx={{ minWidth: 0 }}
             >
-              <IconButton disabled aria-label={t("nav.notifications")} sx={{ minWidth: 44, minHeight: 44 }}>
-                <NotificationsNoneOutlined aria-hidden />
-              </IconButton>
+              <NotificationBell workspace={workspace} />
               <IconButton
                 color="inherit"
                 aria-label={t("nav.account")}
@@ -179,9 +178,6 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
             <Box />
           ) : (
             <Stack direction="row" spacing={0} style={{ flexDirection: "row" }}>
-              <IconButton disabled aria-label={t("nav.notifications")} sx={{ minWidth: 44, minHeight: 44 }}>
-                <NotificationsNoneOutlined aria-hidden />
-              </IconButton>
               <IconButton
                 color="inherit"
                 aria-label={t("nav.account")}

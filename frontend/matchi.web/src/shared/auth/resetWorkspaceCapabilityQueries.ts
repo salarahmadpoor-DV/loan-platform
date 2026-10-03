@@ -1,8 +1,9 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { queryKeys } from "../api/queryKeys";
 
-/** Drops provider/business capability caches so login cannot reuse a stale `exists: false`. */
+/** Drops user-scoped caches so login/logout cannot reuse another user's data. */
 export function resetWorkspaceCapabilityQueries(queryClient: QueryClient): void {
   queryClient.removeQueries({ queryKey: queryKeys.provider.profile() });
   queryClient.removeQueries({ queryKey: queryKeys.provider.myBusinesses() });
+  queryClient.removeQueries({ queryKey: queryKeys.notifications.all });
 }

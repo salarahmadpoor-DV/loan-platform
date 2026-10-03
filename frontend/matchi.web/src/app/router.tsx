@@ -29,6 +29,7 @@ import { ProviderProposalListPage } from "../features/provider/proposals/pages/P
 import { ProviderRequestInboxPage } from "../features/provider/requests/pages/ProviderRequestInboxPage";
 import { ProviderRequestDetailPage } from "../features/provider/requests/pages/ProviderRequestDetailPage";
 import { CreateProviderProposalPage } from "../features/provider/proposals/create/pages/CreateProviderProposalPage";
+import { NotificationCenterPage } from "../features/notifications/pages/NotificationCenterPage";
 import { PlaceholderPage } from "../features/shell/pages/PlaceholderPage";
 import { PublicHomePage } from "../features/shell/pages/PublicHomePage";
 import { BusinessLayout } from "../layouts/BusinessLayout";
@@ -64,6 +65,7 @@ export function AppRouter() {
           <Route path="/customer" element={<CustomerLayout />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<CustomerDashboardPage />} />
+            <Route path="notifications" element={<NotificationCenterPage />} />
             <Route path="requests" element={<RequestListPage />} />
             <Route path="requests/create" element={<CreateRequestPage />} />
             <Route path="requests/:id" element={<RequestDetailPage />} />
@@ -79,6 +81,7 @@ export function AppRouter() {
           <Route path="/provider" element={<ProviderLayout />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<ProviderDashboardPage />} />
+            <Route path="notifications" element={<NotificationCenterPage />} />
             <Route path="marketplace" element={<Navigate to="/provider/requests" replace />} />
             <Route path="requests" element={<ProviderRequestInboxPage />} />
             <Route path="requests/:requestId" element={<ProviderRequestDetailPage />} />
@@ -101,6 +104,7 @@ export function AppRouter() {
         <Route element={<RequireWorkspace workspace="business" />}>
           <Route path="/business" element={<BusinessLayout />}>
             <Route index element={<ProviderBusinessDashboardPage />} />
+            <Route path="notifications" element={<NotificationCenterPage />} />
             <Route path="info" element={<ProviderBusinessInfoPage />} />
             <Route path="members" element={<ProviderBusinessTeamPage />} />
             <Route path="invitations" element={<ProviderBusinessInvitationsPage />} />

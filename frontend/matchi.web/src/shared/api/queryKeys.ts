@@ -54,6 +54,12 @@ export const queryKeys = {
   productDelivery: {
     all: ["productDelivery"] as const,
   },
+  notifications: {
+    all: ["notifications"] as const,
+    list: (page: number, pageSize: number) =>
+      [...queryKeys.notifications.all, "list", page, pageSize] as const,
+    unread: () => [...queryKeys.notifications.all, "unread"] as const,
+  },
   reviews: {
     all: ["reviews"] as const,
     byProvider: (providerId: number) =>

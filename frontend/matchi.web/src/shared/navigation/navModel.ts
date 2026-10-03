@@ -19,6 +19,16 @@ export const workspaceHome: Record<AppWorkspace, string> = {
   business: "/business",
 };
 
+export function workspaceNotificationsPath(workspace: AppWorkspace): string {
+  if (workspace === "customer") {
+    return "/customer/notifications";
+  }
+  if (workspace === "business") {
+    return "/business/notifications";
+  }
+  return "/provider/notifications";
+}
+
 export const workspaceNav: Record<AppWorkspace, readonly NavItem[]> = {
   customer: [
     { to: "/customer/dashboard", labelKey: "nav.dashboard" },
@@ -123,6 +133,7 @@ export function buildWorkspaceDrawerNav(
             { to: "/customer/requests", labelKey: "nav.requests" },
             { to: "/customer/deals", labelKey: "nav.deals" },
             { to: "/customer/reviews", labelKey: "nav.reviews" },
+            { to: "/customer/notifications", labelKey: "nav.notifications" },
           ],
         },
       ],
@@ -137,7 +148,10 @@ export function buildWorkspaceDrawerNav(
           id: "work",
           labelKey: "nav.group.work",
           icon: "deals",
-          items: [{ to: "/business/executions", labelKey: "nav.executions" }],
+          items: [
+            { to: "/business/executions", labelKey: "nav.executions" },
+            { to: "/business/notifications", labelKey: "nav.notifications" },
+          ],
         },
         {
           id: "marketplace",
@@ -197,7 +211,10 @@ export function buildWorkspaceDrawerNav(
         id: "account",
         labelKey: "nav.group.account",
         icon: "profile",
-        items: [{ to: "/provider/profile", labelKey: "nav.profile" }],
+        items: [
+          { to: "/provider/notifications", labelKey: "nav.notifications" },
+          { to: "/provider/profile", labelKey: "nav.profile" },
+        ],
       },
     ],
   };

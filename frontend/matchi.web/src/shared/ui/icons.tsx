@@ -10,6 +10,7 @@ import HandshakeOutlined from "@mui/icons-material/HandshakeOutlined";
 import InfoOutlined from "@mui/icons-material/InfoOutlined";
 import Menu from "@mui/icons-material/Menu";
 import MoreHoriz from "@mui/icons-material/MoreHoriz";
+import NotificationsNoneOutlined from "@mui/icons-material/NotificationsNoneOutlined";
 import PeopleOutline from "@mui/icons-material/PeopleOutline";
 import PersonOutline from "@mui/icons-material/PersonOutline";
 import RateReviewOutlined from "@mui/icons-material/RateReviewOutlined";
@@ -75,4 +76,4 @@ export function ForwardIcon(props: SvgIconProps) {
   );
 }
 
-export { Add, CheckOutlined, ExpandLess, ExpandMore, Menu, PersonOutline, SearchOutlined };
+export { Add, CheckOutlined, ExpandLess, ExpandMore, Menu, MoreHoriz, NotificationsNoneOutlined, PersonOutline, SearchOutlined };

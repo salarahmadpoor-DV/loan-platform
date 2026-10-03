@@ -145,7 +145,7 @@ export function PublicHomePage() {
               </Typography>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ pt: 0.5 }}>
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   size="large"
                   onClick={() => goFind()}
                   sx={{ width: { xs: "100%", sm: "auto" } }}

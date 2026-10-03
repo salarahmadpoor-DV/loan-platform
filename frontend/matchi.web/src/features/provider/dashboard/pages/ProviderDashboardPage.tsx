@@ -134,10 +134,10 @@ export function ProviderDashboardPage() {
                 <List
                   disablePadding
                   sx={{
-                    bgcolor: "rgba(37, 99, 235, 0.05)",
+                    bgcolor: "background.paper",
                     border: 1,
-                    borderColor: "rgba(37, 99, 235, 0.16)",
-                    borderRadius: 1,
+                    borderColor: "divider",
+                    borderRadius: 2,
                   }}
                 >
                   {actions.map((row, index) => (
@@ -201,22 +201,13 @@ export function ProviderDashboardPage() {
           </Stack>
 
           <Stack spacing={{ xs: 2.5, md: 3 }}>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                columnGap: 1.5,
-                py: { xs: 0.5, md: 1 },
-              }}
-            >
-              <QuietStat value={inbox.length} label={t("provider.dashboard.statsNew")} color="primary.main" />
-              <QuietStat
-                value={attentionExecutions.length}
-                label={t("provider.dashboard.statsActive")}
-                color="secondary.main"
-              />
-              <QuietStat value={completedCount} label={t("provider.dashboard.statsDone")} color="success.main" />
-            </Box>
+            <Typography variant="caption" color="text.secondary">
+              {t("provider.dashboard.statsNew")}: {inbox.length}
+              {" · "}
+              {t("provider.dashboard.statsActive")}: {attentionExecutions.length}
+              {" · "}
+              {t("provider.dashboard.statsDone")}: {completedCount}
+            </Typography>
 
             <Stack spacing={1.25}>
               <Typography variant="subtitle1" component="h2">
@@ -250,26 +241,5 @@ export function ProviderDashboardPage() {
         </Box>
       ) : null}
     </Stack>
-  );
-}
-
-function QuietStat({
-  value,
-  label,
-  color,
-}: {
-  value: number;
-  label: string;
-  color: "primary.main" | "secondary.main" | "success.main";
-}) {
-  return (
-    <Box sx={{ minWidth: 0, textAlign: "center" }}>
-      <Typography variant="h4" component="p" sx={{ fontWeight: 700, lineHeight: 1.2, color }}>
-        {value}
-      </Typography>
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
-    </Box>
   );
 }

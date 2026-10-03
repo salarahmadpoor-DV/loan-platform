@@ -14,7 +14,7 @@ const TONE_COLOR: Record<StatusTone, ChipProps["color"]> = {
   danger: "error",
   info: "info",
   primary: "primary",
-  inProgress: "secondary",
+  inProgress: "warning",
 };
 
 export function StatusChip({ label, tone = "neutral" }: StatusChipProps) {
@@ -23,7 +23,7 @@ export function StatusChip({ label, tone = "neutral" }: StatusChipProps) {
       size="small"
       label={label}
       color={TONE_COLOR[tone]}
-      sx={{ fontWeight: 600 }}
+      sx={{ fontWeight: 500 }}
     />
   );
 }

@@ -15,7 +15,7 @@ function executionTone(status: string): StatusTone {
     return "pending";
   }
   if (key === "inprogress") {
-    return "info";
+    return "inProgress";
   }
   if (key === "completed") {
     return "success";

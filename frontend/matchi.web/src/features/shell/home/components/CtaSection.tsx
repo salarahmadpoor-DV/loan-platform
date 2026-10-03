@@ -35,7 +35,13 @@ export function CtaSection({
         {body}
       </Typography>
       <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-        <Button variant="contained" color="secondary" size="large" onClick={onPrimary}>
+        <Button
+          variant="contained"
+          color="inherit"
+          size="large"
+          onClick={onPrimary}
+          sx={{ bgcolor: "common.white", color: "primary.main", "&:hover": { bgcolor: "grey.100" } }}
+        >
           {primaryLabel}
         </Button>
         <Button

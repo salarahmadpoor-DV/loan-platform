@@ -19,14 +19,14 @@ export function requestStatusLabel(status: string): string {
   return status;
 }
 
-export function requestStatusTone(status: string): "success" | "neutral" | "pending" {
+export function requestStatusTone(status: string): "success" | "neutral" | "pending" | "danger" {
   if (isRequestOpen(status)) {
-    return "success";
+    return "pending";
   }
   if (isRequestCancelled(status)) {
-    return "neutral";
+    return "danger";
   }
-  return "pending";
+  return "neutral";
 }
 
 export function formatRequestDateTime(iso: string | null | undefined): string {

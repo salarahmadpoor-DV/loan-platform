@@ -10,4 +10,5 @@ export { FormSplitLayout } from "./FormSplitLayout";
 export { MarketplaceStepper } from "./MarketplaceStepper";
 export { JourneyTimeline } from "./JourneyTimeline";
 export { PriceSummary } from "./PriceSummary";
+export { OverflowActions, ItemActions } from "./OverflowActions";
 export { SectionHeader } from "./SectionHeader";

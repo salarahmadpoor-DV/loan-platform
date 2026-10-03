@@ -91,19 +91,18 @@ export function WorkspaceDrawerNav({
       <Box
         sx={{
           px: 2,
-          py: 1.75,
-          bgcolor: "rgba(37, 99, 235, 0.07)",
+          py: 1.5,
           borderBottom: 1,
-          borderColor: "rgba(37, 99, 235, 0.12)",
+          borderColor: "divider",
         }}
       >
-        <Typography variant="subtitle1" fontWeight={700} color="primary.main">
+        <Typography variant="subtitle1" fontWeight={700}>
           {t("app.name")}
         </Typography>
         <Typography variant="caption" color="text.secondary" display="block">
           {t("nav.drawer.tagline")}
         </Typography>
-        <Typography variant="caption" color="secondary.main" display="block" sx={{ mt: 0.25 }}>
+        <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
           {t(workspaceLabelKey[workspace])}
         </Typography>
       </Box>

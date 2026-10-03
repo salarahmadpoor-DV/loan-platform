@@ -3,7 +3,6 @@ import {
   Box,
   BottomNavigation,
   BottomNavigationAction,
-  Button,
   Drawer,
   IconButton,
   Menu as AccountMenu,
@@ -30,7 +29,7 @@ import {
   type AppWorkspace,
 } from "../shared/navigation/navModel";
 import { PageContainer } from "../shared/ui/PageContainer";
-import { BackIcon, Menu, NavIcon, PersonOutline } from "../shared/ui/icons";
+import { BackIcon, Menu, NavIcon, NotificationsNoneOutlined, PersonOutline } from "../shared/ui/icons";
 import { mobileDrawerAnchor, mobileDrawerPaperSx } from "./mobileDrawerPlacement";
 import { WorkspaceDrawerNav } from "./WorkspaceDrawerNav";
 
@@ -100,12 +99,7 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
         sx={{
           zIndex: (z) => z.zIndex.drawer + 1,
           borderBottom: 1,
-          borderColor:
-            workspace === "provider"
-              ? "secondary.main"
-              : workspace === "business"
-                ? "warning.main"
-                : "primary.main",
+          borderColor: "divider",
           bgcolor: "background.paper",
           color: "text.primary",
         }}
@@ -163,58 +157,64 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
           {isDesktop ? (
             <Stack
               direction="row"
-              spacing={0.5}
+              spacing={0.25}
               alignItems="center"
               justifyContent="flex-end"
               style={{ flexDirection: "row" }}
               sx={{ minWidth: 0 }}
             >
-              {availableWorkspaces.map((ws) => (
-                <Button
-                  key={ws}
-                  color={ws === workspace ? "primary" : "inherit"}
-                  size="small"
-                  variant={ws === workspace ? "contained" : "text"}
-                  onClick={() => navigate(workspaceHome[ws])}
-                >
-                  {t(workspaceLabelKey[ws])}
-                </Button>
-              ))}
-              <Button
+              <IconButton disabled aria-label={t("nav.notifications")} sx={{ minWidth: 44, minHeight: 44 }}>
+                <NotificationsNoneOutlined aria-hidden />
+              </IconButton>
+              <IconButton
                 color="inherit"
-                onClick={() => changeAppLocale(locale === "fa-IR" ? "en-US" : "fa-IR")}
-                sx={{ flexShrink: 0 }}
-                aria-label={t("locale.switch")}
+                aria-label={t("nav.account")}
+                aria-haspopup="menu"
+                onClick={(event: MouseEvent<HTMLElement>) => setAccountEl(event.currentTarget)}
               >
-                {locale === "fa-IR" ? t("locale.en") : t("locale.fa")}
-              </Button>
-              <Button color="inherit" onClick={() => logout()} sx={{ flexShrink: 0 }}>
-                {t("auth.signOut")}
-              </Button>
+                <PersonOutline aria-hidden />
+              </IconButton>
             </Stack>
           ) : focused ? (
             <Box />
           ) : (
-            <IconButton
-              color="inherit"
-              aria-label={t("nav.account")}
-              aria-haspopup="menu"
-              onClick={(event: MouseEvent<HTMLElement>) => setAccountEl(event.currentTarget)}
-            >
-              <PersonOutline aria-hidden />
-            </IconButton>
+            <Stack direction="row" spacing={0} style={{ flexDirection: "row" }}>
+              <IconButton disabled aria-label={t("nav.notifications")} sx={{ minWidth: 44, minHeight: 44 }}>
+                <NotificationsNoneOutlined aria-hidden />
+              </IconButton>
+              <IconButton
+                color="inherit"
+                aria-label={t("nav.account")}
+                aria-haspopup="menu"
+                onClick={(event: MouseEvent<HTMLElement>) => setAccountEl(event.currentTarget)}
+              >
+                <PersonOutline aria-hidden />
+              </IconButton>
+            </Stack>
           )}
         </Toolbar>
       </AppBar>
 
       <AccountMenu anchorEl={accountEl} open={Boolean(accountEl)} onClose={() => setAccountEl(null)}>
+        {availableWorkspaces.map((ws) => (
+          <MenuItem
+            key={ws}
+            selected={ws === workspace}
+            onClick={() => {
+              setAccountEl(null);
+              navigate(workspaceHome[ws]);
+            }}
+          >
+            {t(workspaceLabelKey[ws])}
+          </MenuItem>
+        ))}
         <MenuItem
           onClick={() => {
             setAccountEl(null);
-            setMobileOpen(true);
+            changeAppLocale(locale === "fa-IR" ? "en-US" : "fa-IR");
           }}
         >
-          {t("nav.switchWorkspace")}
+          {locale === "fa-IR" ? t("locale.en") : t("locale.fa")}
         </MenuItem>
         <MenuItem
           onClick={() => {

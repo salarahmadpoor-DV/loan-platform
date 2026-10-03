@@ -6,26 +6,31 @@ type SectionHeaderProps = {
   subtitle?: string;
   action?: ReactNode;
   id?: string;
+  compact?: boolean;
 };
 
-export function SectionHeader({ title, subtitle, action, id }: SectionHeaderProps) {
+export function SectionHeader({ title, subtitle, action, id, compact = false }: SectionHeaderProps) {
   return (
     <Box
       sx={{
         display: "flex",
         flexDirection: { xs: "column", sm: "row" },
-        alignItems: { sm: "flex-end" },
+        alignItems: { sm: compact ? "center" : "flex-end" },
         justifyContent: "space-between",
-        gap: 2,
-        mb: 3,
+        gap: compact ? 1 : 2,
+        mb: compact ? 1.25 : 3,
       }}
     >
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="h2" component="h2" id={id}>
+        <Typography variant={compact ? "subtitle1" : "h2"} component="h2" id={id}>
           {title}
         </Typography>
         {subtitle ? (
-          <Typography variant="body1" color="text.secondary" sx={{ mt: 1, maxWidth: 640 }}>
+          <Typography
+            variant={compact ? "body2" : "body1"}
+            color="text.secondary"
+            sx={{ mt: compact ? 0.25 : 1, maxWidth: 640 }}
+          >
             {subtitle}
           </Typography>
         ) : null}

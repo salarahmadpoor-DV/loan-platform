@@ -2,16 +2,19 @@ import { Button, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { t } from "../../../../shared/i18n";
 import { AppCard } from "../../../../shared/ui/AppCard";
+import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
+import { ItemActions } from "../../../../shared/ui/OverflowActions";
 import { PriceSummary } from "../../../../shared/ui/PriceSummary";
 import type { ProposalDetail, ProposalListItem } from "../api/proposalTypes";
+import { useRejectProposal } from "../hooks/useRejectProposal";
 import {
   formatDateTime,
   formatProposalSchedule,
+  isPendingProposal,
   proposalItemsSubtotal,
   proposerPartyLabel,
 } from "../model/proposalDisplay";
 import { AcceptProposalButton } from "./AcceptProposalButton";
-import { RejectProposalButton } from "./RejectProposalButton";
 import { ProposalStatusChip } from "./ProposalStatusChip";
 
 type ProposalCardProps = {
@@ -35,14 +38,24 @@ export function ProposalCard({
   detailLoading,
   detailFailed,
 }: ProposalCardProps) {
-  const schedule = detail
-    ? formatProposalSchedule(detail)
-    : null;
+  const schedule = detail ? formatProposalSchedule(detail) : null;
   const items = detail
     ? [...detail.items].sort((a, b) => a.displayOrder - b.displayOrder || a.id - b.id)
     : [];
   const subtotal = detail ? proposalItemsSubtotal(detail.items) : proposal.totalPrice - proposal.deliveryFee;
   const message = detail?.message?.trim();
+  const pending = isPendingProposal(proposal.status);
+  const reject = useRejectProposal();
+  const viewButton = (
+    <Button
+      component={RouterLink}
+      to={`/customer/proposals/${proposal.id}`}
+      variant={pending ? "outlined" : "contained"}
+      sx={{ minHeight: 44 }}
+    >
+      {t("proposal.view")}
+    </Button>
+  );
 
   return (
     <AppCard>
@@ -105,16 +118,30 @@ export function ProposalCard({
         <Typography variant="caption" color="text.secondary">
           {t("proposal.created", { date: formatDateTime(proposal.createDate) })}
         </Typography>
-        <AcceptProposalButton proposalId={proposal.id} status={proposal.status} />
-        <RejectProposalButton proposalId={proposal.id} status={proposal.status} />
-        <Button
-          component={RouterLink}
-          to={`/customer/proposals/${proposal.id}`}
-          variant="outlined"
-          sx={{ minHeight: 44, alignSelf: { xs: "stretch", sm: "flex-start" } }}
-        >
-          {t("proposal.view")}
-        </Button>
+        {reject.isError ? <ErrorAlert error={reject.error} /> : null}
+        <ItemActions
+          primary={
+            pending ? (
+              <AcceptProposalButton proposalId={proposal.id} status={proposal.status} />
+            ) : (
+              viewButton
+            )
+          }
+          items={
+            pending
+              ? [
+                  { key: "view", label: t("proposal.view"), to: `/customer/proposals/${proposal.id}` },
+                  {
+                    key: "reject",
+                    label: reject.isPending ? t("proposal.rejecting") : t("proposal.reject"),
+                    destructive: true,
+                    disabled: reject.isPending,
+                    onClick: () => reject.mutate(proposal.id),
+                  },
+                ]
+              : []
+          }
+        />
       </Stack>
     </AppCard>
   );

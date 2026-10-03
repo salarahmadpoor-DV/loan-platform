@@ -2,6 +2,7 @@ import { Button, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { t } from "../../../../shared/i18n";
 import { AppCard } from "../../../../shared/ui/AppCard";
+import { ItemActions } from "../../../../shared/ui/OverflowActions";
 import { StatusChip } from "../../../../shared/ui/StatusChip";
 import { requestKindLabel, type RequestDto } from "../api/requestTypes";
 import {
@@ -66,40 +67,34 @@ export function RequestCard({ request }: RequestCardProps) {
             products: request.products.length,
           })}
         </Typography>
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          spacing={1}
-          sx={{ mt: "auto", pt: 0.5 }}
-        >
-          <Button
-            component={RouterLink}
-            to={`/customer/requests/${request.id}`}
-            variant="contained"
-            sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}
-          >
-            {t("request.card.view")}
-          </Button>
-          {open ? (
-            <>
+        <ItemActions
+          primary={
             <Button
               component={RouterLink}
-              to={`/customer/requests/${request.id}/matches`}
-              variant="outlined"
-              sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}
+              to={`/customer/requests/${request.id}`}
+              variant="contained"
+              sx={{ minHeight: 44 }}
             >
-              {t("request.card.viewMatches")}
+              {t("request.card.view")}
             </Button>
-            <Button
-              component={RouterLink}
-              to={`/customer/requests/${request.id}/proposals`}
-              variant="outlined"
-              sx={{ minHeight: 44, width: { xs: "100%", sm: "auto" } }}
-            >
-              {t("request.card.viewProposals")}
-            </Button>
-            </>
-          ) : null}
-        </Stack>
+          }
+          items={
+            open
+              ? [
+                  {
+                    key: "matches",
+                    label: t("request.card.viewMatches"),
+                    to: `/customer/requests/${request.id}/matches`,
+                  },
+                  {
+                    key: "proposals",
+                    label: t("request.card.viewProposals"),
+                    to: `/customer/requests/${request.id}/proposals`,
+                  },
+                ]
+              : []
+          }
+        />
       </Stack>
     </AppCard>
   );

@@ -8,6 +8,7 @@ import { AppCard } from "../../../../shared/ui/AppCard";
 import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
 import { JourneyTimeline } from "../../../../shared/ui/JourneyTimeline";
 import { LoadingState } from "../../../../shared/ui/LoadingState";
+import { ItemActions } from "../../../../shared/ui/OverflowActions";
 import { PageHeader } from "../../../../shared/ui/PageHeader";
 import { StatusChip } from "../../../../shared/ui/StatusChip";
 import {
@@ -117,26 +118,40 @@ function RequestDetailBody({ request }: { request: RequestDto }) {
         </Typography>
       </Stack>
 
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-        {open ? (
-          <Button
-            component={RouterLink}
-            to={`/customer/requests/${request.id}/matches`}
-            variant="contained"
-            sx={{ minHeight: 48 }}
-          >
-            {t("request.detail.viewMatches")}
-          </Button>
-        ) : null}
-        <Button
-          component={RouterLink}
-          to={`/customer/requests/${request.id}/proposals`}
-          variant={open ? "outlined" : "contained"}
-          sx={{ minHeight: 48 }}
-        >
-          {t("request.detail.viewProposals")}
-        </Button>
-      </Stack>
+      <ItemActions
+        primary={
+          open ? (
+            <Button
+              component={RouterLink}
+              to={`/customer/requests/${request.id}/matches`}
+              variant="contained"
+              sx={{ minHeight: 48 }}
+            >
+              {t("request.detail.viewMatches")}
+            </Button>
+          ) : (
+            <Button
+              component={RouterLink}
+              to={`/customer/requests/${request.id}/proposals`}
+              variant="contained"
+              sx={{ minHeight: 48 }}
+            >
+              {t("request.detail.viewProposals")}
+            </Button>
+          )
+        }
+        items={
+          open
+            ? [
+                {
+                  key: "proposals",
+                  label: t("request.detail.viewProposals"),
+                  to: `/customer/requests/${request.id}/proposals`,
+                },
+              ]
+            : []
+        }
+      />
 
       <AppCard>
         <Typography variant="subtitle2" color="text.secondary">

@@ -22,7 +22,7 @@ export function dealStatusTone(status: string): StatusTone {
     return "success";
   }
   if (key === "completed") {
-    return "info";
+    return "success";
   }
   if (key === "cancelled") {
     return "danger";

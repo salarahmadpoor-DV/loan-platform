@@ -5,6 +5,7 @@ import { EmptyState } from "../../../../shared/ui/EmptyState";
 import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
 import { LoadingState } from "../../../../shared/ui/LoadingState";
 import { PageHeader } from "../../../../shared/ui/PageHeader";
+import { ItemActions } from "../../../../shared/ui/OverflowActions";
 import { StatusChip } from "../../../../shared/ui/StatusChip";
 import { useAcceptProviderInvitation, useRejectProviderInvitation } from "../hooks/useInvitationActions";
 import { useMyProviderInvitations } from "../hooks/useMyProviderInvitations";
@@ -44,27 +45,31 @@ export function ProviderInvitationInboxPage() {
                 </Typography>
                 <StatusChip label={t("provider.invitations.pending")} tone="pending" />
               </Stack>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-                <Button
-                  variant="contained"
-                  disabled={busyId != null}
-                  onClick={() => accept.mutate(item.id)}
-                >
-                  {accept.isPending && accept.variables === item.id
-                    ? t("provider.invitations.accepting")
-                    : t("provider.invitations.accept")}
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  disabled={busyId != null}
-                  onClick={() => reject.mutate(item.id)}
-                >
-                  {reject.isPending && reject.variables === item.id
-                    ? t("provider.invitations.rejecting")
-                    : t("provider.invitations.reject")}
-                </Button>
-              </Stack>
+              <ItemActions
+                primary={
+                  <Button
+                    variant="contained"
+                    disabled={busyId != null}
+                    onClick={() => accept.mutate(item.id)}
+                  >
+                    {accept.isPending && accept.variables === item.id
+                      ? t("provider.invitations.accepting")
+                      : t("provider.invitations.accept")}
+                  </Button>
+                }
+                items={[
+                  {
+                    key: "reject",
+                    label:
+                      reject.isPending && reject.variables === item.id
+                        ? t("provider.invitations.rejecting")
+                        : t("provider.invitations.reject"),
+                    destructive: true,
+                    disabled: busyId != null,
+                    onClick: () => reject.mutate(item.id),
+                  },
+                ]}
+              />
             </Stack>
           </AppCard>
         ))}

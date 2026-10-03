@@ -1,4 +1,4 @@
-import { Button, Divider, Popover, Stack, Typography } from "@mui/material";
+import { Alert, Button, Divider, Popover, Stack, Typography } from "@mui/material";
 import Badge from "@mui/material/Badge";
 import IconButton from "@mui/material/IconButton";
 import { useTheme } from "@mui/material/styles";
@@ -20,6 +20,7 @@ import {
 } from "../hooks/useNotifications";
 import { resolveInAppNotificationPath } from "../model/notificationNavigation";
 import { NotificationListItem } from "./NotificationListItem";
+import { useWorkspaceNavigation } from "../../workspace/hooks/useWorkspaceNavigation";
 
 type NotificationBellProps = {
   workspace: AppWorkspace;
@@ -28,7 +29,9 @@ type NotificationBellProps = {
 export function NotificationBell({ workspace }: NotificationBellProps) {
   const theme = useTheme();
   const navigate = useNavigate();
+  const { openPath } = useWorkspaceNavigation();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const open = Boolean(anchorEl);
   const unread = useUnreadNotificationCount();
   const list = useMyNotifications(1, 8, open);
@@ -43,14 +46,18 @@ export function NotificationBell({ workspace }: NotificationBellProps) {
     setAnchorEl(null);
   }
 
-  function openItem(item: NotificationItem) {
+  async function openItem(item: NotificationItem) {
     if (!item.isRead) {
       markRead.mutate(item.id);
     }
     const path = resolveInAppNotificationPath(item.actionUrl);
     close();
-    if (path) {
-      navigate(path);
+    if (!path) {
+      return;
+    }
+    const opened = await openPath(path, workspace);
+    if (!opened) {
+      setNotice(t("notifications.workspaceUnavailable"));
     }
   }
 
@@ -109,6 +116,7 @@ export function NotificationBell({ workspace }: NotificationBellProps) {
               </Button>
             ) : null}
           </Stack>
+          {notice ? <Alert severity="info">{notice}</Alert> : null}
           {list.isPending ? <LoadingState /> : null}
           {list.isError ? <ErrorAlert error={list.error} /> : null}
           {markAll.isError ? <ErrorAlert error={markAll.error} /> : null}

@@ -32,6 +32,8 @@ type WorkspaceDrawerNavProps = {
   onToggleLocale: () => void;
   onLogout: () => void;
   onSwitchWorkspace: (workspace: AppWorkspace) => void;
+  onSetPreferredWorkspace?: (workspace: AppWorkspace) => void;
+  preferredWorkspace?: AppWorkspace | null;
   onNavigate?: () => void;
 };
 
@@ -51,6 +53,8 @@ export function WorkspaceDrawerNav({
   onToggleLocale,
   onLogout,
   onSwitchWorkspace,
+  onSetPreferredWorkspace,
+  preferredWorkspace,
   onNavigate,
 }: WorkspaceDrawerNavProps) {
   const rtl = direction === "rtl";
@@ -238,11 +242,33 @@ export function WorkspaceDrawerNav({
                     ) : null}
                     <ListItemText
                       primary={t(workspaceLabelKey[ws])}
+                      secondary={preferredWorkspace === ws ? t("workspace.default") : undefined}
                       primaryTypographyProps={{ variant: "body2", fontWeight: 600 }}
+                      secondaryTypographyProps={{ variant: "caption" }}
                       sx={{ my: 0, flex: 1, minWidth: 0 }}
                     />
                   </ListItemButton>
                 ))}
+                {onSetPreferredWorkspace && preferredWorkspace !== workspace ? (
+                  <ListItemButton
+                    onClick={() => {
+                      onSetPreferredWorkspace(workspace);
+                      onNavigate?.();
+                    }}
+                    style={{
+                      ...rowStyle,
+                      paddingInlineStart: 36,
+                      paddingInlineEnd: 12,
+                    }}
+                    sx={linkSx(false)}
+                  >
+                    <ListItemText
+                      primary={t("workspace.setDefault")}
+                      primaryTypographyProps={{ variant: "body2" }}
+                      sx={{ my: 0, flex: 1 }}
+                    />
+                  </ListItemButton>
+                ) : null}
                 <ListItemButton
                   onClick={() => {
                     onToggleLocale();

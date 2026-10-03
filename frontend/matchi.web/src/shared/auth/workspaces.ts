@@ -7,11 +7,10 @@ export type WorkspaceCapabilities = {
 };
 
 /**
- * Workspace access from JWT **ADMIN/USER** plus live capabilities:
- * Provider profile (`Providers.UserId`) and owned businesses (`Businesses.OwnerUserId`).
- *
- * JWT `PROVIDER` / `BUSINESS_OWNER` codes are not treated as identity.
- * BusinessProvider membership does not grant the Business workspace.
+ * Client helpers for JWT ADMIN/USER plus capability flags.
+ * Startup workspace resolution is authoritative on the backend
+ * (`GET /api/users/me/workspace`). These helpers remain for public-path
+ * routing that still receives capability flags.
  */
 export function resolveWorkspaces(
   roles: readonly string[] | undefined,

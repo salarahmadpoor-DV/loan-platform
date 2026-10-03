@@ -6,4 +6,5 @@ export function resetWorkspaceCapabilityQueries(queryClient: QueryClient): void 
   queryClient.removeQueries({ queryKey: queryKeys.provider.profile() });
   queryClient.removeQueries({ queryKey: queryKeys.provider.myBusinesses() });
   queryClient.removeQueries({ queryKey: queryKeys.notifications.all });
+  queryClient.removeQueries({ queryKey: queryKeys.workspace.all });
 }

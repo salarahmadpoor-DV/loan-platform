@@ -1,6 +1,6 @@
-import { Box, Button, Stack } from "@mui/material";
+import { Alert, Box, Button, Stack } from "@mui/material";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { t } from "../../../shared/i18n";
 import { AppCard } from "../../../shared/ui/AppCard";
 import { EmptyState } from "../../../shared/ui/EmptyState";
@@ -15,10 +15,15 @@ import {
 } from "../hooks/useNotifications";
 import { resolveInAppNotificationPath } from "../model/notificationNavigation";
 import { NotificationListItem } from "../components/NotificationListItem";
+import { useWorkspaceNavigation } from "../../workspace/hooks/useWorkspaceNavigation";
+import { workspaceFromPath } from "../../workspace/model/workspacePath";
 
 export function NotificationCenterPage() {
-  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const { openPath } = useWorkspaceNavigation();
+  const currentWorkspace = workspaceFromPath(pathname) ?? undefined;
   const [pageSize, setPageSize] = useState(20);
+  const [notice, setNotice] = useState<string | null>(null);
   const list = useMyNotifications(1, pageSize);
   const markRead = useMarkNotificationAsRead();
   const markAll = useMarkAllNotificationsAsRead();
@@ -27,13 +32,17 @@ export function NotificationCenterPage() {
   const unreadCount = data?.unreadCount ?? 0;
   const canLoadMore = data != null && items.length < data.totalCount && pageSize < 100;
 
-  function openItem(item: NotificationItem) {
+  async function openItem(item: NotificationItem) {
     if (!item.isRead) {
       markRead.mutate(item.id);
     }
     const path = resolveInAppNotificationPath(item.actionUrl);
-    if (path) {
-      navigate(path);
+    if (!path) {
+      return;
+    }
+    const opened = await openPath(path, currentWorkspace);
+    if (!opened) {
+      setNotice(t("notifications.workspaceUnavailable"));
     }
   }
 
@@ -50,6 +59,7 @@ export function NotificationCenterPage() {
           ) : undefined
         }
       />
+      {notice ? <Alert severity="info" sx={{ mb: 2 }}>{notice}</Alert> : null}
       {list.isPending ? <LoadingState /> : null}
       {list.isError ? <ErrorAlert error={list.error} /> : null}
       {markAll.isError ? <ErrorAlert error={markAll.error} /> : null}

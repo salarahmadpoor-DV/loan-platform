@@ -1,4 +1,5 @@
 using FluentValidation;
+using Matchi.Application.Workspaces;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,6 +20,7 @@ public static class ApplicationServiceCollectionExtensions
             typeof(ApplicationServiceCollectionExtensions).Assembly);
 
         services.AddTransient(typeof(IPipelineBehavior<,>), typeof(Common.MediatR.ValidationBehavior<,>));
+        services.AddScoped<IWorkspaceAccessService, WorkspaceAccessService>();
 
         return services;
     }

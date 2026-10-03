@@ -33,6 +33,7 @@ import { BackIcon, Menu, NavIcon, PersonOutline } from "../shared/ui/icons";
 import { mobileDrawerAnchor, mobileDrawerPaperSx } from "./mobileDrawerPlacement";
 import { WorkspaceDrawerNav } from "./WorkspaceDrawerNav";
 import { NotificationBell } from "../features/notifications/components/NotificationBell";
+import { useWorkspaceNavigation } from "../features/workspace/hooks/useWorkspaceNavigation";
 
 const DRAWER_WIDTH = 260;
 const APP_BAR_HEIGHT = 56;
@@ -58,7 +59,8 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { logout } = useAuth();
-  const { workspaces: availableWorkspaces, canAccess } = useWorkspaceAccess();
+  const { workspaces: availableWorkspaces, canAccess, preferredWorkspace } = useWorkspaceAccess();
+  const { switchTo, setPreferred } = useWorkspaceNavigation();
   const drawerModel = useMemo(
     () => buildWorkspaceDrawerNav(workspace, canAccess("business")),
     [workspace, canAccess],
@@ -86,7 +88,13 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
       localeLabel={locale === "fa-IR" ? t("locale.en") : t("locale.fa")}
       onToggleLocale={() => changeAppLocale(locale === "fa-IR" ? "en-US" : "fa-IR")}
       onLogout={() => logout()}
-      onSwitchWorkspace={(ws) => navigate(workspaceHome[ws])}
+      onSwitchWorkspace={(ws) => {
+        void switchTo(ws);
+      }}
+      onSetPreferredWorkspace={(ws) => {
+        void setPreferred(ws);
+      }}
+      preferredWorkspace={preferredWorkspace}
       onNavigate={isDesktop ? undefined : closeDrawer}
     />
   );
@@ -198,12 +206,23 @@ export function AppShellLayout({ workspace }: AppShellLayoutProps) {
             selected={ws === workspace}
             onClick={() => {
               setAccountEl(null);
-              navigate(workspaceHome[ws]);
+              void switchTo(ws);
             }}
           >
             {t(workspaceLabelKey[ws])}
+            {preferredWorkspace === ws ? ` · ${t("workspace.default")}` : ""}
           </MenuItem>
         ))}
+        {preferredWorkspace !== workspace ? (
+          <MenuItem
+            onClick={() => {
+              setAccountEl(null);
+              void setPreferred(workspace);
+            }}
+          >
+            {t("workspace.setDefault")}
+          </MenuItem>
+        ) : null}
         <MenuItem
           onClick={() => {
             setAccountEl(null);

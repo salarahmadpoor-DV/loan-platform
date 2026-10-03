@@ -38,7 +38,7 @@ export function ProviderDealListPage() {
         </Stack>
       ) : null}
       {!isPending && !isError && data?.length === 0 ? (
-        <EmptyState title={t("provider.deals.emptyTitle")} body={t("provider.deals.emptyBody")} />
+        <EmptyState title={t("provider.deals.emptyTitle")} body={t("provider.deals.emptyBody")} illustration="deals" />
       ) : null}
       {groups.map((group) => (
         <Stack key={group.status} spacing={1.5} sx={{ mb: 3 }}>

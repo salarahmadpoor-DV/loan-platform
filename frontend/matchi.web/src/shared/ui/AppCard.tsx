@@ -15,6 +15,7 @@ export function AppCard({ children, sx }: AppCardProps) {
           height: "100%",
           borderColor: "divider",
           bgcolor: "background.paper",
+          borderRadius: 2,
         },
         ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
       ]}

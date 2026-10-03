@@ -29,6 +29,12 @@ import {
   findServicePath,
   providerJoinPath,
 } from "../../../../shared/marketplace/publicPaths";
+import {
+  workspaceHome,
+  workspaceLabelKey,
+} from "../../../../shared/navigation/navModel";
+import { mobileDrawerAnchor, mobileDrawerPaperSx } from "../../../../layouts/mobileDrawerPlacement";
+import { Menu as MenuIcon } from "../../../../shared/ui/icons";
 import { usePublicEntry } from "../../../auth/PublicEntryContext";
 
 const NAV_LINKS = [
@@ -49,10 +55,10 @@ export function PublicHeader() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, user } = useAuth();
-  const { defaultPath, capabilities } = useWorkspaceAccess();
+  const { defaultPath, capabilities, workspaces } = useWorkspaceAccess();
   const { openCustomerLogin } = usePublicEntry();
   const findPath = findServicePath(isAuthenticated, user?.roles, undefined, capabilities);
-  const drawerAnchor = theme.direction === "rtl" ? "right" : "left";
+  const drawerAnchor = mobileDrawerAnchor(theme.direction);
   const menuId = useId();
   const authMenuId = useId();
   const [authMenuEl, setAuthMenuEl] = useState<HTMLElement | null>(null);
@@ -138,9 +144,9 @@ export function PublicHeader() {
       <Container maxWidth="lg" disableGutters>
         <Toolbar
           disableGutters
+          dir={theme.direction}
+          style={{ display: "grid", gridTemplateColumns: "auto minmax(0, 1fr) auto" }}
           sx={{
-            display: "grid",
-            gridTemplateColumns: "auto minmax(0, 1fr) auto",
             columnGap: { xs: 1, sm: 2 },
             alignItems: "center",
             px: { xs: 1.5, sm: 3 },
@@ -157,39 +163,53 @@ export function PublicHeader() {
                 aria-controls={menuId}
                 onClick={() => setOpen(true)}
               >
-                <Typography component="span" fontWeight={700} aria-hidden>
-                  ≡
-                </Typography>
+                <MenuIcon aria-hidden />
               </IconButton>
-            ) : null}
+            ) : (
+              <Stack
+                component={RouterLink}
+                to="/"
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{ color: "inherit", textDecoration: "none", minWidth: 0 }}
+              >
+                <Box
+                  aria-hidden
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 1,
+                    bgcolor: "primary.main",
+                    flexShrink: 0,
+                  }}
+                />
+                <Typography variant="h6" component="span" noWrap sx={{ fontWeight: 700 }}>
+                  {t("app.name")}
+                </Typography>
+              </Stack>
+            )}
+          </Stack>
+          {compactNav ? (
             <Stack
               component={RouterLink}
               to="/"
               direction="row"
               spacing={1}
               alignItems="center"
+              justifyContent="center"
               sx={{ color: "inherit", textDecoration: "none", minWidth: 0 }}
             >
-              <Box
-                aria-hidden
-                sx={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 1,
-                  bgcolor: "primary.main",
-                  flexShrink: 0,
-                }}
-              />
-              <Typography variant="h6" component="span" noWrap sx={{ fontWeight: 700 }}>
+              <Typography variant="subtitle1" component="span" noWrap fontWeight={700}>
                 {t("app.name")}
               </Typography>
             </Stack>
-          </Stack>
-          {!compactNav ? (
+          ) : (
             <Stack
               direction="row"
               spacing={0.5}
               sx={{ minWidth: 0, justifyContent: "flex-start" }}
+              style={{ flexDirection: "row" }}
               component="nav"
               aria-label={t("public.nav.findServices")}
             >
@@ -199,11 +219,15 @@ export function PublicHeader() {
                 </Button>
               ))}
             </Stack>
-          ) : (
-            <Box />
           )}
-          <Stack direction="row" spacing={1} sx={{ alignItems: "center", justifyContent: "flex-end" }}>
-            {localeToggle}
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            justifyContent="flex-end"
+            style={{ flexDirection: "row" }}
+          >
+            {!compactNav ? localeToggle : null}
             {!isAuthenticated && !compactNav ? (
               <>
                 <Button
@@ -262,13 +286,27 @@ export function PublicHeader() {
         open={open}
         onClose={() => setOpen(false)}
         ModalProps={{ keepMounted: true }}
-        sx={{ "& .MuiDrawer-paper": { width: { xs: "min(100%, 300px)" } } }}
+        sx={{
+          "& .MuiDrawer-paper": mobileDrawerPaperSx(theme.direction, { xs: "min(100%, 300px)" }),
+        }}
       >
-        <Box id={menuId} sx={{ p: 2 }} role="presentation">
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>
+        <Box id={menuId} sx={{ p: 2, direction: theme.direction }} role="presentation">
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>
             {t("app.name")}
           </Typography>
-          <List>
+          {isAuthenticated ? (
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+              {t("nav.currentWorkspace")}
+            </Typography>
+          ) : null}
+          <List
+            subheader={
+              <ListItemText
+                primary={t("nav.section.discover")}
+                primaryTypographyProps={{ variant: "overline", color: "text.secondary" }}
+              />
+            }
+          >
             {NAV_LINKS.map((link) => (
               <ListItemButton key={link.hash} onClick={() => goSection(link.hash)}>
                 <ListItemText primary={t(link.labelKey)} />
@@ -277,35 +315,50 @@ export function PublicHeader() {
             <ListItemButton onClick={() => goSection("for-professionals")}>
               <ListItemText primary={t("public.nav.forProfessionals")} />
             </ListItemButton>
-            {!isAuthenticated ? (
-              <>
-                <ListItemButton onClick={chooseCustomer}>
-                  <ListItemText
-                    primary={t("auth.customer.title")}
-                    secondary={t("auth.customer.description")}
-                  />
-                </ListItemButton>
-                <ListItemButton onClick={chooseProvider}>
-                  <ListItemText
-                    primary={t("auth.provider.title")}
-                    secondary={t("auth.provider.description")}
-                  />
-                </ListItemButton>
-              </>
-            ) : null}
-            <ListItemButton
-              onClick={() => {
-                if (isAuthenticated) {
-                  go(primaryPath);
-                  return;
-                }
-                chooseRequestService();
-              }}
+          </List>
+          {isAuthenticated ? (
+            <List
+              subheader={
+                <ListItemText
+                  primary={t("nav.switchWorkspace")}
+                  primaryTypographyProps={{ variant: "overline", color: "text.secondary" }}
+                />
+              }
             >
+              {workspaces.map((ws) => (
+                <ListItemButton key={ws} onClick={() => go(workspaceHome[ws])}>
+                  <ListItemText primary={t(workspaceLabelKey[ws])} />
+                </ListItemButton>
+              ))}
+            </List>
+          ) : (
+            <List
+              subheader={
+                <ListItemText
+                  primary={t("auth.signIn")}
+                  primaryTypographyProps={{ variant: "overline", color: "text.secondary" }}
+                />
+              }
+            >
+              <ListItemButton onClick={chooseCustomer}>
+                <ListItemText primary={t("auth.customer.title")} secondary={t("auth.customer.description")} />
+              </ListItemButton>
+              <ListItemButton onClick={chooseProvider}>
+                <ListItemText primary={t("auth.provider.title")} secondary={t("auth.provider.description")} />
+              </ListItemButton>
+              <ListItemButton onClick={chooseRequestService}>
+                <ListItemText primary={t("public.hero.requestService")} />
+              </ListItemButton>
+            </List>
+          )}
+          <List
+            subheader={
               <ListItemText
-                primary={isAuthenticated ? t("public.nav.workspace") : t("public.hero.requestService")}
+                primary={t("nav.section.settings")}
+                primaryTypographyProps={{ variant: "overline", color: "text.secondary" }}
               />
-            </ListItemButton>
+            }
+          >
             <ListItemButton
               onClick={() => {
                 changeAppLocale(locale === "fa-IR" ? "en-US" : "fa-IR");
@@ -315,9 +368,6 @@ export function PublicHeader() {
               <ListItemText primary={locale === "fa-IR" ? t("locale.en") : t("locale.fa")} />
             </ListItemButton>
           </List>
-          <Button fullWidth onClick={() => setOpen(false)}>
-            {t("public.nav.closeMenu")}
-          </Button>
         </Box>
       </Drawer>
     </AppBar>

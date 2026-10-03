@@ -94,6 +94,7 @@ export function ProviderRequestInboxPage() {
         <EmptyState
           title={t("provider.requests.emptyTitle")}
           body={t("provider.requests.emptyBody")}
+          illustration="search"
           action={
             <Button component={RouterLink} to="/provider/dashboard" variant="contained">
               {t("provider.requests.backToDashboard")}
@@ -102,7 +103,7 @@ export function ProviderRequestInboxPage() {
         />
       ) : null}
       {!isPending && !isError && data && data.length > 0 && items.length === 0 ? (
-        <EmptyState title={t("provider.requests.filterEmpty")} />
+        <EmptyState title={t("provider.requests.filterEmpty")} illustration="search" />
       ) : null}
       {items.length > 0 ? (
         <Stack spacing={2}>

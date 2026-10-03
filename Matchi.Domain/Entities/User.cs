@@ -24,6 +24,10 @@ public class User : AuditableEntity
 
     public ICollection<UserRole> UserRoles { get; private set; } = new List<UserRole>();
 
+    public string? PreferredWorkspace { get; private set; }
+
+    public string? LastWorkspace { get; private set; }
+
     private User()
     {
     }
@@ -43,6 +47,18 @@ public class User : AuditableEntity
     public void UpdateProfile(string? name)
     {
         Name = name;
+        SetUpdated();
+    }
+
+    public void SetPreferredWorkspace(string? workspace)
+    {
+        PreferredWorkspace = workspace;
+        SetUpdated();
+    }
+
+    public void SetLastWorkspace(string? workspace)
+    {
+        LastWorkspace = workspace;
         SetUpdated();
     }
 }

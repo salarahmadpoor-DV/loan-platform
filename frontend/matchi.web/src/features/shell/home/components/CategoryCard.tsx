@@ -2,14 +2,31 @@ import { Box, CardActionArea, Stack, Typography } from "@mui/material";
 import { matchiShadows } from "../../../../app/designTokens";
 import type { HomeCategoryView } from "../../../../shared/mocks/homeMocks";
 import { AppCard } from "../../../../shared/ui/AppCard";
+import { categoryGlyph } from "./categoryGlyph";
 
 type CategoryCardProps = {
   category: HomeCategoryView;
   onSelect: (category: HomeCategoryView) => void;
 };
 
+const ICON_TONES = [
+  { bgcolor: "rgba(37, 99, 235, 0.10)", color: "primary.dark" },
+  { bgcolor: "rgba(13, 148, 136, 0.12)", color: "success.dark" },
+  { bgcolor: "rgba(217, 119, 6, 0.12)", color: "warning.dark" },
+  { bgcolor: "rgba(2, 132, 199, 0.12)", color: "info.dark" },
+] as const;
+
+function iconTone(id: string) {
+  let hash = 0;
+  for (const char of id) {
+    hash = (hash + char.charCodeAt(0)) % ICON_TONES.length;
+  }
+  return ICON_TONES[hash] ?? ICON_TONES[0];
+}
+
 export function CategoryCard({ category, onSelect }: CategoryCardProps) {
-  const initial = category.title.trim().charAt(0) || "•";
+  const Glyph = categoryGlyph(category.id, category.title);
+  const tone = iconTone(category.id);
 
   return (
     <AppCard
@@ -45,16 +62,15 @@ export function CategoryCard({ category, onSelect }: CategoryCardProps) {
             sx={{
               width: 44,
               height: 44,
-              borderRadius: 1,
-              bgcolor: "secondary.light",
-              color: "secondary.dark",
+              borderRadius: 1.5,
+              bgcolor: tone.bgcolor,
+              color: tone.color,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              typography: "subtitle1",
             }}
           >
-            {initial}
+            <Glyph sx={{ fontSize: 22 }} aria-hidden />
           </Box>
           <Typography variant="subtitle1" component="h3">
             {category.title}

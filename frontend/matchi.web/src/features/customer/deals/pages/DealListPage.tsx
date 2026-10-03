@@ -30,7 +30,7 @@ export function DealListPage() {
         </Stack>
       ) : null}
       {!isPending && !isError && data?.length === 0 ? (
-        <EmptyState title={t("deal.list.emptyTitle")} body={t("deal.list.emptyBody")} />
+        <EmptyState title={t("deal.list.emptyTitle")} body={t("deal.list.emptyBody")} illustration="deals" />
       ) : null}
       {data && data.length > 0 ? (
         <Stack spacing={2}>

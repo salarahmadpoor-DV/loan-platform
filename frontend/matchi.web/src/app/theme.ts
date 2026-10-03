@@ -2,6 +2,7 @@ import { enUS, faIR } from "@mui/material/locale";
 import { createTheme } from "@mui/material/styles";
 import { DEFAULT_LOCALE, isRtlLocale, type Locale } from "../shared/i18n";
 import { matchiColors, matchiRadius, matchiShadows } from "./designTokens";
+import { noflipFlexRow } from "../shared/ui/noflipFlex";
 
 const FONT_FAMILY =
   '"Vazirmatn", "Tahoma", "Segoe UI", "Roboto", "Helvetica", "Arial", sans-serif';
@@ -60,6 +61,10 @@ export function createAppTheme(locale: Locale = DEFAULT_LOCALE) {
         secondary: matchiColors.mutedText,
       },
       divider: matchiColors.border,
+      action: {
+        selected: "rgba(37, 99, 235, 0.10)",
+        hover: "rgba(37, 99, 235, 0.06)",
+      },
     },
     typography: {
       fontFamily: FONT_FAMILY,
@@ -201,8 +206,12 @@ export function createAppTheme(locale: Locale = DEFAULT_LOCALE) {
           root: {
             minHeight: 44,
             borderRadius: matchiRadius.sm,
-            marginInline: 8,
           },
+        },
+      },
+      MuiBottomNavigation: {
+        styleOverrides: {
+          root: [noflipFlexRow],
         },
       },
       MuiToolbar: {

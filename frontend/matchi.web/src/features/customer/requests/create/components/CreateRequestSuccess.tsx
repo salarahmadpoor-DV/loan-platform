@@ -2,6 +2,7 @@ import { Box, Button, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { t } from "../../../../../shared/i18n";
 import { AppCard } from "../../../../../shared/ui/AppCard";
+import { CheckOutlined } from "../../../../../shared/ui/icons";
 
 type CreateRequestSuccessProps = {
   requestId: number;
@@ -22,11 +23,9 @@ export function CreateRequestSuccess({ requestId, onCreateAnother }: CreateReque
             color: "success.contrastText",
             display: "grid",
             placeItems: "center",
-            fontSize: 28,
-            fontWeight: 700,
           }}
         >
-          ✓
+          <CheckOutlined sx={{ fontSize: 32 }} aria-hidden />
         </Box>
         <Stack spacing={1}>
           <Typography variant="h4" component="h1">

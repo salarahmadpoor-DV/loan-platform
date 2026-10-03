@@ -26,6 +26,12 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasDefaultValue(false);
 
+        builder.Property(x => x.PreferredWorkspace)
+            .HasMaxLength(20);
+
+        builder.Property(x => x.LastWorkspace)
+            .HasMaxLength(20);
+
         builder.HasIndex(x => x.Mobile)
             .IsUnique()
             .HasFilter("([IsDeleted]=(0))")

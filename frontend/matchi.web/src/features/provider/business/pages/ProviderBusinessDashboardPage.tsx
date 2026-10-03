@@ -29,24 +29,26 @@ function DashboardBody({ business }: { business: MyBusinessProfile }) {
               {business.description}
             </Typography>
           ) : null}
-          <Typography variant="body2">{t("provider.business.rating", { rating: business.rating })}</Typography>
-          <Typography variant="body2">{t("provider.business.reviews", { count: business.reviewCount })}</Typography>
-          <Typography variant="body2">
+          <Typography variant="body2" color="text.secondary">
+            {t("provider.business.rating", { rating: business.rating })}
+            {" · "}
+            {t("provider.business.reviews", { count: business.reviewCount })}
+            {" · "}
             {t("provider.business.completedJobs", { count: business.completedJobCount })}
           </Typography>
+          {team.data ? (
+            <Typography variant="caption" color="text.secondary">
+              {t("provider.business.memberCount", { count: members.length })}
+              {" · "}
+              {t("provider.business.activeCount", { count: activeCount })}
+              {" · "}
+              {t("provider.business.pendingCount", { count: pendingCount })}
+            </Typography>
+          ) : null}
         </Stack>
       </AppCard>
       {team.isPending ? <LoadingState /> : null}
       {team.isError ? <ErrorAlert error={team.error} /> : null}
-      {team.data ? (
-        <AppCard>
-          <Stack spacing={0.75}>
-            <Typography variant="body2">{t("provider.business.memberCount", { count: members.length })}</Typography>
-            <Typography variant="body2">{t("provider.business.activeCount", { count: activeCount })}</Typography>
-            <Typography variant="body2">{t("provider.business.pendingCount", { count: pendingCount })}</Typography>
-          </Stack>
-        </AppCard>
-      ) : null}
       {!team.isPending && !team.isError && members.length === 0 ? (
         <EmptyState title={t("provider.business.emptyTeam")} />
       ) : null}
@@ -60,7 +62,7 @@ export function ProviderBusinessDashboardPage() {
       title={t("provider.business.dashboardTitle")}
       description={t("provider.business.dashboardDescription")}
       action={
-        <Button component={RouterLink} to="/provider/business/create" variant="outlined">
+        <Button component={RouterLink} to="/provider/business/create" variant="contained">
           {t("provider.business.create")}
         </Button>
       }

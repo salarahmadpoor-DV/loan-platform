@@ -2,154 +2,208 @@ import { Box, Button, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../../../../shared/auth/AuthProvider";
 import { t } from "../../../../shared/i18n";
-import { REQUEST_KINDS } from "../../../../shared/types/marketplace";
-import { AppCard } from "../../../../shared/ui/AppCard";
 import { EmptyState } from "../../../../shared/ui/EmptyState";
 import { ErrorAlert } from "../../../../shared/ui/ErrorAlert";
 import { LoadingState } from "../../../../shared/ui/LoadingState";
-import { PageHeader } from "../../../../shared/ui/PageHeader";
-import { StatusChip } from "../../../../shared/ui/StatusChip";
-import { isRequestKind, requestKindLabel } from "../../requests/api/requestTypes";
+import { ItemActions } from "../../../../shared/ui/OverflowActions";
+import { SectionHeader } from "../../../../shared/ui/SectionHeader";
+import { RequestStatusChip } from "../../requests/components/RequestStatusChip";
+import { Add } from "../../../../shared/ui/icons";
+import { useMyDeals } from "../../deals/hooks/useMyDeals";
 import { useMyRequests } from "../../requests/hooks/useMyRequests";
 import { isRequestOpen } from "../../requests/model/requestPresentation";
 
 export function CustomerDashboardPage() {
   const { user } = useAuth();
-  const { data, isPending, isError, error } = useMyRequests();
-  const requests = data ?? [];
+  const requestsQuery = useMyRequests();
+  const dealsQuery = useMyDeals();
+  const requests = requestsQuery.data ?? [];
+  const deals = dealsQuery.data ?? [];
   const openRequests = requests.filter((item) => isRequestOpen(item.status));
-  const openCount = openRequests.length;
-  const focusRequest = openRequests[0];
+  const activeDeals = deals.filter((item) => item.status.toLowerCase() === "active");
+  const recent = requests.slice(0, 5);
+  const isPending = requestsQuery.isPending || dealsQuery.isPending;
+  const isError = requestsQuery.isError;
+  const error = requestsQuery.error;
 
   return (
-    <>
-      <PageHeader title={t("dashboard.title")} />
-
-      <AppCard>
-        <Typography variant="h6">
+    <Stack spacing={{ xs: 2.5, md: 3 }}>
+      <Stack spacing={0.75}>
+        <Typography variant="h4" component="h1">
           {t("dashboard.welcome", { mobile: user?.mobile ? `، ${user.mobile}` : "" })}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+        <Typography variant="body2" color="text.secondary">
           {t("dashboard.intro")}
         </Typography>
-        <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: "wrap" }} useFlexGap>
-          {REQUEST_KINDS.map((kind) => (
-            <StatusChip key={kind} label={requestKindLabel(kind)} />
-          ))}
-        </Stack>
         <Button
           component={RouterLink}
           to="/customer/requests/create"
           variant="contained"
-          sx={{ mt: 2, width: { xs: "100%", sm: "auto" } }}
+          size="large"
+          startIcon={<Add />}
+          sx={{ minHeight: 48, alignSelf: { xs: "stretch", sm: "flex-start" }, fontWeight: 700, mt: 0.5 }}
         >
-          {t("request.list.create")}
+          {t("request.create.new")}
         </Button>
-      </AppCard>
-
-      <Typography variant="subtitle1" sx={{ mt: 3, mb: 1 }}>
-        {t("dashboard.summary")}
-      </Typography>
+      </Stack>
 
       {isPending ? <LoadingState label={t("dashboard.loading")} /> : null}
       {isError ? <ErrorAlert error={error} /> : null}
 
-      {!isPending && !isError && requests.length === 0 ? (
-        <EmptyState
-          title={t("dashboard.emptyTitle")}
-          body={t("dashboard.emptyBody")}
-          action={
-            <Button component={RouterLink} to="/customer/requests/create" variant="outlined">
-              {t("request.list.create")}
-            </Button>
-          }
-        />
+      {!isPending && !isError && requests.length === 0 && activeDeals.length === 0 ? (
+        <EmptyState title={t("dashboard.emptyTitle")} body={t("dashboard.emptyBody")} illustration="requests" />
       ) : null}
 
-      {requests.length > 0 ? (
-        <Box
-          sx={{
-            display: "grid",
-            gap: 2,
-            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", lg: "1fr 1fr 1fr" },
-          }}
-        >
-          <SummaryCard label={t("dashboard.allRequests")} value={requests.length} />
-          <SummaryCard label={t("dashboard.open")} value={openCount} />
-          {REQUEST_KINDS.map((kind) => (
-            <SummaryCard
-              key={kind}
-              label={requestKindLabel(kind)}
-              value={
-                requests.filter((item) => isRequestKind(item.requestType) && item.requestType === kind)
-                  .length
-              }
-            />
-          ))}
-        </Box>
-      ) : null}
-
-      <Typography variant="subtitle1" sx={{ mt: 3, mb: 1 }}>
-        {t("dashboard.next")}
-      </Typography>
-      <AppCard>
-        <Typography variant="subtitle1">{t("dashboard.nextTitle")}</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-          {t("dashboard.nextBody")}
-        </Typography>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 2, flexWrap: "wrap" }} useFlexGap>
-          {focusRequest ? (
-            <>
-              <Button
-                component={RouterLink}
-                to={`/customer/requests/${focusRequest.id}/matches`}
-                variant="contained"
-                sx={{ minHeight: 48 }}
-              >
-                {t("dashboard.nextMatching")}
-              </Button>
-              <Button
-                component={RouterLink}
-                to={`/customer/requests/${focusRequest.id}/proposals`}
-                variant="outlined"
-                sx={{ minHeight: 48 }}
-              >
-                {t("dashboard.nextProposals")}
-              </Button>
-            </>
-          ) : (
-            <Button
-              component={RouterLink}
-              to="/customer/requests/create"
-              variant="contained"
-              sx={{ minHeight: 48 }}
-            >
-              {t("request.list.create")}
-            </Button>
-          )}
-          <Button
-            component={RouterLink}
-            to="/customer/deals"
-            variant="outlined"
-            sx={{ minHeight: 48 }}
+      {!isPending && !isError && (openRequests.length > 0 || activeDeals.length > 0) ? (
+        <Stack spacing={1.25}>
+          <SectionHeader compact title={t("dashboard.attention")} />
+          <Box
+            sx={{
+              bgcolor: "background.paper",
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 2,
+            }}
           >
-            {t("dashboard.nextDeals")}
-          </Button>
+            {openRequests.map((item, index) => (
+              <Box
+                key={`req-${item.id}`}
+                sx={{
+                  px: 1.5,
+                  py: 1.25,
+                  borderTop: index === 0 ? 0 : 1,
+                  borderColor: "divider",
+                }}
+              >
+                <Stack spacing={1}>
+                  <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                      <Typography variant="body2" fontWeight={600} noWrap>
+                        {item.title}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {t("dashboard.attentionOpen")}
+                      </Typography>
+                    </Box>
+                    <RequestStatusChip status={item.status} />
+                  </Stack>
+                  <ItemActions
+                    primary={
+                      <Button
+                        component={RouterLink}
+                        to={`/customer/requests/${item.id}`}
+                        size="small"
+                        variant="contained"
+                        sx={{ minHeight: 40 }}
+                      >
+                        {t("request.card.view")}
+                      </Button>
+                    }
+                    items={[
+                      {
+                        key: "matches",
+                        label: t("dashboard.nextMatching"),
+                        to: `/customer/requests/${item.id}/matches`,
+                      },
+                      {
+                        key: "proposals",
+                        label: t("dashboard.nextProposals"),
+                        to: `/customer/requests/${item.id}/proposals`,
+                      },
+                    ]}
+                  />
+                </Stack>
+              </Box>
+            ))}
+            {activeDeals.map((deal) => (
+              <Box
+                key={`deal-${deal.id}`}
+                sx={{
+                  px: 1.5,
+                  py: 1.25,
+                  borderTop: 1,
+                  borderColor: "divider",
+                }}
+              >
+                <Stack spacing={1}>
+                  <Box>
+                    <Typography variant="body2" fontWeight={600}>
+                      {t("deal.requestRef", { id: deal.requestId })}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {t("dashboard.attentionDeal")}
+                    </Typography>
+                  </Box>
+                  <ItemActions
+                    primary={
+                      <Button
+                        component={RouterLink}
+                        to={`/customer/deals/${deal.id}`}
+                        size="small"
+                        variant="contained"
+                        sx={{ minHeight: 40 }}
+                      >
+                        {t("deal.view")}
+                      </Button>
+                    }
+                  />
+                </Stack>
+              </Box>
+            ))}
+          </Box>
         </Stack>
-      </AppCard>
-    </>
-  );
-}
+      ) : null}
 
-function SummaryCard({ label, value }: { label: string; value: number }) {
-  return (
-    <AppCard>
-      <Typography variant="body2" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography variant="h5" sx={{ mt: 0.5 }}>
-        {value}
-      </Typography>
-    </AppCard>
+      {!isPending && !isError && recent.length > 0 ? (
+        <Stack spacing={1.25}>
+          <SectionHeader compact title={t("dashboard.recentActivity")} />
+          <Box
+            sx={{
+              bgcolor: "background.paper",
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 2,
+            }}
+          >
+            {recent.map((item, index) => (
+              <Box
+                key={item.id}
+                sx={{
+                  px: 1.5,
+                  py: 1.25,
+                  borderTop: index === 0 ? 0 : 1,
+                  borderColor: "divider",
+                }}
+              >
+                <Stack spacing={0.5}>
+                  <Typography variant="body2" fontWeight={600} noWrap>
+                    {item.title}
+                  </Typography>
+                  <ItemActions
+                    primary={
+                      <Button
+                        component={RouterLink}
+                        to={`/customer/requests/${item.id}`}
+                        size="small"
+                        variant="outlined"
+                        sx={{ minHeight: 40 }}
+                      >
+                        {t("request.card.view")}
+                      </Button>
+                    }
+                  />
+                </Stack>
+              </Box>
+            ))}
+          </Box>
+        </Stack>
+      ) : null}
+
+      {!isPending && !isError && requests.length > 0 ? (
+        <Typography variant="caption" color="text.secondary">
+          {t("dashboard.summaryLine", { total: requests.length, open: openRequests.length })}
+        </Typography>
+      ) : null}
+    </Stack>
   );
 }

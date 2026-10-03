@@ -145,7 +145,7 @@ export function PublicHomePage() {
               </Typography>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ pt: 0.5 }}>
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   size="large"
                   onClick={() => goFind()}
                   sx={{ width: { xs: "100%", sm: "auto" } }}
@@ -180,7 +180,7 @@ export function PublicHomePage() {
               <ErrorAlert error={categories.error} />
             ) : null}
             {!categories.isPending && categories.items.length === 0 ? (
-              <EmptyState title={t("public.categories.empty")} />
+              <EmptyState title={t("public.categories.empty")} illustration="search" />
             ) : null}
             {categories.items.length > 0 ? (
               <CategoryGrid categories={categories.items} onSelect={selectCategory} />

@@ -1,3 +1,4 @@
+import { Box } from "@mui/material";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../../shared/auth/AuthProvider";
 import { useWorkspaceAccess } from "../../../shared/auth/useWorkspaceAccess";
@@ -22,12 +23,14 @@ export function LoginPage() {
   }
 
   return (
-    <AppCard>
-      <OtpLoginForm
-        title={t("auth.loginTitle")}
-        description={t("auth.loginDescription")}
-        onLoggedIn={() => navigate(nextPath ?? "/app", { replace: true })}
-      />
-    </AppCard>
+    <Box sx={{ maxWidth: 440, mx: "auto" }}>
+      <AppCard>
+        <OtpLoginForm
+          title={t("auth.loginTitle")}
+          description={t("auth.loginDescription")}
+          onLoggedIn={() => navigate(nextPath ?? "/app", { replace: true })}
+        />
+      </AppCard>
+    </Box>
   );
 }

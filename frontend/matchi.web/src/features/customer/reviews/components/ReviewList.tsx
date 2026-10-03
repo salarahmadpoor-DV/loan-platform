@@ -38,7 +38,7 @@ export function ReviewList({ target }: ReviewListProps) {
         </Stack>
       ) : null}
       {!isPending && !isError && (data?.length ?? 0) === 0 ? (
-        <EmptyState title={t("review.list.empty")} body={t("review.list.emptyBody")} />
+        <EmptyState title={t("review.list.empty")} body={t("review.list.emptyBody")} illustration="reviews" />
       ) : null}
       {data && data.length > 0 ? (
         <Stack spacing={1}>

@@ -1,6 +1,7 @@
-import { Button, Stack, Typography } from "@mui/material";
+import { Box, Stack, Typography } from "@mui/material";
 import { t } from "../../../../shared/i18n";
 import { AppCard } from "../../../../shared/ui/AppCard";
+import { OverflowActions } from "../../../../shared/ui/OverflowActions";
 import { StatusChip } from "../../../../shared/ui/StatusChip";
 import type { BusinessMembership } from "../api/ownedBusinessApi";
 
@@ -47,16 +48,19 @@ export function MembershipCard({ membership, onRemove, removing }: MembershipCar
           </Typography>
         ) : null}
         {onRemove ? (
-          <Button
-            color="error"
-            variant="outlined"
-            size="small"
-            disabled={removing}
-            onClick={() => onRemove(membership.providerId)}
-            sx={{ alignSelf: "flex-start", minHeight: 40 }}
-          >
-            {t("provider.business.remove")}
-          </Button>
+          <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+            <OverflowActions
+              items={[
+                {
+                  key: "remove",
+                  label: t("provider.business.remove"),
+                  destructive: true,
+                  disabled: removing,
+                  onClick: () => onRemove(membership.providerId),
+                },
+              ]}
+            />
+          </Box>
         ) : null}
       </Stack>
     </AppCard>

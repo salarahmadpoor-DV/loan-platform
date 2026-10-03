@@ -26,6 +26,7 @@ namespace Matchi.Api.Controllers
 
         public record UpdateUserRequest(string? Name, UserLocationDto? Location);
         public record UserLocationDto(double Lat, double Lng, string? Address);
+        public record WorkspacePreferenceRequest(string Workspace);
 
         [HttpGet("me")]
         [Authorize]
@@ -55,6 +56,47 @@ namespace Matchi.Api.Controllers
                 return NotFound();
 
             return Ok(new { success = true });
+        }
+
+        [HttpGet("me/workspace")]
+        [Authorize]
+        public async Task<IActionResult> GetWorkspace(CancellationToken cancellationToken = default)
+        {
+            if (_currentUserService.UserId is null)
+                return Unauthorized();
+
+            var state = await _mediator.Send(new GetMyWorkspaceStateQuery(), cancellationToken);
+            return Ok(state);
+        }
+
+        [HttpPut("me/workspace-preference")]
+        [Authorize]
+        public async Task<IActionResult> SetPreferredWorkspace(
+            [FromBody] WorkspacePreferenceRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            if (_currentUserService.UserId is null)
+                return Unauthorized();
+
+            var state = await _mediator.Send(
+                new SetPreferredWorkspaceCommand(request.Workspace),
+                cancellationToken);
+            return Ok(state);
+        }
+
+        [HttpPut("me/workspace-last")]
+        [Authorize]
+        public async Task<IActionResult> SetLastWorkspace(
+            [FromBody] WorkspacePreferenceRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            if (_currentUserService.UserId is null)
+                return Unauthorized();
+
+            var state = await _mediator.Send(
+                new SetLastWorkspaceCommand(request.Workspace),
+                cancellationToken);
+            return Ok(state);
         }
     }
 }

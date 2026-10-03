@@ -1,6 +1,6 @@
 import { Chip, type ChipProps } from "@mui/material";
 
-export type StatusTone = "neutral" | "pending" | "success" | "danger" | "info" | "primary";
+export type StatusTone = "neutral" | "pending" | "success" | "danger" | "info" | "primary" | "inProgress";
 
 type StatusChipProps = {
   label: string;
@@ -14,6 +14,7 @@ const TONE_COLOR: Record<StatusTone, ChipProps["color"]> = {
   danger: "error",
   info: "info",
   primary: "primary",
+  inProgress: "warning",
 };
 
 export function StatusChip({ label, tone = "neutral" }: StatusChipProps) {
@@ -22,7 +23,7 @@ export function StatusChip({ label, tone = "neutral" }: StatusChipProps) {
       size="small"
       label={label}
       color={TONE_COLOR[tone]}
-      sx={{ fontWeight: 600 }}
+      sx={{ fontWeight: 500 }}
     />
   );
 }

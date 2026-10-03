@@ -1,4 +1,5 @@
 using Matchi.Application.Features.Providers;
+using Matchi.Application.Notifications;
 using Matchi.Domain.Interfaces;
 using MediatR;
 using Matchi.Application.Common.Interfaces;
@@ -11,26 +12,40 @@ public sealed class InviteProviderCommandHandler : IRequestHandler<InviteProvide
     private readonly IBusinessRepository _businesses;
     private readonly IUserRepository _users;
     private readonly IProviderRepository _providers;
+    private readonly INotificationService _notifications;
 
     public InviteProviderCommandHandler(
         ICurrentUserService currentUserService,
         IBusinessRepository businesses,
         IUserRepository users,
-        IProviderRepository providers)
+        IProviderRepository providers,
+        INotificationService notifications)
     {
         _currentUserService = currentUserService;
         _businesses = businesses;
         _users = users;
         _providers = providers;
+        _notifications = notifications;
     }
 
     public async Task<long> Handle(InviteProviderCommand request, CancellationToken cancellationToken)
     {
         var providerId = await ResolveProviderIdAsync(request, cancellationToken);
         var handler = new AddBusinessProviderCommandHandler(_currentUserService, _businesses);
-        return await handler.Handle(
+        var membershipId = await handler.Handle(
             new AddBusinessProviderCommand(request.BusinessId, providerId, request.Role, "Pending"),
             cancellationToken);
+
+        var provider = await _providers.GetByIdAsync(providerId, cancellationToken);
+        if (provider is not null)
+        {
+            await _notifications.NotifyAsync(
+                provider.UserId,
+                NotificationCatalog.InvitationReceived(membershipId),
+                cancellationToken);
+        }
+
+        return membershipId;
     }
 
     private async Task<long> ResolveProviderIdAsync(

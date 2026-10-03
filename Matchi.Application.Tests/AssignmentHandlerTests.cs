@@ -24,7 +24,9 @@ public sealed class ExecutionAssignmentCommandTests
         var handler = new CreateExecutionAssignmentCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.BusinessOwnerUserId),
             executions,
-            assignments);
+            assignments,
+            new FakeProviderRepository(),
+            TestNotifications.Service());
 
         var id = await handler.Handle(
             new CreateExecutionAssignmentCommand(3, 44, "Technician", false),
@@ -40,7 +42,9 @@ public sealed class ExecutionAssignmentCommandTests
         var handler = new CreateExecutionAssignmentCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.OtherUserId),
             new FakeServiceExecutionRepository(),
-            new FakeExecutionAssignmentRepository());
+            new FakeExecutionAssignmentRepository(),
+            new FakeProviderRepository(),
+            TestNotifications.Service());
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             handler.Handle(new CreateExecutionAssignmentCommand(3, 44, "Technician"), CancellationToken.None));
@@ -55,7 +59,9 @@ public sealed class ExecutionAssignmentCommandTests
         var handler = new CreateExecutionAssignmentCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.ProviderUserId),
             new FakeServiceExecutionRepository { Tracked = execution },
-            new FakeExecutionAssignmentRepository());
+            new FakeExecutionAssignmentRepository(),
+            new FakeProviderRepository(),
+            TestNotifications.Service());
 
         await Assert.ThrowsAsync<ValidationException>(() =>
             handler.Handle(new CreateExecutionAssignmentCommand(3, 44, "Technician"), CancellationToken.None));
@@ -67,7 +73,9 @@ public sealed class ExecutionAssignmentCommandTests
         var handler = new CreateExecutionAssignmentCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.BusinessOwnerUserId),
             new FakeServiceExecutionRepository { Tracked = BusinessExecution() },
-            new FakeExecutionAssignmentRepository { HasMembership = false });
+            new FakeExecutionAssignmentRepository { HasMembership = false },
+            new FakeProviderRepository(),
+            TestNotifications.Service());
 
         await Assert.ThrowsAsync<ValidationException>(() =>
             handler.Handle(new CreateExecutionAssignmentCommand(3, 44, "Technician"), CancellationToken.None));
@@ -79,7 +87,9 @@ public sealed class ExecutionAssignmentCommandTests
         var handler = new CreateExecutionAssignmentCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.BusinessOwnerUserId),
             new FakeServiceExecutionRepository { Tracked = BusinessExecution() },
-            new FakeExecutionAssignmentRepository { HasPrimary = true });
+            new FakeExecutionAssignmentRepository { HasPrimary = true },
+            new FakeProviderRepository(),
+            TestNotifications.Service());
 
         await Assert.ThrowsAsync<ValidationException>(() =>
             handler.Handle(new CreateExecutionAssignmentCommand(3, 44, "Technician", true), CancellationToken.None));
@@ -91,7 +101,9 @@ public sealed class ExecutionAssignmentCommandTests
         var handler = new CreateExecutionAssignmentCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.BusinessOwnerUserId),
             new FakeServiceExecutionRepository { Tracked = BusinessExecution() },
-            new FakeExecutionAssignmentRepository { HasAssignedProvider = true });
+            new FakeExecutionAssignmentRepository { HasAssignedProvider = true },
+            new FakeProviderRepository(),
+            TestNotifications.Service());
 
         await Assert.ThrowsAsync<ConflictException>(() =>
             handler.Handle(new CreateExecutionAssignmentCommand(3, 44, "Technician"), CancellationToken.None));
@@ -108,7 +120,9 @@ public sealed class ExecutionAssignmentCommandTests
         var handler = new CreateExecutionAssignmentCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.BusinessOwnerUserId),
             new FakeServiceExecutionRepository { Tracked = BusinessExecution() },
-            assignments);
+            assignments,
+            new FakeProviderRepository(),
+            TestNotifications.Service());
 
         var id = await handler.Handle(
             new CreateExecutionAssignmentCommand(3, 44, "Technician"),
@@ -128,7 +142,9 @@ public sealed class ExecutionAssignmentCommandTests
             {
                 HasPrimary = false,
                 SaveException = new ConflictException("A primary assignment already exists.")
-            });
+            },
+            new FakeProviderRepository(),
+            TestNotifications.Service());
 
         await Assert.ThrowsAsync<ConflictException>(() =>
             handler.Handle(new CreateExecutionAssignmentCommand(3, 44, "Technician", true), CancellationToken.None));

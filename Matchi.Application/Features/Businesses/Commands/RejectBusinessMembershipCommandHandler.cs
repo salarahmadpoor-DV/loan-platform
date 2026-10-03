@@ -1,5 +1,6 @@
 using Matchi.Application.Common.Interfaces;
 using Matchi.Application.Features.Providers;
+using Matchi.Application.Notifications;
 using Matchi.Domain.Interfaces;
 using MediatR;
 
@@ -9,13 +10,16 @@ public sealed class RejectBusinessMembershipCommandHandler : IRequestHandler<Rej
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IBusinessRepository _businesses;
+    private readonly INotificationService _notifications;
 
     public RejectBusinessMembershipCommandHandler(
         ICurrentUserService currentUserService,
-        IBusinessRepository businesses)
+        IBusinessRepository businesses,
+        INotificationService notifications)
     {
         _currentUserService = currentUserService;
         _businesses = businesses;
+        _notifications = notifications;
     }
 
     public async Task<bool> Handle(RejectBusinessMembershipCommand request, CancellationToken cancellationToken)
@@ -30,6 +34,10 @@ public sealed class RejectBusinessMembershipCommandHandler : IRequestHandler<Rej
 
         membership.Reject();
         await _businesses.UpdateAsync(cancellationToken);
+        await _notifications.NotifyAsync(
+            membership.Business.OwnerUserId,
+            NotificationCatalog.InvitationRejected(membership.Id),
+            cancellationToken);
         return true;
     }
 }

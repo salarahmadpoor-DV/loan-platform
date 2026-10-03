@@ -2,6 +2,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using Matchi.Application.Common.Interfaces;
 using Matchi.Application.Features.Providers;
+using Matchi.Application.Notifications;
 using Matchi.Domain.Entities;
 using Matchi.Domain.Interfaces;
 using MediatR;
@@ -17,15 +18,21 @@ public sealed class AcceptProposalCommandHandler : IRequestHandler<AcceptProposa
     private readonly ICurrentUserService _currentUserService;
     private readonly IProposalRepository _proposalRepository;
     private readonly IDealRepository _dealRepository;
+    private readonly INotificationService _notifications;
+    private readonly NotificationRecipientResolver _recipients;
 
     public AcceptProposalCommandHandler(
         ICurrentUserService currentUserService,
         IProposalRepository proposalRepository,
-        IDealRepository dealRepository)
+        IDealRepository dealRepository,
+        INotificationService notifications,
+        NotificationRecipientResolver recipients)
     {
         _currentUserService = currentUserService;
         _proposalRepository = proposalRepository;
         _dealRepository = dealRepository;
+        _notifications = notifications;
+        _recipients = recipients;
     }
 
     public async Task<AcceptProposalResult> Handle(
@@ -77,6 +84,15 @@ public sealed class AcceptProposalCommandHandler : IRequestHandler<AcceptProposa
 
         _dealRepository.Add(deal);
         await _dealRepository.SaveChangesAsync(cancellationToken);
+
+        var originator = await _recipients.ProposalOriginatorUserIdAsync(proposal, cancellationToken);
+        if (originator is > 0)
+        {
+            await _notifications.NotifyAsync(
+                originator.Value,
+                NotificationCatalog.ProposalAccepted(deal.Id),
+                cancellationToken);
+        }
 
         return new AcceptProposalResult(proposal.Id, proposal.Status, deal.Id);
     }

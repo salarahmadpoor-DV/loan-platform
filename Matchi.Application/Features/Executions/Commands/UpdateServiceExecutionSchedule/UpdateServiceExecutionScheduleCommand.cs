@@ -2,6 +2,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using Matchi.Application.Common.Interfaces;
 using Matchi.Application.Features.Providers;
+using Matchi.Application.Notifications;
 using Matchi.Domain.Interfaces;
 using MediatR;
 
@@ -30,13 +31,19 @@ public sealed class UpdateServiceExecutionScheduleCommandHandler
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IServiceExecutionRepository _executions;
+    private readonly INotificationService _notifications;
+    private readonly NotificationRecipientResolver _recipients;
 
     public UpdateServiceExecutionScheduleCommandHandler(
         ICurrentUserService currentUserService,
-        IServiceExecutionRepository executions)
+        IServiceExecutionRepository executions,
+        INotificationService notifications,
+        NotificationRecipientResolver recipients)
     {
         _currentUserService = currentUserService;
         _executions = executions;
+        _notifications = notifications;
+        _recipients = recipients;
     }
 
     public async Task<bool> Handle(
@@ -65,6 +72,14 @@ public sealed class UpdateServiceExecutionScheduleCommandHandler
         }
 
         await _executions.SaveChangesAsync(cancellationToken);
+
+        var parties = await _recipients.ExecutionPartyUserIdsAsync(execution, cancellationToken);
+        await _notifications.NotifyManyAsync(
+            parties,
+            NotificationCatalog.ExecutionScheduled(execution.Id),
+            cancellationToken,
+            excludeUserId: userId);
+
         return true;
     }
 }

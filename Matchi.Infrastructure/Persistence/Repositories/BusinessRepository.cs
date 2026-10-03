@@ -253,6 +253,7 @@ public sealed class BusinessRepository : IBusinessRepository
     {
         return _context.BusinessProviders
             .Include(x => x.Provider)
+            .Include(x => x.Business)
             .FirstOrDefaultAsync(x => x.Id == membershipId && !x.IsDeleted, cancellationToken);
     }
 }

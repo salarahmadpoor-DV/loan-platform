@@ -69,6 +69,7 @@ public sealed class MatchiDbContext : DbContext
     public DbSet<Conversation> Conversations => Set<Conversation>();
     public DbSet<ConversationParticipant> ConversationParticipants => Set<ConversationParticipant>();
     public DbSet<Message> Messages => Set<Message>();
+    public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<Complaint> Complaints => Set<Complaint>();
     public DbSet<Cancellation> Cancellations => Set<Cancellation>();
 

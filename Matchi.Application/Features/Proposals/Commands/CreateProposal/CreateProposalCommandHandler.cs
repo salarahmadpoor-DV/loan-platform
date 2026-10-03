@@ -2,7 +2,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using Matchi.Application.Common.Interfaces;
 using Matchi.Application.Features.Businesses;
-using Matchi.Application.Features.Proposals;
+using Matchi.Application.Notifications;
 using Matchi.Application.Features.Providers;
 using Matchi.Domain.Entities;
 using Matchi.Domain.Interfaces;
@@ -17,19 +17,25 @@ public sealed class CreateProposalCommandHandler : IRequestHandler<CreateProposa
     private readonly IProviderRepository _providerRepository;
     private readonly IBusinessRepository _businessRepository;
     private readonly IProposalRepository _proposalRepository;
+    private readonly INotificationService _notifications;
+    private readonly NotificationRecipientResolver _recipients;
 
     public CreateProposalCommandHandler(
         ICurrentUserService currentUserService,
         IRequestRepository requestRepository,
         IProviderRepository providerRepository,
         IBusinessRepository businessRepository,
-        IProposalRepository proposalRepository)
+        IProposalRepository proposalRepository,
+        INotificationService notifications,
+        NotificationRecipientResolver recipients)
     {
         _currentUserService = currentUserService;
         _requestRepository = requestRepository;
         _providerRepository = providerRepository;
         _businessRepository = businessRepository;
         _proposalRepository = proposalRepository;
+        _notifications = notifications;
+        _recipients = recipients;
     }
 
     public async Task<long> Handle(CreateProposalCommand command, CancellationToken cancellationToken)
@@ -114,6 +120,16 @@ public sealed class CreateProposalCommandHandler : IRequestHandler<CreateProposa
         }
 
         await _proposalRepository.AddAsync(proposal, cancellationToken);
+
+        var customerUserId = await _recipients.CustomerUserIdAsync(request, cancellationToken);
+        if (customerUserId is > 0)
+        {
+            await _notifications.NotifyAsync(
+                customerUserId.Value,
+                NotificationCatalog.NewProposal(request.Id, proposal.Id),
+                cancellationToken);
+        }
+
         return proposal.Id;
     }
 

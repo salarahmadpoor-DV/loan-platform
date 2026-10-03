@@ -48,6 +48,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IServiceExecutionRepository, ServiceExecutionRepository>();
         services.AddScoped<IExecutionAssignmentRepository, ExecutionAssignmentRepository>();
         services.AddScoped<IReviewRepository, ReviewRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IMatchingReadRepository, MatchingReadRepository>();
         services.AddScoped<ILocationReadRepository, LocationReadRepository>();
 

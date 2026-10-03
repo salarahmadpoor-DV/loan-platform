@@ -26,7 +26,10 @@ public sealed class RequestLifecycleTests
         var handler = new CancelRequestCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.CustomerUserId),
             requests,
-            deals);
+            deals,
+            new FakeProposalRepository(),
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         var result = await handler.Handle(new CancelRequestCommand(1), CancellationToken.None);
 
@@ -45,7 +48,10 @@ public sealed class RequestLifecycleTests
         var handler = new CancelRequestCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.CustomerUserId),
             requests,
-            new FakeDealRepository { HasActiveDeal = true });
+            new FakeDealRepository { HasActiveDeal = true },
+            new FakeProposalRepository(),
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         var ex = await Assert.ThrowsAsync<ConflictException>(() =>
             handler.Handle(new CancelRequestCommand(1), CancellationToken.None));
@@ -104,7 +110,10 @@ public sealed class RequestLifecycleTests
         var handler = new CancelRequestCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.OtherUserId),
             new FakeRequestRepository(),
-            deals);
+            deals,
+            new FakeProposalRepository(),
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             handler.Handle(new CancelRequestCommand(1), CancellationToken.None));
@@ -133,7 +142,10 @@ public sealed class RequestLifecycleTests
         var handler = new CancelRequestCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.CustomerUserId),
             new FakeRequestRepository { Owned = request },
-            new FakeDealRepository { HasActiveDeal = true, ThrowIfActiveDealQueried = true });
+            new FakeDealRepository { HasActiveDeal = true, ThrowIfActiveDealQueried = true },
+            new FakeProposalRepository(),
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         await Assert.ThrowsAsync<ValidationException>(() =>
             handler.Handle(new CancelRequestCommand(1), CancellationToken.None));
@@ -166,7 +178,9 @@ public sealed class AcceptProposalLifecycleTests
         var handler = new AcceptProposalCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.CustomerUserId),
             proposals,
-            deals);
+            deals,
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         var firstResult = await handler.Handle(new AcceptProposalCommand(11), CancellationToken.None);
         var secondResult = await handler.Handle(new AcceptProposalCommand(12), CancellationToken.None);
@@ -193,7 +207,9 @@ public sealed class AcceptProposalLifecycleTests
         var handler = new AcceptProposalCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.CustomerUserId),
             new FakeProposalRepository { Tracked = proposal },
-            deals);
+            deals,
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         await handler.Handle(new AcceptProposalCommand(11), CancellationToken.None);
 

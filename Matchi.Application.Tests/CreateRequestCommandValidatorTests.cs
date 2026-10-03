@@ -311,7 +311,7 @@ public sealed class CreateRequestCommandValidatorTests
         requests.ProductAttributes[(3, 201)] = new ProductAttribute(3, "برند", "ac_brand", "Select").WithId(201);
 
         var users = new StubUserRepository(new User("09120000000").WithId(5));
-        var handler = new CreateRequestCommandHandler(new FakeCurrentUser(5), users, requests);
+        var handler = new CreateRequestCommandHandler(new FakeCurrentUser(5), users, requests, TestNotifications.Service());
 
         var id = await handler.Handle(
             new CreateRequestCommand(
@@ -426,7 +426,8 @@ public sealed class CreateRequestCommandValidatorTests
         var handler = new CreateRequestCommandHandler(
             new FakeCurrentUser(5),
             new StubUserRepository(new User("09120000000").WithId(5)),
-            requests);
+            requests,
+            TestNotifications.Service());
 
         var command = new CreateRequestCommand(
             "Service",

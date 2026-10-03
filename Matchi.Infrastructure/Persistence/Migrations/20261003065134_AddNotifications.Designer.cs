@@ -4,6 +4,7 @@ using Matchi.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Matchi.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(MatchiDbContext))]
-    partial class MatchiDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261003065134_AddNotifications")]
+    partial class AddNotifications
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2838,10 +2841,6 @@ namespace Matchi.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<string>("LastWorkspace")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.Property<string>("Mobile")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -2850,10 +2849,6 @@ namespace Matchi.Infrastructure.Persistence.Migrations
                     b.Property<string>("Name")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("PreferredWorkspace")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTime?>("UpdateDate")
                         .HasColumnType("datetime2");

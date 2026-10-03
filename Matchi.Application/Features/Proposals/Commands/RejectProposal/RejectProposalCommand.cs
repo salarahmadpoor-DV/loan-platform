@@ -2,6 +2,7 @@ using FluentValidation;
 using FluentValidation.Results;
 using Matchi.Application.Common.Interfaces;
 using Matchi.Application.Features.Providers;
+using Matchi.Application.Notifications;
 using Matchi.Domain.Interfaces;
 using MediatR;
 
@@ -13,13 +14,19 @@ public sealed class RejectProposalCommandHandler : IRequestHandler<RejectProposa
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IProposalRepository _proposalRepository;
+    private readonly INotificationService _notifications;
+    private readonly NotificationRecipientResolver _recipients;
 
     public RejectProposalCommandHandler(
         ICurrentUserService currentUserService,
-        IProposalRepository proposalRepository)
+        IProposalRepository proposalRepository,
+        INotificationService notifications,
+        NotificationRecipientResolver recipients)
     {
         _currentUserService = currentUserService;
         _proposalRepository = proposalRepository;
+        _notifications = notifications;
+        _recipients = recipients;
     }
 
     public async Task<string> Handle(RejectProposalCommand command, CancellationToken cancellationToken)
@@ -43,6 +50,16 @@ public sealed class RejectProposalCommandHandler : IRequestHandler<RejectProposa
 
         proposal.Reject();
         await _proposalRepository.UpdateAsync(cancellationToken);
+
+        var originator = await _recipients.ProposalOriginatorUserIdAsync(proposal, cancellationToken);
+        if (originator is > 0)
+        {
+            await _notifications.NotifyAsync(
+                originator.Value,
+                NotificationCatalog.ProposalRejected(proposal.Id),
+                cancellationToken);
+        }
+
         return proposal.Status;
     }
 }

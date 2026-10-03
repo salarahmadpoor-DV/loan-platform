@@ -24,6 +24,8 @@ public class User : AuditableEntity
 
     public ICollection<UserRole> UserRoles { get; private set; } = new List<UserRole>();
 
+    public ICollection<Notification> Notifications { get; private set; } = new List<Notification>();
+
     public string? PreferredWorkspace { get; private set; }
 
     public string? LastWorkspace { get; private set; }

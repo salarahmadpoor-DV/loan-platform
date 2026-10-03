@@ -226,11 +226,18 @@ internal sealed class OfferingBusinessRepository : IBusinessRepository
     public HashSet<long> ActiveCatalogProductIds { get; } = [];
     public List<BusinessService> ServiceLinks { get; } = [];
     public List<BusinessProduct> ProductLinks { get; } = [];
+    public BusinessProvider? Membership { get; set; }
+    public HashSet<long> ExistingProviderIds { get; } = [];
+    public int UpdateCount { get; private set; }
 
     public Task AddAsync(Business business, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();
 
-    public Task UpdateAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task UpdateAsync(CancellationToken cancellationToken = default)
+    {
+        UpdateCount++;
+        return Task.CompletedTask;
+    }
 
     public Task<Business?> GetByIdAsync(long businessId, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();
@@ -250,7 +257,7 @@ internal sealed class OfferingBusinessRepository : IBusinessRepository
         Task.FromResult(ActiveCatalogProductIds.Contains(productId));
 
     public Task<bool> ProviderExistsAsync(long providerId, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        Task.FromResult(ExistingProviderIds.Contains(providerId));
 
     public Task<BusinessService?> GetServiceLinkAsync(
         long businessId,
@@ -318,15 +325,34 @@ internal sealed class OfferingBusinessRepository : IBusinessRepository
         long businessId, byte dayOfWeek, TimeSpan timeFrom, TimeSpan timeTo, long? excludeId, CancellationToken cancellationToken = default) =>
         throw new NotSupportedException();
 
-    public Task<BusinessProvider?> GetMembershipAsync(long businessId, long providerId, bool includeDeleted, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+    public Task<BusinessProvider?> GetMembershipAsync(
+        long businessId,
+        long providerId,
+        bool includeDeleted,
+        CancellationToken cancellationToken = default)
+    {
+        if (Membership is null
+            || Membership.BusinessId != businessId
+            || Membership.ProviderId != providerId
+            || (!includeDeleted && Membership.IsDeleted))
+        {
+            return Task.FromResult<BusinessProvider?>(null);
+        }
+
+        return Task.FromResult<BusinessProvider?>(Membership);
+    }
 
     public Task<IReadOnlyList<BusinessProvider>> ListMembershipsAsync(long businessId, CancellationToken cancellationToken = default) =>
         Task.FromResult<IReadOnlyList<BusinessProvider>>([]);
 
-    public Task AddMembershipAsync(BusinessProvider membership, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+    public Task AddMembershipAsync(BusinessProvider membership, CancellationToken cancellationToken = default)
+    {
+        if (membership.Id == 0)
+            membership.WithId(1);
+        Membership = membership;
+        return Task.CompletedTask;
+    }
 
     public Task<BusinessProvider?> GetMembershipByIdAsync(long membershipId, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        Task.FromResult(Membership is not null && Membership.Id == membershipId ? Membership : null);
 }

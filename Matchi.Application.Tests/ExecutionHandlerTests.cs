@@ -17,7 +17,9 @@ public sealed class CreateServiceExecutionCommandHandlerTests
         var executions = new FakeServiceExecutionRepository { DealGraph = MarketplaceGraph.ProviderDeal() };
         var handler = new CreateServiceExecutionCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.ProviderUserId),
-            executions);
+            executions,
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         var id = await handler.Handle(new CreateServiceExecutionCommand(1), CancellationToken.None);
 
@@ -32,7 +34,9 @@ public sealed class CreateServiceExecutionCommandHandlerTests
         var executions = new FakeServiceExecutionRepository { DealGraph = MarketplaceGraph.BusinessDeal() };
         var handler = new CreateServiceExecutionCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.BusinessOwnerUserId),
-            executions);
+            executions,
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         await handler.Handle(new CreateServiceExecutionCommand(2), CancellationToken.None);
 
@@ -45,7 +49,9 @@ public sealed class CreateServiceExecutionCommandHandlerTests
         var executions = new FakeServiceExecutionRepository { DealGraph = MarketplaceGraph.ProviderDeal() };
         var handler = new CreateServiceExecutionCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.OtherUserId),
-            executions);
+            executions,
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             handler.Handle(new CreateServiceExecutionCommand(1), CancellationToken.None));
@@ -60,7 +66,9 @@ public sealed class CreateServiceExecutionCommandHandlerTests
         };
         var handler = new CreateServiceExecutionCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.ProviderUserId),
-            executions);
+            executions,
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         await Assert.ThrowsAsync<ValidationException>(() =>
             handler.Handle(new CreateServiceExecutionCommand(1), CancellationToken.None));
@@ -75,7 +83,9 @@ public sealed class CreateServiceExecutionCommandHandlerTests
         };
         var handler = new CreateServiceExecutionCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.ProviderUserId),
-            executions);
+            executions,
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         await Assert.ThrowsAsync<ValidationException>(() =>
             handler.Handle(new CreateServiceExecutionCommand(1), CancellationToken.None));
@@ -91,7 +101,9 @@ public sealed class CreateServiceExecutionCommandHandlerTests
         };
         var handler = new CreateServiceExecutionCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.ProviderUserId),
-            executions);
+            executions,
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         await Assert.ThrowsAsync<ValidationException>(() =>
             handler.Handle(new CreateServiceExecutionCommand(1), CancellationToken.None));
@@ -108,7 +120,9 @@ public sealed class ServiceExecutionLifecycleHandlerTests
         var executions = new FakeServiceExecutionRepository { Tracked = pending };
         var handler = new UpdateServiceExecutionScheduleCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.ProviderUserId),
-            executions);
+            executions,
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         await handler.Handle(
             new UpdateServiceExecutionScheduleCommand(1, null, TimeSpan.FromHours(9), TimeSpan.FromHours(10)),
@@ -128,7 +142,9 @@ public sealed class ServiceExecutionLifecycleHandlerTests
         var executions = new FakeServiceExecutionRepository { Tracked = execution };
         var handler = new StartServiceExecutionCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.ProviderUserId),
-            executions);
+            executions,
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         var status = await handler.Handle(new StartServiceExecutionCommand(1), CancellationToken.None);
         Assert.Equal("InProgress", status);
@@ -147,7 +163,9 @@ public sealed class ServiceExecutionLifecycleHandlerTests
         };
         var handler = new StartServiceExecutionCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.CustomerUserId),
-            executions);
+            executions,
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             handler.Handle(new StartServiceExecutionCommand(1), CancellationToken.None));
@@ -159,7 +177,9 @@ public sealed class ServiceExecutionLifecycleHandlerTests
         var execution = ServiceExecution.Create(1, null).WithId(1);
         var handler = new CompleteServiceExecutionCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.ProviderUserId),
-            new FakeServiceExecutionRepository { Tracked = execution });
+            new FakeServiceExecutionRepository { Tracked = execution },
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         await Assert.ThrowsAsync<ValidationException>(() =>
             handler.Handle(new CompleteServiceExecutionCommand(1), CancellationToken.None));
@@ -176,7 +196,9 @@ public sealed class ServiceExecutionLifecycleHandlerTests
         };
         var handler = new StartServiceExecutionCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.ProviderUserId),
-            executions);
+            executions,
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         await Assert.ThrowsAsync<ConflictException>(() =>
             handler.Handle(new StartServiceExecutionCommand(1), CancellationToken.None));
@@ -190,7 +212,9 @@ public sealed class ServiceExecutionLifecycleHandlerTests
         var executions = new FakeServiceExecutionRepository { Tracked = execution };
         var handler = new CompleteServiceExecutionCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.ProviderUserId),
-            executions);
+            executions,
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         var status = await handler.Handle(new CompleteServiceExecutionCommand(1), CancellationToken.None);
         Assert.Equal("Completed", status);
@@ -207,7 +231,9 @@ public sealed class ServiceExecutionLifecycleHandlerTests
         var executions = new FakeServiceExecutionRepository { Tracked = execution };
         var handler = new CancelServiceExecutionCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.BusinessOwnerUserId),
-            executions);
+            executions,
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         var status = await handler.Handle(new CancelServiceExecutionCommand(1), CancellationToken.None);
         Assert.Equal("Cancelled", status);
@@ -220,7 +246,9 @@ public sealed class ServiceExecutionLifecycleHandlerTests
     {
         var handler = new CancelServiceExecutionCommandHandler(
             new FakeCurrentUser(MarketplaceGraph.OtherUserId),
-            new FakeServiceExecutionRepository());
+            new FakeServiceExecutionRepository(),
+            TestNotifications.Service(),
+            TestNotifications.Recipients());
 
         await Assert.ThrowsAsync<KeyNotFoundException>(() =>
             handler.Handle(new CancelServiceExecutionCommand(1), CancellationToken.None));

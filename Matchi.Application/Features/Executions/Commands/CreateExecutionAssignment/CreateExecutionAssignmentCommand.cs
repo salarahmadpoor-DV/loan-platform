@@ -3,6 +3,7 @@ using FluentValidation.Results;
 using Matchi.Application.Common;
 using Matchi.Application.Common.Interfaces;
 using Matchi.Application.Features.Providers;
+using Matchi.Application.Notifications;
 using Matchi.Domain.Entities;
 using Matchi.Domain.Interfaces;
 using MediatR;
@@ -30,15 +31,21 @@ public sealed class CreateExecutionAssignmentCommandHandler : IRequestHandler<Cr
     private readonly ICurrentUserService _currentUserService;
     private readonly IServiceExecutionRepository _executions;
     private readonly IExecutionAssignmentRepository _assignments;
+    private readonly IProviderRepository _providers;
+    private readonly INotificationService _notifications;
 
     public CreateExecutionAssignmentCommandHandler(
         ICurrentUserService currentUserService,
         IServiceExecutionRepository executions,
-        IExecutionAssignmentRepository assignments)
+        IExecutionAssignmentRepository assignments,
+        IProviderRepository providers,
+        INotificationService notifications)
     {
         _currentUserService = currentUserService;
         _executions = executions;
         _assignments = assignments;
+        _providers = providers;
+        _notifications = notifications;
     }
 
     public async Task<long> Handle(CreateExecutionAssignmentCommand command, CancellationToken cancellationToken)
@@ -105,6 +112,15 @@ public sealed class CreateExecutionAssignmentCommandHandler : IRequestHandler<Cr
 
         _assignments.Add(assignment);
         await _assignments.SaveChangesAsync(cancellationToken);
+
+        var provider = await _providers.GetByIdAsync(command.ProviderId, cancellationToken);
+        if (provider is not null)
+        {
+            await _notifications.NotifyAsync(
+                provider.UserId,
+                NotificationCatalog.ProviderAssigned(assignment.Id),
+                cancellationToken);
+        }
 
         return assignment.Id;
     }

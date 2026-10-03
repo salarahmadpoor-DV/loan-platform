@@ -1,4 +1,5 @@
 using Matchi.Application.Common.Interfaces;
+using Matchi.Application.Notifications;
 using Matchi.Domain.Entities;
 using Matchi.Domain.Interfaces;
 using MediatR;
@@ -10,15 +11,18 @@ public sealed class CreateRequestCommandHandler : IRequestHandler<CreateRequestC
     private readonly ICurrentUserService _currentUserService;
     private readonly IUserRepository _userRepository;
     private readonly IRequestRepository _requestRepository;
+    private readonly INotificationService _notifications;
 
     public CreateRequestCommandHandler(
         ICurrentUserService currentUserService,
         IUserRepository userRepository,
-        IRequestRepository requestRepository)
+        IRequestRepository requestRepository,
+        INotificationService notifications)
     {
         _currentUserService = currentUserService;
         _userRepository = userRepository;
         _requestRepository = requestRepository;
+        _notifications = notifications;
     }
 
     public async Task<long> Handle(CreateRequestCommand command, CancellationToken cancellationToken)
@@ -49,6 +53,10 @@ public sealed class CreateRequestCommandHandler : IRequestHandler<CreateRequestC
             cancellationToken);
 
         await _requestRepository.AddAsync(request, cancellationToken);
+        await _notifications.NotifyAsync(
+            userId.Value,
+            NotificationCatalog.RequestCreated(request.Id),
+            cancellationToken);
         return request.Id;
     }
 }

@@ -101,6 +101,7 @@ public sealed class RequestRepository : IRequestRepository
         CancellationToken cancellationToken = default)
     {
         return _context.Requests
+            .Include(r => r.Customer)
             .FirstOrDefaultAsync(r => r.Id == requestId && !r.IsDeleted, cancellationToken);
     }
 

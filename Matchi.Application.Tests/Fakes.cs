@@ -1,6 +1,7 @@
 using Matchi.Application.Common.Interfaces;
 using Matchi.Application.Features.Matching;
 using Matchi.Application.Features.Providers;
+using Matchi.Application.Notifications;
 using Matchi.Domain.Entities;
 using Matchi.Domain.Interfaces;
 using Matchi.Domain.Locations;
@@ -348,7 +349,7 @@ internal sealed class FakeRequestRepository : IRequestRepository
     public Task<Request?> GetByIdAsync(
         long requestId,
         CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        Task.FromResult(Owned is not null && Owned.Id == requestId ? Owned : null);
 
     public Task<Request?> GetOwnedByIdAsync(
         long requestId,
@@ -430,8 +431,16 @@ internal sealed class FakeProposalRepository : IProposalRepository
     public Func<long, Proposal?>? ResolveTracked { get; set; }
     public List<Proposal> ByProvider { get; } = [];
 
-    public Task AddAsync(Proposal proposal, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+    public List<Proposal> Added { get; } = [];
+    public List<Proposal> OwnedRequestProposals { get; } = [];
+
+    public Task AddAsync(Proposal proposal, CancellationToken cancellationToken = default)
+    {
+        if (proposal.Id == 0)
+            proposal.WithId(Added.Count + 1);
+        Added.Add(proposal);
+        return Task.CompletedTask;
+    }
 
     public Task UpdateAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
 
@@ -457,7 +466,7 @@ internal sealed class FakeProposalRepository : IProposalRepository
         long requestId,
         long userId,
         CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        Task.FromResult<IReadOnlyList<Proposal>>(OwnedRequestProposals);
 
     public Task<Proposal?> GetOwnedDetailAsync(
         long proposalId,
@@ -542,8 +551,15 @@ internal sealed class FakeProviderRepository : IProviderRepository
     public List<ProviderProduct> ProductLinks { get; } = [];
     public int UpdateCount { get; private set; }
 
-    public Task<Provider?> GetByIdAsync(long providerId, CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+    public Dictionary<long, Provider> ById { get; } = [];
+
+    public Task<Provider?> GetByIdAsync(long providerId, CancellationToken cancellationToken = default)
+    {
+        if (ById.TryGetValue(providerId, out var found))
+            return Task.FromResult<Provider?>(found);
+
+        return Task.FromResult(Mine is not null && Mine.Id == providerId ? Mine : null);
+    }
 
     public Task<Provider?> GetByUserIdAsync(long userId, CancellationToken cancellationToken = default) =>
         Task.FromResult(Mine is not null && Mine.UserId == userId ? Mine : null);
@@ -683,4 +699,102 @@ internal sealed class FakeProviderRepository : IProviderRepository
         long providerId,
         CancellationToken cancellationToken = default) =>
         Task.FromResult<IReadOnlyList<BusinessProvider>>([]);
+}
+
+internal sealed class FakeNotificationService : INotificationService
+{
+    public List<(long UserId, NotificationDefinition Definition)> Created { get; } = [];
+
+    public Task NotifyAsync(
+        long userId,
+        NotificationDefinition definition,
+        CancellationToken cancellationToken = default)
+    {
+        Created.Add((userId, definition));
+        return Task.CompletedTask;
+    }
+
+    public Task NotifyManyAsync(
+        IEnumerable<long> userIds,
+        NotificationDefinition definition,
+        CancellationToken cancellationToken = default,
+        long? excludeUserId = null)
+    {
+        foreach (var userId in userIds.Where(id => id > 0 && id != excludeUserId).Distinct())
+            Created.Add((userId, definition));
+
+        return Task.CompletedTask;
+    }
+}
+
+internal sealed class FakeNotificationRepository : INotificationRepository
+{
+    public List<Notification> Items { get; } = [];
+    public Dictionary<long, long> CustomerUserIds { get; } = [];
+    public Dictionary<long, long> ProviderUserIds { get; } = [];
+    public Dictionary<long, long> BusinessOwnerUserIds { get; } = [];
+    public int SaveCount { get; private set; }
+
+    public Task AddAsync(Notification notification, CancellationToken cancellationToken = default)
+    {
+        if (notification.Id == 0)
+            notification.WithId(Items.Count + 1);
+        Items.Add(notification);
+        return Task.CompletedTask;
+    }
+
+    public Task SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        SaveCount++;
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> ExistsAsync(long userId, string referenceKey, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Items.Any(n => n.UserId == userId && n.ReferenceKey == referenceKey));
+
+    public Task<(IReadOnlyList<Notification> Items, int TotalCount, int UnreadCount)> ListForUserAsync(
+        long userId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var mine = Items.Where(n => n.UserId == userId).OrderByDescending(n => n.CreatedAt).ThenByDescending(n => n.Id).ToList();
+        var pageItems = mine.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+        return Task.FromResult<(IReadOnlyList<Notification>, int, int)>(
+            (pageItems, mine.Count, mine.Count(n => !n.IsRead)));
+    }
+
+    public Task<int> CountUnreadAsync(long userId, CancellationToken cancellationToken = default) =>
+        Task.FromResult(Items.Count(n => n.UserId == userId && !n.IsRead));
+
+    public Task<Notification?> GetTrackedForUserAsync(
+        long notificationId,
+        long userId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(Items.FirstOrDefault(n => n.Id == notificationId && n.UserId == userId));
+
+    public Task<int> MarkAllReadAsync(long userId, CancellationToken cancellationToken = default)
+    {
+        var unread = Items.Where(n => n.UserId == userId && !n.IsRead).ToList();
+        foreach (var item in unread)
+            item.MarkRead();
+        return Task.FromResult(unread.Count);
+    }
+
+    public Task<long?> GetCustomerUserIdAsync(long customerId, CancellationToken cancellationToken = default) =>
+        Task.FromResult(CustomerUserIds.TryGetValue(customerId, out var id) ? id : (long?)null);
+
+    public Task<long?> GetProviderUserIdAsync(long providerId, CancellationToken cancellationToken = default) =>
+        Task.FromResult(ProviderUserIds.TryGetValue(providerId, out var id) ? id : (long?)null);
+
+    public Task<long?> GetBusinessOwnerUserIdAsync(long businessId, CancellationToken cancellationToken = default) =>
+        Task.FromResult(BusinessOwnerUserIds.TryGetValue(businessId, out var id) ? id : (long?)null);
+}
+
+internal static class TestNotifications
+{
+    public static FakeNotificationService Service() => new();
+
+    public static NotificationRecipientResolver Recipients(FakeNotificationRepository? repo = null) =>
+        new(repo ?? new FakeNotificationRepository());
 }

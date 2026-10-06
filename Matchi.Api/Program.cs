@@ -117,6 +117,17 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
+using (var migrationScope = app.Services.CreateScope())
+{
+    var dbContext = migrationScope.ServiceProvider.GetRequiredService<MatchiDbContext>();
+    var migrateOnStartup = app.Configuration.GetValue<bool?>("Database:MigrateOnStartup")
+        ?? app.Environment.IsDevelopment();
+    await DatabaseMigrationRunner.ApplyAsync(
+        dbContext,
+        app.Logger,
+        migrateOnStartup);
+}
+
 var seedEnabled = app.Configuration.GetValue("Seed:Enabled", false);
 if (seedEnabled && app.Environment.IsDevelopment())
 {

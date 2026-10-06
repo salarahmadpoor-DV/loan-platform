@@ -33,7 +33,6 @@ import {
   workspaceHome,
   workspaceLabelKey,
 } from "../../../../shared/navigation/navModel";
-import { mobileDrawerAnchor, mobileDrawerPaperSx } from "../../../../layouts/mobileDrawerPlacement";
 import { Menu as MenuIcon } from "../../../../shared/ui/icons";
 import { usePublicEntry } from "../../../auth/PublicEntryContext";
 
@@ -41,6 +40,26 @@ const NAV_LINKS = [
   { hash: "categories", labelKey: "public.nav.findServices" as const },
   { hash: "how-it-works", labelKey: "public.nav.howItWorks" as const },
 ];
+
+function DrawerSectionTitle({ children, first }: { children: string; first?: boolean }) {
+  return (
+    <Typography
+      component="p"
+      sx={{
+        mt: first ? 1.25 : 2.25,
+        mb: 0.5,
+        px: 2,
+        fontSize: "0.75rem",
+        fontWeight: 600,
+        letterSpacing: 0.2,
+        color: "text.secondary",
+        textAlign: "right",
+      }}
+    >
+      {children}
+    </Typography>
+  );
+}
 
 function scrollToSection(hash: string) {
   const el = document.getElementById(hash);
@@ -58,7 +77,6 @@ export function PublicHeader() {
   const { defaultPath, capabilities, workspaces } = useWorkspaceAccess();
   const { openCustomerLogin } = usePublicEntry();
   const findPath = findServicePath(isAuthenticated, user?.roles, undefined, capabilities);
-  const drawerAnchor = mobileDrawerAnchor(theme.direction);
   const menuId = useId();
   const authMenuId = useId();
   const [authMenuEl, setAuthMenuEl] = useState<HTMLElement | null>(null);
@@ -282,90 +300,132 @@ export function PublicHeader() {
         </Toolbar>
       </Container>
       <Drawer
-        anchor={drawerAnchor}
+        anchor="right"
         open={open}
         onClose={() => setOpen(false)}
         ModalProps={{ keepMounted: true }}
-        sx={{
-          "& .MuiDrawer-paper": mobileDrawerPaperSx(theme.direction, { xs: "min(100%, 300px)" }),
+        slotProps={{
+          paper: {
+            // Inline styles are not flipped by stylis-plugin-rtl, so the paper
+            // stays on the physical right edge even when the theme is RTL.
+            style: {
+              left: "auto",
+              right: 0,
+              width: "min(100%, 300px)",
+              maxWidth: "100%",
+              boxSizing: "border-box",
+              direction: "rtl",
+              textAlign: "right",
+            },
+          },
         }}
       >
-        <Box id={menuId} sx={{ p: 2, direction: theme.direction }} role="presentation">
-          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>
+        <Box
+          id={menuId}
+          dir="rtl"
+          role="presentation"
+          sx={{
+            py: 2,
+            px: 0.5,
+            direction: "rtl",
+            textAlign: "right",
+          }}
+        >
+          <Typography
+            variant="subtitle1"
+            fontWeight={700}
+            sx={{ px: 2, mb: 0.5, textAlign: "right" }}
+          >
             {t("app.name")}
           </Typography>
           {isAuthenticated ? (
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block", mb: 1 }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: "block", px: 2, mb: 0.5, textAlign: "right" }}
+            >
               {t("nav.currentWorkspace")}
             </Typography>
           ) : null}
-          <List
-            subheader={
-              <ListItemText
-                primary={t("nav.section.discover")}
-                primaryTypographyProps={{ variant: "overline", color: "text.secondary" }}
-              />
-            }
-          >
+          <DrawerSectionTitle first>{t("nav.section.discover")}</DrawerSectionTitle>
+          <List disablePadding>
             {NAV_LINKS.map((link) => (
               <ListItemButton key={link.hash} onClick={() => goSection(link.hash)}>
-                <ListItemText primary={t(link.labelKey)} />
+                <ListItemText
+                  primary={t(link.labelKey)}
+                  sx={{ my: 0, textAlign: "right" }}
+                  primaryTypographyProps={{ fontWeight: 600, textAlign: "right" }}
+                />
               </ListItemButton>
             ))}
             <ListItemButton onClick={() => goSection("for-professionals")}>
-              <ListItemText primary={t("public.nav.forProfessionals")} />
+              <ListItemText
+                primary={t("public.nav.forProfessionals")}
+                sx={{ my: 0, textAlign: "right" }}
+                primaryTypographyProps={{ fontWeight: 600, textAlign: "right" }}
+              />
             </ListItemButton>
           </List>
           {isAuthenticated ? (
-            <List
-              subheader={
-                <ListItemText
-                  primary={t("nav.switchWorkspace")}
-                  primaryTypographyProps={{ variant: "overline", color: "text.secondary" }}
-                />
-              }
-            >
-              {workspaces.map((ws) => (
-                <ListItemButton key={ws} onClick={() => go(workspaceHome[ws])}>
-                  <ListItemText primary={t(workspaceLabelKey[ws])} />
-                </ListItemButton>
-              ))}
-            </List>
+            <>
+              <DrawerSectionTitle>{t("nav.switchWorkspace")}</DrawerSectionTitle>
+              <List disablePadding>
+                {workspaces.map((ws) => (
+                  <ListItemButton key={ws} onClick={() => go(workspaceHome[ws])}>
+                    <ListItemText
+                      primary={t(workspaceLabelKey[ws])}
+                      sx={{ my: 0, textAlign: "right" }}
+                      primaryTypographyProps={{ fontWeight: 600, textAlign: "right" }}
+                    />
+                  </ListItemButton>
+                ))}
+              </List>
+            </>
           ) : (
-            <List
-              subheader={
-                <ListItemText
-                  primary={t("auth.signIn")}
-                  primaryTypographyProps={{ variant: "overline", color: "text.secondary" }}
-                />
-              }
-            >
-              <ListItemButton onClick={chooseCustomer}>
-                <ListItemText primary={t("auth.customer.title")} secondary={t("auth.customer.description")} />
-              </ListItemButton>
-              <ListItemButton onClick={chooseProvider}>
-                <ListItemText primary={t("auth.provider.title")} secondary={t("auth.provider.description")} />
-              </ListItemButton>
-              <ListItemButton onClick={chooseRequestService}>
-                <ListItemText primary={t("public.hero.requestService")} />
-              </ListItemButton>
-            </List>
+            <>
+              <DrawerSectionTitle>{t("auth.signIn")}</DrawerSectionTitle>
+              <List disablePadding>
+                <ListItemButton onClick={chooseCustomer} sx={{ alignItems: "flex-start" }}>
+                  <ListItemText
+                    primary={t("auth.customer.title")}
+                    secondary={t("auth.customer.description")}
+                    sx={{ my: 0, textAlign: "right" }}
+                    primaryTypographyProps={{ fontWeight: 600, textAlign: "right" }}
+                    secondaryTypographyProps={{ color: "text.secondary", textAlign: "right" }}
+                  />
+                </ListItemButton>
+                <ListItemButton onClick={chooseProvider} sx={{ alignItems: "flex-start" }}>
+                  <ListItemText
+                    primary={t("auth.provider.title")}
+                    secondary={t("auth.provider.description")}
+                    sx={{ my: 0, textAlign: "right" }}
+                    primaryTypographyProps={{ fontWeight: 600, textAlign: "right" }}
+                    secondaryTypographyProps={{ color: "text.secondary", textAlign: "right" }}
+                  />
+                </ListItemButton>
+                <ListItemButton onClick={chooseRequestService}>
+                  <ListItemText
+                    primary={t("public.hero.requestService")}
+                    sx={{ my: 0, textAlign: "right" }}
+                    primaryTypographyProps={{ fontWeight: 600, textAlign: "right" }}
+                  />
+                </ListItemButton>
+              </List>
+            </>
           )}
-          <List
-            subheader={
-              <ListItemText
-                primary={t("nav.section.settings")}
-                primaryTypographyProps={{ variant: "overline", color: "text.secondary" }}
-              />
-            }
-          >
+          <DrawerSectionTitle>{t("nav.section.settings")}</DrawerSectionTitle>
+          <List disablePadding>
             <ListItemButton
               onClick={() => {
                 changeAppLocale(locale === "fa-IR" ? "en-US" : "fa-IR");
                 setOpen(false);
               }}
             >
-              <ListItemText primary={locale === "fa-IR" ? t("locale.en") : t("locale.fa")} />
+              <ListItemText
+                primary={locale === "fa-IR" ? t("locale.en") : t("locale.fa")}
+                sx={{ my: 0, textAlign: "right" }}
+                primaryTypographyProps={{ fontWeight: 600, textAlign: "right" }}
+              />
             </ListItemButton>
           </List>
         </Box>

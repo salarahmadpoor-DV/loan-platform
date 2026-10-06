@@ -7,10 +7,9 @@ internal sealed class MatchiDbContextFactory : IDesignTimeDbContextFactory<Match
 {
     public MatchiDbContext CreateDbContext(string[] args)
     {
-        var options = new DbContextOptionsBuilder<MatchiDbContext>()
-            .UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=MatchiDesign;Trusted_Connection=True;")
-            .Options;
-
-        return new MatchiDbContext(options);
+        var connectionString = MatchiSqlServerConfiguration.ResolveDesignTimeConnectionString();
+        var options = new DbContextOptionsBuilder<MatchiDbContext>();
+        MatchiSqlServerConfiguration.Configure(options, connectionString);
+        return new MatchiDbContext(options.Options);
     }
 }

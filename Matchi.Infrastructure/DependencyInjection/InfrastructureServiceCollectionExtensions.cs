@@ -7,7 +7,6 @@ using Matchi.Infrastructure.Locations;
 using Matchi.Infrastructure.Persistence;
 using Matchi.Infrastructure.Persistence.Repositories;
 using Matchi.Infrastructure.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,8 +20,10 @@ public static class InfrastructureServiceCollectionExtensions
     {
         services.AddDbContext<MatchiDbContext>(options =>
         {
-            options.UseSqlServer(
-                configuration.GetConnectionString("DefaultConnection"));
+            MatchiSqlServerConfiguration.Configure(
+                options,
+                configuration.GetConnectionString(MatchiSqlServerConfiguration.ConnectionStringName)
+                    ?? string.Empty);
         });
 
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
